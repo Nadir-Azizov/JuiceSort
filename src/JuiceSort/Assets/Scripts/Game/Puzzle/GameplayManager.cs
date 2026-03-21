@@ -38,6 +38,7 @@ namespace JuiceSort.Game.Puzzle
         private GameplayHUD _hud;
         private GameObject _hudCanvas;
         private BackgroundManager _backgroundManager;
+        private bool _isAnimating;
 
         public int SelectedContainerIndex => _selectedContainerIndex;
         public int MoveCount => _moveCount;
@@ -144,6 +145,8 @@ namespace JuiceSort.Game.Puzzle
 
         private void DestroyBoard()
         {
+            _isAnimating = false;
+
             if (_bottleBoard != null)
             {
                 _bottleBoard.OnContainerTapped -= OnContainerTapped;
@@ -184,6 +187,9 @@ namespace JuiceSort.Game.Puzzle
 
         public void RestartLevel()
         {
+            if (_isAnimating)
+                return;
+
             // Regenerate same level (same seed = same params/container count)
             // Use RebindPuzzle instead of full board recreation since container count is unchanged
             var definition = DifficultyScaler.GetLevelDefinition(_currentLevelNumber);
@@ -208,7 +214,7 @@ namespace JuiceSort.Game.Puzzle
 
         public void RequestExtraBottle()
         {
-            if (_isLevelComplete)
+            if (_isLevelComplete || _isAnimating)
                 return;
 
             if (_extraBottlesUsed >= GameConstants.MaxExtraBottles)
@@ -249,6 +255,9 @@ namespace JuiceSort.Game.Puzzle
         /// </summary>
         public void GoBackToRoadmap()
         {
+            if (_isAnimating)
+                return;
+
             if (_currentPuzzle != null && !_isLevelComplete)
             {
                 // Save current state for resume
@@ -340,7 +349,7 @@ namespace JuiceSort.Game.Puzzle
 
         public void OnContainerTapped(int index)
         {
-            if (_isLevelComplete)
+            if (_isLevelComplete || _isAnimating)
                 return;
 
             if (_selectedContainerIndex < 0)
@@ -369,28 +378,56 @@ namespace JuiceSort.Game.Puzzle
             if (!PuzzleEngine.CanPour(_currentPuzzle, sourceIndex, targetIndex))
                 return;
 
+            var source = _currentPuzzle.GetContainer(sourceIndex);
+            var target = _currentPuzzle.GetContainer(targetIndex);
+
+            // Capture pour info before executing logic (data mutates after ExecutePour)
+            DrinkColor pourColor = source.GetTopColor();
+            int available = source.GetTopColorCount();
+            int emptySlots = target.SlotCount - target.FilledCount();
+            int pourCount = available < emptySlots ? available : emptySlots;
+            int sourceTopIndex = source.GetTopIndex();
+            int targetFirstEmpty = target.GetFirstEmptyIndex();
+
+            // Execute game logic immediately (data changes now)
             _undoStack.Push(_currentPuzzle.Clone());
             PuzzleEngine.ExecutePour(_currentPuzzle, sourceIndex, targetIndex);
-
             _moveCount++;
-            _bottleBoard.GetContainerView(sourceIndex).Refresh();
-            _bottleBoard.GetContainerView(targetIndex).Refresh();
-            DeselectCurrent();
-            _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
-            if (Services.TryGet<IAudioManager>(out var pourAudio))
-                pourAudio.PlaySFX(AudioClipType.Pour);
 
-            Debug.Log($"[GameplayManager] Pour executed. Moves: {_moveCount}");
+            // Reset source to idle instantly (no deselect animation — pour animation takes over)
+            var sourceView = _bottleBoard.GetContainerView(sourceIndex);
+            sourceView.ResetVisualState();
+            _selectedContainerIndex = -1;
 
-            if (_currentPuzzle.IsAllSorted())
-            {
-                OnLevelComplete();
-            }
+            // Play animation (visuals catch up to data)
+            var targetView = _bottleBoard.GetContainerView(targetIndex);
+            _isAnimating = true;
+
+            StartCoroutine(PourAnimator.Animate(
+                sourceView, targetView, pourCount, pourColor,
+                sourceTopIndex, targetFirstEmpty,
+                onMidPour: () =>
+                {
+                    if (Services.TryGet<IAudioManager>(out var pourAudio))
+                        pourAudio.PlaySFX(AudioClipType.Pour);
+                },
+                onComplete: () =>
+                {
+                    _isAnimating = false;
+                    _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
+                    Debug.Log($"[GameplayManager] Pour animated. Moves: {_moveCount}");
+
+                    if (_currentPuzzle.IsAllSorted())
+                    {
+                        OnLevelComplete();
+                    }
+                }
+            ));
         }
 
         public void Undo()
         {
-            if (_isLevelComplete)
+            if (_isLevelComplete || _isAnimating)
                 return;
 
             var snapshot = _undoStack.Pop();

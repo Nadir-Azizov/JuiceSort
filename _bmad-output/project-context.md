@@ -208,6 +208,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Pour validation must check: matching color OR empty target, AND available slot — both conditions. Pour moves all consecutive same-color units from top, limited by target empty slots
 - Win detection must check ALL containers, not just the one that received the pour
 - Star rating depends on optimal move count — this must be calculated or estimated per generated puzzle
+- Animations use coroutines (no DOTween/LeanTween) — `PourAnimator` is a static class with `IEnumerator Animate(...)`, called via `StartCoroutine` from GameplayManager
+- `_isAnimating` flag on GameplayManager blocks all input (tap, undo, restart, back, extra bottle) during pour animation
+- Pour animation indices (sourceTopIndex, targetFirstEmpty) must be captured BEFORE `ExecutePour` mutates the data — animation is visual-only, data changes immediately
+- Selection animation lives in `BottleContainerView` — `ResetVisualState()` snaps to idle instantly when transitioning to pour
 
 ---
 

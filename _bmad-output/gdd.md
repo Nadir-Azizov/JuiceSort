@@ -239,8 +239,8 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 
 ### Input Feel
 
-- **Responsive:** Immediate visual feedback on tap — container highlights instantly
-- **Satisfying:** Pour animation should feel smooth and liquid-like
+- **Responsive:** Immediate visual feedback on tap — container lifts, scales up (108%), and glows golden with an ease-out-back bounce (0.15s)
+- **Satisfying:** Pour animation lifts source bottle, tilts toward target, transfers liquid slot-by-slot, then returns to rest (coroutine-based, ~0.5s total)
 - **Forgiving:** Tapping an invalid target does nothing (no error state, no punishment)
 - **One-handed:** All interactions reachable with thumb on a standard phone
 
@@ -455,7 +455,12 @@ All levels are drink-sorting puzzles. Variety comes from parameter differences, 
 - **Liquids:** Fruit-inspired colors that look like actual drinks, not abstract colored blocks
 - **Backgrounds:** City scenes with iconic landmark silhouettes/signs, atmospheric lighting
 - **UI:** Minimal, elegant — doesn't compete with the visual experience
-- **Animations:** Organic, satisfying — smooth liquid pours, gentle celebrations on completion
+- **Animations:** Coroutine-based, no external tween library
+  - **Selection:** Bottle lifts 0.25 units + scales 108% + golden glow (EaseOutBack, 0.15s)
+  - **Deselection:** Smooth return to rest (EaseOutCubic, 0.12s)
+  - **Pour:** 4-phase sequence — lift → tilt toward target → slot-by-slot liquid transfer → return (EaseOutCubic, ~0.5s total)
+  - **Input blocked** during pour animation to prevent state corruption
+  - Completion celebration: not yet implemented
 
 #### Visual References
 

@@ -43,7 +43,17 @@ so that I can move drinks between containers to sort them.
   - [x] 4.2 Exposed `MoveCount` property
   - [x] 4.3 Debug.Log with move count after each pour
 
-- [x] Task 5: Write EditMode tests for pour logic (AC: all)
+- [x] Task 5: Pour animation (AC: 4)
+  - [x] 5.1 Created `PourAnimator.cs` — static class with `IEnumerator Animate()` coroutine
+  - [x] 5.2 Phase 1: Lift source bottle 0.4 units (EaseOutCubic, 0.15s)
+  - [x] 5.3 Phase 2: Tilt source 25° toward target (EaseOutCubic, 0.12s)
+  - [x] 5.4 Phase 3: Slot-by-slot liquid transfer — hide from source, show on target (0.08s per slot)
+  - [x] 5.5 Phase 4: Return source to original position (untilt + drop, 0.2s)
+  - [x] 5.6 `_isAnimating` flag blocks all input during animation (tap, undo, restart, back, extra bottle)
+  - [x] 5.7 Pre-mutation capture: sourceTopIndex and targetFirstEmpty passed as params to avoid stale data
+  - [x] 5.8 `DestroyBoard()` resets `_isAnimating` to prevent stuck input lock
+
+- [x] Task 6: Write EditMode tests for pour logic (AC: all)
   - [x] 5.1 Created PuzzleEngineTests.cs — 17 tests covering ExecutePour, RemoveTop, AddToTop, GetFirstEmptyIndex
   - [x] 5.2 Test pour into empty container — verified color at index 0
   - [x] 5.3 Test pour from empty source — returns false, no change

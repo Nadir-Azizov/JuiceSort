@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using JuiceSort.Game.UI;
 
@@ -16,6 +17,20 @@ namespace JuiceSort.Game.Puzzle
         private ContainerData _data;
         private ContainerState _state;
         private int _containerIndex;
+
+        // Selection animation state
+        private Coroutine _selectionCoroutine;
+        private Vector3 _restLocalPosition;
+        private Vector3 _baseScale;
+
+        // Selection animation constants
+        private const float SelectLiftHeight = 0.25f;
+        private const float SelectScaleBump = 1.08f;
+        private const float SelectAnimDuration = 0.15f;
+        private const float DeselectAnimDuration = 0.12f;
+
+        private static readonly Color SelectedFrameColor = new Color(1f, 0.88f, 0.3f, 1f);
+        private static readonly Color IdleFrameColor = new Color(1f, 1f, 1f, 0.9f);
 
         // Cached assets
         private static Sprite _cachedMaskSprite;
@@ -74,6 +89,7 @@ namespace JuiceSort.Game.Puzzle
             _data = data;
             _containerIndex = containerIndex;
             _state = ContainerState.Idle;
+            CaptureRestState();
             Refresh();
         }
 
@@ -86,13 +102,99 @@ namespace JuiceSort.Game.Puzzle
         public void Select()
         {
             _state = ContainerState.Selected;
-            UpdateHighlight();
+            StopSelectionAnim();
+            _selectionCoroutine = StartCoroutine(AnimateSelect());
         }
 
         public void Deselect()
         {
             _state = ContainerState.Idle;
-            UpdateHighlight();
+            StopSelectionAnim();
+            _selectionCoroutine = StartCoroutine(AnimateDeselect());
+        }
+
+        /// <summary>
+        /// Instantly resets to idle visual state without animation (used by pour animator return).
+        /// </summary>
+        public void ResetVisualState()
+        {
+            StopSelectionAnim();
+            _state = ContainerState.Idle;
+            transform.localPosition = _restLocalPosition;
+            transform.localScale = _baseScale;
+            if (_frameRenderer != null)
+                _frameRenderer.color = IdleFrameColor;
+        }
+
+        private void StopSelectionAnim()
+        {
+            if (_selectionCoroutine != null)
+            {
+                StopCoroutine(_selectionCoroutine);
+                _selectionCoroutine = null;
+            }
+        }
+
+        private IEnumerator AnimateSelect()
+        {
+            Vector3 fromPos = transform.localPosition;
+            Vector3 toPos = _restLocalPosition + new Vector3(0f, SelectLiftHeight, 0f);
+            Vector3 toScale = _baseScale * SelectScaleBump;
+
+            float elapsed = 0f;
+            while (elapsed < SelectAnimDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutBack(Mathf.Clamp01(elapsed / SelectAnimDuration));
+                transform.localPosition = Vector3.Lerp(fromPos, toPos, t);
+                transform.localScale = Vector3.Lerp(_baseScale, toScale, t);
+                if (_frameRenderer != null)
+                    _frameRenderer.color = Color.Lerp(IdleFrameColor, SelectedFrameColor, t);
+                yield return null;
+            }
+            transform.localPosition = toPos;
+            transform.localScale = toScale;
+            if (_frameRenderer != null)
+                _frameRenderer.color = SelectedFrameColor;
+
+            _selectionCoroutine = null;
+        }
+
+        private IEnumerator AnimateDeselect()
+        {
+            Vector3 fromPos = transform.localPosition;
+            Vector3 fromScale = transform.localScale;
+            Color fromColor = _frameRenderer != null ? _frameRenderer.color : IdleFrameColor;
+
+            float elapsed = 0f;
+            while (elapsed < DeselectAnimDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / DeselectAnimDuration));
+                transform.localPosition = Vector3.Lerp(fromPos, _restLocalPosition, t);
+                transform.localScale = Vector3.Lerp(fromScale, _baseScale, t);
+                if (_frameRenderer != null)
+                    _frameRenderer.color = Color.Lerp(fromColor, IdleFrameColor, t);
+                yield return null;
+            }
+            transform.localPosition = _restLocalPosition;
+            transform.localScale = _baseScale;
+            if (_frameRenderer != null)
+                _frameRenderer.color = IdleFrameColor;
+
+            _selectionCoroutine = null;
+        }
+
+        private static float EaseOutBack(float t)
+        {
+            const float c1 = 1.70158f;
+            const float c3 = c1 + 1f;
+            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+        }
+
+        private static float EaseOutCubic(float t)
+        {
+            return 1f - (1f - t) * (1f - t) * (1f - t);
         }
 
         public void Refresh()
@@ -117,14 +219,34 @@ namespace JuiceSort.Game.Puzzle
             }
         }
 
-        private void UpdateHighlight()
+        /// <summary>
+        /// Shows or hides a specific slot renderer (used by PourAnimator).
+        /// </summary>
+        public void SetSlotVisible(int slotIndex, bool visible)
         {
-            if (_frameRenderer != null)
+            if (_slotRenderers != null && slotIndex >= 0 && slotIndex < _slotRenderers.Length)
+                _slotRenderers[slotIndex].enabled = visible;
+        }
+
+        /// <summary>
+        /// Sets a slot's color and makes it visible (used by PourAnimator for target fill).
+        /// </summary>
+        public void SetSlotColorAndShow(int slotIndex, DrinkColor drinkColor)
+        {
+            if (_slotRenderers != null && slotIndex >= 0 && slotIndex < _slotRenderers.Length)
             {
-                _frameRenderer.color = _state == ContainerState.Selected
-                    ? new Color(1f, 0.88f, 0.3f, 1f)   // golden glow
-                    : new Color(1f, 1f, 1f, 0.9f);      // normal glass
+                _slotRenderers[slotIndex].color = ThemeConfig.GetDrinkColor(drinkColor);
+                _slotRenderers[slotIndex].enabled = true;
             }
+        }
+
+        /// <summary>
+        /// Captures the rest position and scale. Must be called after the bottle is positioned.
+        /// </summary>
+        private void CaptureRestState()
+        {
+            _restLocalPosition = transform.localPosition;
+            _baseScale = transform.localScale;
         }
 
         private void OnMouseDown()

@@ -26,7 +26,8 @@ Get the fundamental puzzle mechanics working — a player can pour drinks betwee
 - Container data model (slots, colors)
 - Tap-to-select container interaction
 - Pour mechanic (multi-unit consecutive same-color, matching color or empty, slot availability check)
-- Pour animation (placeholder is fine)
+- Pour animation (implemented: lift → tilt → slot-by-slot transfer → return)
+- Selection animation (implemented: lift + scale + golden glow with EaseOutBack)
 - Win condition detection (all containers sorted)
 - Undo mechanic (single pour reversal, limited count)
 - Level restart
@@ -120,7 +121,7 @@ Complete levels, earn stars, replay for better ratings, and unlock batch gates.
 ### Stories
 - **3.1** As a player, I earn 1-3 stars based on my move efficiency when completing a level → [3-1-star-rating.md](implementation-artifacts/3-1-star-rating.md)
 - ~~**3.2** As a player, I see my star rating on the level complete screen~~ *(merged into 3.1 — star display is part of star rating)*
-- **3.3** As a player, I need minimum 1 star to pass a level → [3-3-minimum-star-pass.md](implementation-artifacts/3-3-minimum-star-pass.md)
+- **3.3** As a player, my level completions are tracked with city, mood, and star ratings → [3-3-minimum-star-pass.md](implementation-artifacts/3-3-minimum-star-pass.md)
 - **3.4** As a player, I need ~80% of possible stars to unlock the next batch of 50 levels → [3-4-star-gate-unlock.md](implementation-artifacts/3-4-star-gate-unlock.md)
 - **3.5** As a player, I can replay any completed level to improve my star rating → [3-5-level-replay.md](implementation-artifacts/3-5-level-replay.md)
 - **3.6** As a player, my progress is saved automatically and persists across sessions → [3-6-auto-save.md](implementation-artifacts/3-6-auto-save.md)
@@ -141,7 +142,7 @@ Build the full navigation flow so the game feels complete and polished.
 - Level complete screen (stars, next level, replay)
 - Star gate screen (batch unlock notification)
 - Settings screen (sound toggle, etc.)
-- Screen transitions
+- Screen transitions (not yet implemented)
 
 **Excludes:**
 - Tropical Fresh styling (Epic 5 — use placeholder styling here)
@@ -181,8 +182,8 @@ Transform placeholder visuals into the "Tropical Fresh" aesthetic with city them
 - UI styling to match Tropical Fresh direction
 
 **Excludes:**
-- Animations beyond basic (stretch goal)
 - City-specific music (post-MVP)
+- Note: Pour and selection animations were implemented in Epic 1
 
 ### Dependencies
 Epic 1 (container rendering), Epic 4 (UI to style)

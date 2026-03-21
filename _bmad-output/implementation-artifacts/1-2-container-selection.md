@@ -29,7 +29,14 @@ so that I can indicate which container I want to pour from.
 - [x] Task 2: Implement selection visual highlight (AC: 1, 4)
   - [x] 2.1 Selection changes container body Image color: Idle=gray(0.7,0.7,0.7,0.5), Selected=yellow(1.0,0.9,0.4,0.8)
   - [x] 2.2 Deselect() restores IdleColor via UpdateHighlight()
-  - [x] 2.3 Immediate color swap — no animation
+  - [ ] 2.3 ~~Immediate color swap — no animation~~ → replaced by animated selection (Task 7)
+
+- [x] Task 7: Selection animation (AC: 1, 4)
+  - [x] 7.1 `AnimateSelect()` coroutine — lifts bottle 0.25 units + scales 108% + golden frame glow (EaseOutBack, 0.15s)
+  - [x] 7.2 `AnimateDeselect()` coroutine — smooth return to rest position/scale/color (EaseOutCubic, 0.12s)
+  - [x] 7.3 `ResetVisualState()` — instant snap to idle (used before pour animation takes over)
+  - [x] 7.4 `CaptureRestState()` — stores rest position/scale on Initialize for animation targets
+  - [x] 7.5 `StopSelectionAnim()` — cancels running coroutine to prevent conflicts
 
 - [x] Task 3: Implement touch input handler for container taps (AC: 1, 3, 5)
   - [x] 3.1 Added `IPointerClickHandler` directly to ContainerView (no separate TouchInputHandler needed — simpler)

@@ -48,11 +48,20 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 ---
 
 ## Animations & Micro-Interactions
-- **Liquid pour:** Smooth, organic sloshing animation — the juice feels alive
+
+### Implemented
+- **Bottle selection:** Lift 0.25 units + scale 108% + golden frame glow (EaseOutBack, 0.15s). Deselect smoothly returns to rest (EaseOutCubic, 0.12s)
+- **Pour animation:** 4-phase coroutine — lift source → tilt 25° toward target → transfer liquid slots one-by-one (0.08s each) → untilt and return to rest. All input blocked during animation (~0.5s total)
+
+### Not Yet Implemented
 - **Completion:** Shimmer ripple across completed glass
 - **UI feedback:** Gentle bounces on tap, soft transitions
 - **Ambient:** Subtle glass sparkles, floating light particles
-- **Overall:** Every interaction should feel satisfying and organic
+- **Screen transitions:** Fades/slides between menus
+
+### Design Goals
+- Every interaction should feel satisfying and organic
+- No external tween libraries — pure coroutine-based with easing functions
 
 ---
 

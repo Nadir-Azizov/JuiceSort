@@ -75,6 +75,7 @@
     <Compile Include="Assets\Scripts\Game\UI\Screens\SettingsScreen.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\ProgressionManager.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\StarCalculator.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\PourAnimator.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ThemeColorType.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\OptimalMoveEstimator.cs" />
     <Compile Include="Assets\Scripts\Game\Boot\BootLoader.cs" />

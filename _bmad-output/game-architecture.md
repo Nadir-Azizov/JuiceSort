@@ -419,7 +419,7 @@ Assets/
 ├── Art/
 │   ├── Sprites/                   # Containers, drinks, UI elements
 │   ├── Backgrounds/               # 76 city backgrounds (Addressable groups)
-│   └── Animations/                # Pour, completion, UI animations
+│   └── Animations/                # Coroutine-based (PourAnimator.cs, BottleContainerView selection anim)
 ├── Audio/
 │   ├── Music/                     # 2 tracks (morning/night)
 │   └── SFX/                       # Pour, UI, completion sounds
