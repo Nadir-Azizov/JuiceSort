@@ -5,32 +5,22 @@ using JuiceSort.Game.UI;
 namespace JuiceSort.Game.Puzzle
 {
     /// <summary>
-    /// SpriteRenderer-based container view using the Bottle Fill Shader Graph.
-    /// Renders liquid as colored bands inside a bottle mask, with a glass frame overlay.
+    /// SpriteRenderer-based container view using SpriteMask for liquid clipping.
+    /// Renders each liquid slot as an equal-height colored sprite inside the bottle mask.
     /// </summary>
     public class BottleContainerView : MonoBehaviour
     {
-        private SpriteRenderer _fillRenderer;   // mask sprite + fill shader
-        private SpriteRenderer _frameRenderer;  // glass outline overlay
+        private SpriteRenderer _frameRenderer;
+        private SpriteMask _mask;
+        private SpriteRenderer[] _slotRenderers;
         private ContainerData _data;
         private ContainerState _state;
         private int _containerIndex;
-        private MaterialPropertyBlock _propBlock;
-
-        // Shader property IDs (cached for performance)
-        private static readonly int FillAmountId = Shader.PropertyToID("_FillAmount");
-        private static readonly int SpriteHeightId = Shader.PropertyToID("_SpriteHeight");
-        private static readonly int BandScaleId = Shader.PropertyToID("_BandScale");
-        private static readonly int BandCountId = Shader.PropertyToID("_BandCount");
-        private static readonly int BandColor1Id = Shader.PropertyToID("_BandColor1");
-        private static readonly int BandColor2Id = Shader.PropertyToID("_BandColor2");
-        private static readonly int BandColor3Id = Shader.PropertyToID("_BandColor3");
-        private static readonly int BandColor4Id = Shader.PropertyToID("_BandColor4");
 
         // Cached assets
         private static Sprite _cachedMaskSprite;
         private static Sprite _cachedFrameSprite;
-        private static Material _cachedFillMaterial;
+        private static Sprite _cachedWhiteSprite;
 
         public ContainerState State => _state;
         public bool IsSelected => _state == ContainerState.Selected;
@@ -65,15 +55,18 @@ namespace JuiceSort.Game.Puzzle
             return _cachedFrameSprite;
         }
 
-        private static Material LoadFillMaterial()
+        private static Sprite LoadWhiteSprite()
         {
-            if (_cachedFillMaterial == null)
+            if (_cachedWhiteSprite == null)
             {
-                _cachedFillMaterial = Resources.Load<Material>("Bottles/BottleFillShaderGraph");
-                if (_cachedFillMaterial == null)
-                    Debug.LogError("[BottleContainerView] Failed to load BottleFillShaderGraph material from Resources/Bottles/");
+                var tex = new Texture2D(4, 4);
+                var pixels = new Color[16];
+                for (int i = 0; i < 16; i++) pixels[i] = Color.white;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                _cachedWhiteSprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
             }
-            return _cachedFillMaterial;
+            return _cachedWhiteSprite;
         }
 
         public void Initialize(ContainerData data, int containerIndex)
@@ -81,7 +74,6 @@ namespace JuiceSort.Game.Puzzle
             _data = data;
             _containerIndex = containerIndex;
             _state = ContainerState.Idle;
-            _propBlock = new MaterialPropertyBlock();
             Refresh();
         }
 
@@ -105,49 +97,24 @@ namespace JuiceSort.Game.Puzzle
 
         public void Refresh()
         {
-            if (_data == null || _fillRenderer == null || _propBlock == null)
+            if (_data == null || _slotRenderers == null)
                 return;
 
             int slotCount = _data.SlotCount;
-            int filledCount = _data.FilledCount();
 
-            // Fill amount: proportion of slots filled
-            float fillAmount = slotCount > 0 ? (float)filledCount / slotCount : 0f;
-
-            // Compute sprite height for the shader
-            float spriteHeight = 0f;
-            if (_fillRenderer.sprite != null)
-                spriteHeight = _fillRenderer.sprite.bounds.size.y * _fillRenderer.transform.lossyScale.y;
-
-            _fillRenderer.GetPropertyBlock(_propBlock);
-            _propBlock.SetFloat(FillAmountId, fillAmount);
-            _propBlock.SetFloat(SpriteHeightId, spriteHeight);
-            _propBlock.SetFloat(BandScaleId, 1f);
-            _propBlock.SetFloat(BandCountId, Mathf.Clamp(filledCount, 1, 4));
-
-            // Map slots to band colors
-            // Shader: BandColor1 = topmost, BandColor4 = bottom
-            // Container: slot 0 = bottom, slot N-1 = top
-            // So we reverse: slot[N-1] → BandColor1, slot[N-2] → BandColor2, etc.
-            var bandColorIds = new[] { BandColor1Id, BandColor2Id, BandColor3Id, BandColor4Id };
-            int bandIndex = 0;
-
-            // Gather filled colors from top to bottom
-            for (int i = slotCount - 1; i >= 0 && bandIndex < 4; i--)
+            for (int i = 0; i < _slotRenderers.Length && i < slotCount; i++)
             {
                 var drinkColor = _data.GetSlot(i);
                 if (drinkColor != DrinkColor.None)
                 {
-                    _propBlock.SetColor(bandColorIds[bandIndex], ThemeConfig.GetDrinkColor(drinkColor));
-                    bandIndex++;
+                    _slotRenderers[i].color = ThemeConfig.GetDrinkColor(drinkColor);
+                    _slotRenderers[i].enabled = true;
+                }
+                else
+                {
+                    _slotRenderers[i].enabled = false;
                 }
             }
-
-            // Fill remaining bands with transparent
-            for (; bandIndex < 4; bandIndex++)
-                _propBlock.SetColor(bandColorIds[bandIndex], new Color(0, 0, 0, 0));
-
-            _fillRenderer.SetPropertyBlock(_propBlock);
         }
 
         private void UpdateHighlight()
@@ -169,26 +136,50 @@ namespace JuiceSort.Game.Puzzle
         {
             var maskSprite = LoadMaskSprite();
             var frameSprite = LoadFrameSprite();
-            var fillMaterial = LoadFillMaterial();
+            var whiteSprite = LoadWhiteSprite();
 
             var go = new GameObject($"Bottle_{containerIndex}");
             go.transform.SetParent(parent, false);
             go.transform.localPosition = new Vector3(xPosition, 0f, 0f);
 
-            // Scale the bottle to a reasonable world-space size
-            // Mask sprite is ~510x1017 pixels at 100 PPU = ~5.1 x 10.17 units
-            // We want bottles about 0.9 x 1.8 units, so scale ~0.18
+            // Scale the bottle
             float bottleScale = 0.18f;
             go.transform.localScale = new Vector3(bottleScale, bottleScale, 1f);
 
-            // Fill renderer: mask sprite with shader material
-            var fillRenderer = go.AddComponent<SpriteRenderer>();
-            fillRenderer.sprite = maskSprite;
-            if (fillMaterial != null)
-                fillRenderer.sharedMaterial = fillMaterial;
-            fillRenderer.sortingOrder = 0;
+            // SpriteMask clips liquid sprites to the bottle shape
+            var mask = go.AddComponent<SpriteMask>();
+            mask.sprite = maskSprite;
 
-            // Frame renderer: glass outline on top
+            // Compute slot geometry from the mask sprite bounds
+            float spriteWidth = maskSprite != null ? maskSprite.bounds.size.x : 5f;
+            float spriteHeight = maskSprite != null ? maskSprite.bounds.size.y : 10f;
+
+            int slotCount = data.SlotCount;
+            float slotHeight = spriteHeight / slotCount;
+            // Bottom of sprite is at -spriteHeight/2
+            float bottomY = -spriteHeight / 2f;
+
+            // Create one colored sprite per slot (bottom-up: slot 0 = bottom)
+            var slotRenderers = new SpriteRenderer[slotCount];
+            for (int i = 0; i < slotCount; i++)
+            {
+                var slotGo = new GameObject($"Slot_{i}");
+                slotGo.transform.SetParent(go.transform, false);
+
+                float slotCenterY = bottomY + slotHeight * i + slotHeight / 2f;
+                slotGo.transform.localPosition = new Vector3(0f, slotCenterY, 0f);
+                // Scale the white sprite (1x1 unit) to fill the slot
+                slotGo.transform.localScale = new Vector3(spriteWidth, slotHeight, 1f);
+
+                var sr = slotGo.AddComponent<SpriteRenderer>();
+                sr.sprite = whiteSprite;
+                sr.sortingOrder = 0;
+                sr.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+
+                slotRenderers[i] = sr;
+            }
+
+            // Frame renderer: glass outline on top (not masked)
             var frameGo = new GameObject("Frame");
             frameGo.transform.SetParent(go.transform, false);
             frameGo.transform.localPosition = Vector3.zero;
@@ -196,8 +187,9 @@ namespace JuiceSort.Game.Puzzle
 
             var frameRenderer = frameGo.AddComponent<SpriteRenderer>();
             frameRenderer.sprite = frameSprite;
-            frameRenderer.sortingOrder = 1;
+            frameRenderer.sortingOrder = 2;
             frameRenderer.color = new Color(1f, 1f, 1f, 0.9f);
+            frameRenderer.maskInteraction = SpriteMaskInteraction.None;
 
             // Collider for tap detection
             var collider = go.AddComponent<BoxCollider2D>();
@@ -207,8 +199,9 @@ namespace JuiceSort.Game.Puzzle
                 collider.size = new Vector2(5f, 10f);
 
             var view = go.AddComponent<BottleContainerView>();
-            view._fillRenderer = fillRenderer;
             view._frameRenderer = frameRenderer;
+            view._mask = mask;
+            view._slotRenderers = slotRenderers;
             view.Initialize(data, containerIndex);
 
             return view;
