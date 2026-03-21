@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 21c43deeac75d084582c1793af0cf257
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 351750
+  packageName: Bottle Fill Shader Graph
+  packageVersion: 1.0
+  assetPath: Assets/GameAI/Bottle Fill Shader Graph/Samples/Demo.unity
+  uploadId: 839176

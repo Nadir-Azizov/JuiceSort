@@ -1,0 +1,104 @@
+# generated: 2026-03-20
+# last_updated: 2026-03-20
+# project: JuiceSort
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-20
+last_updated: 2026-03-20T00:00:00
+project: JuiceSort
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Core Puzzle Engine
+  epic-1: done
+  1-1-container-rendering: done
+  1-2-container-selection: done
+  1-3-pour-mechanic: done
+  1-4-pour-color-validation: done
+  1-5-pour-slot-validation: done
+  1-6-deselect-container: done
+  1-7-win-condition: done
+  1-8-undo-mechanic: done
+  1-9-level-restart: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Level Generation
+  epic-2: done  # reviewed
+  2-1-puzzle-generation: done
+  2-2-difficulty-scaling: done
+  2-3-progressive-challenge: done
+  2-4-solvability-guarantee: done
+  2-5-city-mood-assignment: done
+  2-6-difficulty-configuration: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Progression System
+  epic-3: done
+  3-1-star-rating: done
+  3-3-minimum-star-pass: done
+  3-4-star-gate-unlock: done
+  3-5-level-replay: done
+  3-6-auto-save: done
+  epic-3-retrospective: optional
+
+  # Epic 4: UI & Menus
+  epic-4: done
+  4-1-main-menu: done
+  4-2-scrollable-roadmap: done
+  4-4-gameplay-hud: done
+  4-5-level-complete-screen: done
+  4-7-settings-screen: done
+  epic-4-retrospective: optional
+
+  # Epic 5: Visual Theme
+  epic-5: done
+  5-1-container-visuals: done
+  5-2-city-backgrounds: done
+  5-4-morning-night-atmosphere: done
+  5-6-ui-styling: done
+  epic-5-retrospective: optional
+
+  # Epic 6: Audio
+  epic-6: done
+  6-1-ambient-music: done
+  6-2-pour-sound: done
+  epic-6-retrospective: optional
+
+  # Epic 7: Monetization & Publishing
+  epic-7: done
+  7-1-rewarded-ad-extra-bottle: done
+  7-4-play-store-requirements: done
+  epic-7-retrospective: optional
