@@ -28,8 +28,9 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
-        /// Executes a pour: removes one unit from source top, adds to target.
-        /// Returns true if pour succeeded, false if validation fails.
+        /// Executes a pour: moves all consecutive same-color units from source top
+        /// into target, limited by available empty slots. Returns true if at least
+        /// one unit was poured, false if validation fails.
         /// </summary>
         public static bool ExecutePour(PuzzleState state, int sourceIndex, int targetIndex)
         {
@@ -39,8 +40,16 @@ namespace JuiceSort.Game.Puzzle
             var source = state.GetContainer(sourceIndex);
             var target = state.GetContainer(targetIndex);
 
-            var color = source.RemoveTop();
-            target.AddToTop(color);
+            int available = source.GetTopColorCount();
+            int emptySlots = target.SlotCount - target.FilledCount();
+            int pourCount = available < emptySlots ? available : emptySlots;
+
+            for (int i = 0; i < pourCount; i++)
+            {
+                var color = source.RemoveTop();
+                target.AddToTop(color);
+            }
+
             return true;
         }
 

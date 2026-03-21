@@ -1,6 +1,7 @@
 # Story 3.1: Star Rating & Display
 
 Status: done
+Merges: 3.2 (star display on level complete screen)
 
 ## Story
 

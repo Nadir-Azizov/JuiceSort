@@ -161,7 +161,7 @@ namespace JuiceSort.Tests.EditMode
         // --- PuzzleEngine.ExecutePour tests ---
 
         [Test]
-        public void ExecutePour_ValidPour_MovesOneUnit()
+        public void ExecutePour_SingleTopColor_MovesOneUnit()
         {
             var source = new ContainerData(new[]
             {
@@ -239,27 +239,71 @@ namespace JuiceSort.Tests.EditMode
         }
 
         [Test]
-        public void ExecutePour_MultiplePours_EachMovesOneUnit()
+        public void ExecutePour_MultipleConsecutiveSameColor_PoursAll()
         {
+            // Source has 3 consecutive TropicalTeal on top, target is empty
             var source = new ContainerData(new[]
             {
-                DrinkColor.MangoAmber, DrinkColor.DeepBerry,
-                DrinkColor.TropicalTeal, DrinkColor.None
+                DrinkColor.MangoAmber, DrinkColor.TropicalTeal,
+                DrinkColor.TropicalTeal, DrinkColor.TropicalTeal
             });
             var target = new ContainerData(4);
             var state = new PuzzleState(new[] { source, target });
 
             PuzzleEngine.ExecutePour(state, 0, 1);
+
+            // All 3 TropicalTeal should pour in one move
+            Assert.AreEqual(1, source.FilledCount(), "Only MangoAmber should remain");
+            Assert.AreEqual(DrinkColor.MangoAmber, source.GetTopColor());
+            Assert.AreEqual(3, target.FilledCount());
             Assert.AreEqual(DrinkColor.TropicalTeal, target.GetSlot(0));
+            Assert.AreEqual(DrinkColor.TropicalTeal, target.GetSlot(1));
+            Assert.AreEqual(DrinkColor.TropicalTeal, target.GetSlot(2));
+        }
+
+        [Test]
+        public void ExecutePour_MultiPour_LimitedByTargetSpace()
+        {
+            // Source has 3 consecutive Mango, target has 1 empty slot
+            var source = new ContainerData(new[]
+            {
+                DrinkColor.DeepBerry, DrinkColor.MangoAmber,
+                DrinkColor.MangoAmber, DrinkColor.MangoAmber
+            });
+            var target = new ContainerData(new[]
+            {
+                DrinkColor.MangoAmber, DrinkColor.MangoAmber,
+                DrinkColor.MangoAmber, DrinkColor.None
+            });
+            var state = new PuzzleState(new[] { source, target });
+
+            PuzzleEngine.ExecutePour(state, 0, 1);
+
+            // Only 1 should pour (limited by target space)
+            Assert.AreEqual(3, source.FilledCount(), "Source should still have 3 filled");
+            Assert.AreEqual(DrinkColor.MangoAmber, source.GetTopColor());
+            Assert.IsTrue(target.IsFull(), "Target should be full");
+        }
+
+        [Test]
+        public void ExecutePour_TwoConsecutive_PoursTwoIntoEmptyTarget()
+        {
+            // Source has 2 consecutive DeepBerry on top
+            var source = new ContainerData(new[]
+            {
+                DrinkColor.MangoAmber, DrinkColor.TropicalTeal,
+                DrinkColor.DeepBerry, DrinkColor.DeepBerry
+            });
+            var target = new ContainerData(4);
+            var state = new PuzzleState(new[] { source, target });
+
+            PuzzleEngine.ExecutePour(state, 0, 1);
+
             Assert.AreEqual(2, source.FilledCount());
-
-            PuzzleEngine.ExecutePour(state, 0, 1);
+            Assert.AreEqual(DrinkColor.TropicalTeal, source.GetTopColor());
+            Assert.AreEqual(2, target.FilledCount());
+            Assert.AreEqual(DrinkColor.DeepBerry, target.GetSlot(0));
             Assert.AreEqual(DrinkColor.DeepBerry, target.GetSlot(1));
-            Assert.AreEqual(1, source.FilledCount());
-
-            PuzzleEngine.ExecutePour(state, 0, 1);
-            Assert.AreEqual(DrinkColor.MangoAmber, target.GetSlot(2));
-            Assert.IsTrue(source.IsEmpty());
         }
 
         // --- Move counter logic test ---

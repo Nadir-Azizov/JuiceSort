@@ -1,6 +1,7 @@
 # Story 3.6: Save & Load System
 
 Status: done
+Merges: 3.7 (progress persistence across sessions)
 
 ## Story
 

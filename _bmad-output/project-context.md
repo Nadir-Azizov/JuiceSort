@@ -205,7 +205,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **Puzzle-Specific Gotchas:**
 - Level seed must produce identical puzzle on replay — use `System.Random` with seed, not `UnityEngine.Random`
 - Undo stack is fixed at 3 — when full, oldest snapshot drops silently (no error)
-- Pour validation must check: matching color OR empty target, AND available slot — both conditions
+- Pour validation must check: matching color OR empty target, AND available slot — both conditions. Pour moves all consecutive same-color units from top, limited by target empty slots
 - Win detection must check ALL containers, not just the one that received the pour
 - Star rating depends on optimal move count — this must be calculated or estimated per generated puzzle
 

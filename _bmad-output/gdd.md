@@ -182,10 +182,10 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 
 **1. Pour (Core Action)**
 - Tap a source container, then tap a target container to pour
-- Pours **one unit at a time** (one color layer per tap)
+- Pours **all consecutive same-color units** from the top in one tap, limited by available empty slots in the target
 - Can only pour onto a **matching color** at the top of the target container
 - Can **always pour into an empty container**
-- Can only pour if the target container has an **empty slot available**
+- Can only pour if the target container has at least **one empty slot available**
 - Serves pillars: Relaxation (simple, intuitive), Visual Delight (satisfying pour animation)
 
 **2. Sort (Goal Mechanic)**
@@ -195,7 +195,7 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 - Serves pillars: Relaxation (satisfying completion), Discovery (unlocks next city)
 
 **3. Undo (Recovery Mechanic)**
-- Goes back **one pour at a time**
+- Goes back **one pour action at a time** (reverses the entire multi-unit pour)
 - Limited uses per level, scaled by difficulty:
   - First 10 levels: 1 undo per level
   - Medium levels: 2 undos per level
@@ -231,7 +231,7 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 | Action | Input | Notes |
 |---|---|---|
 | Select container | Tap container | Highlights selected container |
-| Pour | Tap target container | Pours one unit if valid move |
+| Pour | Tap target container | Pours all consecutive same-color units (limited by target space) |
 | Deselect | Tap selected container again or tap empty space | Cancel selection |
 | Undo | Tap undo button | UI button, limited uses |
 | Extra Bottle | Tap "+" button | Triggers ad, then adds empty container |
@@ -510,6 +510,51 @@ None — no voice acting planned.
 - **Relaxation:** Warm colors, soft sounds, no visual clutter — everything feels calming
 - **Visual Delight:** Premium look that stands out from generic water sort games
 - **Discovery:** Each city background feels fresh and recognizable — players notice they're somewhere new
+
+---
+
+## Asset Inventory
+
+### Status Legend
+- **Implemented** — asset exists in project
+- **Placeholder** — code references it but asset is missing/stub
+- **Not Started** — not yet created or sourced
+
+### Visual Assets
+
+| Asset | Count | Format | Status | Location |
+|---|---|---|---|---|
+| Bottle frame sprite | 1 | PNG | Implemented | Resources/Bottles/bottle_frame.png |
+| Bottle mask sprite | 1 | PNG | Implemented | Resources/Bottles/bottle_mask.png |
+| City backgrounds | 76 (38 cities × 2 moods) | PNG | Not Started | Addressables (planned) |
+| Landmark icons/signs | 38 | PNG | Not Started | Addressables (planned) |
+| UI sprites (buttons, panels) | ~10-15 | PNG | Placeholder | TBD |
+| App icon | 1 | PNG | Not Started | — |
+| Play Store screenshots | 5-8 | PNG | Not Started | — |
+
+### Audio Assets
+
+| Asset | Count | Format | Status | Location |
+|---|---|---|---|---|
+| Morning music track | 1 | OGG | Not Started | — |
+| Night music track | 1 | OGG | Not Started | — |
+| Pour SFX | 1-3 variants | WAV | Not Started | — |
+| Select SFX | 1 | WAV | Not Started | — |
+| Deselect SFX | 1 | WAV | Not Started | — |
+| Level complete SFX | 1 | WAV | Not Started | — |
+| Star award SFX | 1 | WAV | Not Started | — |
+| UI tap SFX | 1 | WAV | Not Started | — |
+
+### Font Assets
+
+| Asset | Count | Format | Status | Location |
+|---|---|---|---|---|
+| Primary UI font | 1 | TTF/OTF | Not Started | — |
+
+### Notes
+- City backgrounds are loaded via Addressables to manage memory — each loaded on demand, released after
+- Audio files referenced by `AudioClipType` enum in code but no actual clips are wired yet
+- Full visual spec: `_bmad-output/visual-direction-tropical-fresh.md`
 
 ---
 

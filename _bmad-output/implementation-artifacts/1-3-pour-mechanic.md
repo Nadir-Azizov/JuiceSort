@@ -7,13 +7,13 @@ Status: done
 ## Story
 
 As a player,
-I want to tap another container to pour one unit of liquid,
+I want to tap another container to pour liquid,
 so that I can move drinks between containers to sort them.
 
 ## Acceptance Criteria
 
-1. **Pour execution** — When a source container is selected and a different container is tapped, one unit (topmost color) is removed from the source and added to the target
-2. **One unit per tap** — Each pour moves exactly one color layer (the topmost non-empty slot of the source)
+1. **Pour execution** — When a source container is selected and a different container is tapped, all consecutive same-color units from the top of the source are moved to the target, limited by available empty slots
+2. **Multi-unit pour** — Each pour moves all consecutive same-color layers from the top in one tap (e.g., 2 same-color on top + 2 empty slots in target = 2 units poured)
 3. **Target receives liquid** — The poured color appears in the lowest empty slot of the target container
 4. **Visuals update** — Both source and target container visuals refresh immediately after the pour
 5. **Deselect after pour** — The source container is deselected after a successful pour

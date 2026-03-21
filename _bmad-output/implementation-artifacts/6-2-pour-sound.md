@@ -1,6 +1,7 @@
 # Story 6.2: Gameplay Sound Effects
 
 Status: done
+Merges: 6.3 (UI interaction sounds), 6.4 (level complete sound), 6.5 (SFX toggle portion)
 
 ## Story
 

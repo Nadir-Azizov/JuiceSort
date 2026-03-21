@@ -1,6 +1,7 @@
 # Story 7.1: Extra Bottle & Rewarded Ad Framework
 
 Status: done
+Merges: 7.2 (max 2 extra bottles per level), 7.3 (no forced ads)
 
 ## Story
 

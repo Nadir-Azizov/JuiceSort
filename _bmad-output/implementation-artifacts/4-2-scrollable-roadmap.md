@@ -1,6 +1,7 @@
 # Story 4.2: Scrollable Roadmap & Level Start
 
 Status: done
+Merges: 4.3 (tap to start level), 5.5 (roadmap visual journey)
 
 ## Story
 

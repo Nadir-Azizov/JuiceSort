@@ -2,15 +2,17 @@
 
 ## Epic Overview
 
-| # | Epic Name | Dependencies | Deliverable |
-|---|---|---|---|
-| 1 | Core Puzzle Engine | None | Playable pour/sort puzzle |
-| 2 | Level Generation | Epic 1 | Unlimited generated puzzles |
-| 3 | Progression System | Epic 1, 2 | Stars, roadmap, batch gates |
-| 4 | UI & Menus | Epic 1 | Full navigation flow |
-| 5 | Visual Theme | Epic 1, 4 | Tropical Fresh look with cities |
-| 6 | Audio | Epic 1 | Music and sound effects |
-| 7 | Monetization & Publishing | Epic 1-6 | Play Store ready build |
+| # | Epic Name | Dependencies | Stories | Status |
+|---|---|---|---|---|
+| 1 | Core Puzzle Engine | None | 9 implemented | Done |
+| 2 | Level Generation | Epic 1 | 6 implemented | Done |
+| 3 | Progression System | Epic 1, 2 | 5 implemented, 2 merged | Done |
+| 4 | UI & Menus | Epic 1 | 5 implemented, 2 merged | Done |
+| 5 | Visual Theme | Epic 1, 4 | 4 implemented, 2 merged | Done |
+| 6 | Audio | Epic 1 | 2 implemented, 3 merged | Done |
+| 7 | Monetization & Publishing | Epic 1-6 | 2 implemented, 4 merged | Done |
+
+**Total: 33 implemented stories / 46 originally planned (13 merged during development)**
 
 ---
 
@@ -23,7 +25,7 @@ Get the fundamental puzzle mechanics working — a player can pour drinks betwee
 **Includes:**
 - Container data model (slots, colors)
 - Tap-to-select container interaction
-- Pour mechanic (one unit, matching color or empty, slot availability check)
+- Pour mechanic (multi-unit consecutive same-color, matching color or empty, slot availability check)
 - Pour animation (placeholder is fine)
 - Win condition detection (all containers sorted)
 - Undo mechanic (single pour reversal, limited count)
@@ -43,15 +45,15 @@ None — this is the foundation.
 A single hand-crafted test puzzle that can be played to completion with pour, sort, undo, and restart.
 
 ### Stories
-- As a player, I can see containers with colored liquid on screen
-- As a player, I can tap a container to select it (visual highlight)
-- As a player, I can tap another container to pour one unit of liquid
-- As a player, I can only pour onto matching colors or empty containers
-- As a player, I can only pour if the target has an empty slot
-- As a player, I can deselect by tapping the same container or empty space
-- As a player, I see the level complete when all containers are sorted
-- As a player, I can undo my last pour (limited uses)
-- As a player, I can restart the level at any time
+- **1.1** As a player, I can see containers with colored liquid on screen → [1-1-container-rendering.md](implementation-artifacts/1-1-container-rendering.md)
+- **1.2** As a player, I can tap a container to select it (visual highlight) → [1-2-container-selection.md](implementation-artifacts/1-2-container-selection.md)
+- **1.3** As a player, I can tap another container to pour liquid (all consecutive same-color units) → [1-3-pour-mechanic.md](implementation-artifacts/1-3-pour-mechanic.md)
+- **1.4** As a player, I can only pour onto matching colors or empty containers → [1-4-pour-color-validation.md](implementation-artifacts/1-4-pour-color-validation.md)
+- **1.5** As a player, I can only pour if the target has an empty slot → [1-5-pour-slot-validation.md](implementation-artifacts/1-5-pour-slot-validation.md)
+- **1.6** As a player, I can deselect by tapping the same container or empty space → [1-6-deselect-container.md](implementation-artifacts/1-6-deselect-container.md)
+- **1.7** As a player, I see the level complete when all containers are sorted → [1-7-win-condition.md](implementation-artifacts/1-7-win-condition.md)
+- **1.8** As a player, I can undo my last pour (limited uses) → [1-8-undo-mechanic.md](implementation-artifacts/1-8-undo-mechanic.md)
+- **1.9** As a player, I can restart the level at any time → [1-9-level-restart.md](implementation-artifacts/1-9-level-restart.md)
 
 ---
 
@@ -80,12 +82,12 @@ Epic 1 (container data model and mechanics)
 Play through 20+ generated levels with visible difficulty increase. Every puzzle is solvable.
 
 ### Stories
-- As a developer, the system generates a solvable puzzle from difficulty parameters
-- As a developer, difficulty parameters scale based on level number
-- As a player, each new level feels slightly more challenging than the last
-- As a player, I never encounter an unsolvable puzzle
-- As a developer, each level is assigned a random city and mood
-- As a developer, I can configure difficulty scaling formulas
+- **2.1** As a developer, the system generates a solvable puzzle from difficulty parameters → [2-1-puzzle-generation.md](implementation-artifacts/2-1-puzzle-generation.md)
+- **2.2** As a developer, difficulty parameters scale based on level number → [2-2-difficulty-scaling.md](implementation-artifacts/2-2-difficulty-scaling.md)
+- **2.3** As a player, each new level feels slightly more challenging than the last → [2-3-progressive-challenge.md](implementation-artifacts/2-3-progressive-challenge.md)
+- **2.4** As a player, I never encounter an unsolvable puzzle → [2-4-solvability-guarantee.md](implementation-artifacts/2-4-solvability-guarantee.md)
+- **2.5** As a developer, each level is assigned a random city and mood → [2-5-city-mood-assignment.md](implementation-artifacts/2-5-city-mood-assignment.md)
+- **2.6** As a developer, I can configure difficulty scaling formulas → [2-6-difficulty-configuration.md](implementation-artifacts/2-6-difficulty-configuration.md)
 
 ---
 
@@ -116,13 +118,13 @@ Epic 1 (level completion), Epic 2 (level generation, optimal move calculation)
 Complete levels, earn stars, replay for better ratings, and unlock batch gates.
 
 ### Stories
-- As a player, I earn 1-3 stars based on my move efficiency when completing a level
-- As a player, I see my star rating on the level complete screen
-- As a player, I need minimum 1 star to pass a level
-- As a player, I need ~80% of possible stars to unlock the next batch of 50 levels
-- As a player, I can replay any completed level to improve my star rating
-- As a player, my progress is saved automatically
-- As a player, my progress persists when I close and reopen the app
+- **3.1** As a player, I earn 1-3 stars based on my move efficiency when completing a level → [3-1-star-rating.md](implementation-artifacts/3-1-star-rating.md)
+- ~~**3.2** As a player, I see my star rating on the level complete screen~~ *(merged into 3.1 — star display is part of star rating)*
+- **3.3** As a player, I need minimum 1 star to pass a level → [3-3-minimum-star-pass.md](implementation-artifacts/3-3-minimum-star-pass.md)
+- **3.4** As a player, I need ~80% of possible stars to unlock the next batch of 50 levels → [3-4-star-gate-unlock.md](implementation-artifacts/3-4-star-gate-unlock.md)
+- **3.5** As a player, I can replay any completed level to improve my star rating → [3-5-level-replay.md](implementation-artifacts/3-5-level-replay.md)
+- **3.6** As a player, my progress is saved automatically and persists across sessions → [3-6-auto-save.md](implementation-artifacts/3-6-auto-save.md)
+- ~~**3.7** As a player, my progress persists when I close and reopen the app~~ *(merged into 3.6 — persistence is part of auto-save)*
 
 ---
 
@@ -152,13 +154,13 @@ Epic 1 (in-game interactions)
 Navigate from main menu → roadmap → level → completion → next level. Full flow working.
 
 ### Stories
-- As a player, I see a main menu when I open the app
-- As a player, I can view my progress on a scrollable roadmap
-- As a player, I can tap to start the next available level
-- As a player, I see undo count, move count, and restart button during gameplay
-- As a player, I see my star rating and can continue or replay after completing a level
-- As a player, I see a notification when I unlock the next batch of levels
-- As a player, I can access settings from the main menu
+- **4.1** As a player, I see a main menu when I open the app → [4-1-main-menu.md](implementation-artifacts/4-1-main-menu.md)
+- **4.2** As a player, I can view my progress on a scrollable roadmap → [4-2-scrollable-roadmap.md](implementation-artifacts/4-2-scrollable-roadmap.md)
+- ~~**4.3** As a player, I can tap to start the next available level~~ *(merged into 4.2 — level selection is part of roadmap)*
+- **4.4** As a player, I see undo count, move count, and restart button during gameplay → [4-4-gameplay-hud.md](implementation-artifacts/4-4-gameplay-hud.md)
+- **4.5** As a player, I see my star rating and can continue or replay after completing a level → [4-5-level-complete-screen.md](implementation-artifacts/4-5-level-complete-screen.md)
+- ~~**4.6** As a player, I see a notification when I unlock the next batch of levels~~ *(merged into 4.5 — batch unlock notification is part of level complete flow)*
+- **4.7** As a player, I can access settings from the main menu → [4-7-settings-screen.md](implementation-artifacts/4-7-settings-screen.md)
 
 ---
 
@@ -189,12 +191,12 @@ Epic 1 (container rendering), Epic 4 (UI to style)
 The game looks like JuiceSort — beautiful, themed, and visually distinct from competitors.
 
 ### Stories
-- As a player, I see beautiful rounded glass containers with drink-themed colors
-- As a player, I see a unique city background with a landmark for each level
-- As a player, I see the city name and country on screen
-- As a player, morning levels feel like a bright café and night levels feel like a cozy bar
-- As a player, the roadmap looks like a visual journey across the world
-- As a player, the entire UI feels premium and cohesive
+- **5.1** As a player, I see beautiful rounded glass containers with drink-themed colors → [5-1-container-visuals.md](implementation-artifacts/5-1-container-visuals.md)
+- **5.2** As a player, I see a unique city background with a landmark for each level → [5-2-city-backgrounds.md](implementation-artifacts/5-2-city-backgrounds.md)
+- ~~**5.3** As a player, I see the city name and country on screen~~ *(merged into 5.1 — city/country display is part of container visuals & ThemeConfig)*
+- **5.4** As a player, morning levels feel like a bright café and night levels feel like a cozy bar → [5-4-morning-night-atmosphere.md](implementation-artifacts/5-4-morning-night-atmosphere.md)
+- ~~**5.5** As a player, the roadmap looks like a visual journey across the world~~ *(merged into 4.2 — roadmap visual design handled in scrollable roadmap story)*
+- **5.6** As a player, the entire UI feels premium and cohesive → [5-6-ui-styling.md](implementation-artifacts/5-6-ui-styling.md)
 
 ---
 
@@ -224,11 +226,11 @@ Epic 1 (gameplay events to trigger sounds)
 The game sounds as good as it looks — satisfying pours, calming music, polished feedback.
 
 ### Stories
-- As a player, I hear calming music that matches the morning or night mood
-- As a player, I hear a satisfying pour sound when I move liquid
-- As a player, I hear pleasant sounds for UI interactions
-- As a player, I hear a celebration sound when I complete a level
-- As a player, I can toggle music and sound effects on/off
+- **6.1** As a player, I hear calming music that matches the morning or night mood → [6-1-ambient-music.md](implementation-artifacts/6-1-ambient-music.md)
+- **6.2** As a player, I hear a satisfying pour sound when I move liquid → [6-2-pour-sound.md](implementation-artifacts/6-2-pour-sound.md)
+- ~~**6.3** As a player, I hear pleasant sounds for UI interactions~~ *(merged into 6.2 — UI SFX consolidated into gameplay sound effects)*
+- ~~**6.4** As a player, I hear a celebration sound when I complete a level~~ *(merged into 6.2 — level complete SFX is part of gameplay sounds)*
+- ~~**6.5** As a player, I can toggle music and sound effects on/off~~ *(split across 6.1 music toggle + 6.2 SFX toggle)*
 
 ---
 
@@ -258,9 +260,9 @@ All previous epics (game must be feature-complete)
 A published JuiceSort game on the Google Play Store with working ad monetization.
 
 ### Stories
-- As a player, I can tap "+" to watch an ad and receive an extra empty bottle
-- As a player, I can use max 2 extra bottles per level
-- As a player, ads only appear when I choose to watch them (no forced ads)
-- As a developer, the app meets Play Store requirements
-- As a developer, the app is optimized for size and performance
-- As a developer, the game is published and downloadable on the Play Store
+- **7.1** As a player, I can tap "+" to watch an ad and receive an extra empty bottle → [7-1-rewarded-ad-extra-bottle.md](implementation-artifacts/7-1-rewarded-ad-extra-bottle.md)
+- ~~**7.2** As a player, I can use max 2 extra bottles per level~~ *(merged into 7.1 — max 2 limit is part of extra bottle feature)*
+- ~~**7.3** As a player, ads only appear when I choose to watch them (no forced ads)~~ *(merged into 7.1 — no forced ads is part of rewarded ad design)*
+- **7.4** As a developer, the app meets Play Store requirements → [7-4-play-store-requirements.md](implementation-artifacts/7-4-play-store-requirements.md)
+- ~~**7.5** As a developer, the app is optimized for size and performance~~ *(merged into 7.4 — optimization is part of Play Store readiness)*
+- ~~**7.6** As a developer, the game is published and downloadable on the Play Store~~ *(merged into 7.4 — publication is the deliverable of Play Store requirements)*

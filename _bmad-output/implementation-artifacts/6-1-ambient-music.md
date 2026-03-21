@@ -1,6 +1,7 @@
 # Story 6.1: Audio Manager, Mood Music & Settings
 
 Status: done
+Merges: 6.5 (music toggle — music toggle portion)
 
 ## Story
 

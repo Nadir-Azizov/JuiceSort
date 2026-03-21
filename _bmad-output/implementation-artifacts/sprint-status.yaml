@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-20T00:00:00
+last_updated: 2026-03-21T00:00:00
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -65,40 +65,41 @@ development_status:
   2-6-difficulty-configuration: done
   epic-2-retrospective: optional
 
-  # Epic 3: Progression System
+  # Epic 3: Progression System (5 implemented, 2 merged)
   epic-3: done
-  3-1-star-rating: done
+  3-1-star-rating: done            # also covers 3.2 (star display)
   3-3-minimum-star-pass: done
   3-4-star-gate-unlock: done
   3-5-level-replay: done
-  3-6-auto-save: done
+  3-6-auto-save: done              # also covers 3.7 (persistence across sessions)
   epic-3-retrospective: optional
 
-  # Epic 4: UI & Menus
+  # Epic 4: UI & Menus (5 implemented, 2 merged)
   epic-4: done
   4-1-main-menu: done
-  4-2-scrollable-roadmap: done
+  4-2-scrollable-roadmap: done     # also covers 4.3 (tap to start level)
   4-4-gameplay-hud: done
-  4-5-level-complete-screen: done
+  4-5-level-complete-screen: done  # also covers 4.6 (batch unlock notification)
   4-7-settings-screen: done
   epic-4-retrospective: optional
 
-  # Epic 5: Visual Theme
+  # Epic 5: Visual Theme (4 implemented, 2 merged)
   epic-5: done
-  5-1-container-visuals: done
+  5-1-container-visuals: done      # also covers 5.3 (city name/country display)
   5-2-city-backgrounds: done
   5-4-morning-night-atmosphere: done
   5-6-ui-styling: done
+  # 5.5 (roadmap visual journey) merged into 4-2-scrollable-roadmap
   epic-5-retrospective: optional
 
-  # Epic 6: Audio
+  # Epic 6: Audio (2 implemented, 3 merged)
   epic-6: done
-  6-1-ambient-music: done
-  6-2-pour-sound: done
+  6-1-ambient-music: done          # also covers 6.5 (music toggle)
+  6-2-pour-sound: done             # also covers 6.3 (UI sounds), 6.4 (completion sound), 6.5 (SFX toggle)
   epic-6-retrospective: optional
 
-  # Epic 7: Monetization & Publishing
+  # Epic 7: Monetization & Publishing (2 implemented, 4 merged)
   epic-7: done
-  7-1-rewarded-ad-extra-bottle: done
-  7-4-play-store-requirements: done
+  7-1-rewarded-ad-extra-bottle: done  # also covers 7.2 (max 2 per level), 7.3 (no forced ads)
+  7-4-play-store-requirements: done   # also covers 7.5 (optimization), 7.6 (publication)
   epic-7-retrospective: optional

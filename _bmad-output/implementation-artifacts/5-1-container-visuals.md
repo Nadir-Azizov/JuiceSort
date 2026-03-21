@@ -1,6 +1,7 @@
 # Story 5.1: Container Visuals & ThemeConfig
 
 Status: done
+Merges: 5.3 (city name and country display)
 
 ## Story
 

@@ -1,6 +1,7 @@
 # Story 4.5: Level Complete & Gate Screens
 
 Status: done
+Merges: 4.6 (batch unlock notification)
 
 ## Story
 

@@ -1,6 +1,7 @@
 # Story 7.4: Build & Publish Preparation
 
 Status: done
+Merges: 7.5 (app optimization), 7.6 (Play Store publication)
 
 ## Story
 
