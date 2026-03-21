@@ -212,6 +212,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `_isAnimating` flag on GameplayManager blocks all input (tap, undo, restart, back, extra bottle) during pour animation
 - Pour animation indices (sourceTopIndex, targetFirstEmpty) must be captured BEFORE `ExecutePour` mutates the data — animation is visual-only, data changes immediately
 - Selection animation lives in `BottleContainerView` — `ResetVisualState()` snaps to idle instantly when transitioning to pour
+- Re-select on failed pour: when CanPour fails and tapped bottle is non-empty, deselect source and select target — never leave the player with a dead tap
+- Closed bottle: `IsSorted() && !IsEmpty()` = full with one color. Cannot be selected, poured from, or poured into. Distinct from empty sorted bottles which are valid pour targets. `CanPour` must reject closed bottles as both source and target
 
 ---
 

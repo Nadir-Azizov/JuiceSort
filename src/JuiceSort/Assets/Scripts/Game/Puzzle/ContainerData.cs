@@ -124,6 +124,15 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
+        /// A completed container is full with one color (sorted and non-empty).
+        /// Completed containers are locked — cannot be selected, poured from, or poured into.
+        /// </summary>
+        public bool IsCompleted()
+        {
+            return !IsEmpty() && IsSorted();
+        }
+
+        /// <summary>
         /// Returns the number of filled (non-None) slots.
         /// </summary>
         public int FilledCount()

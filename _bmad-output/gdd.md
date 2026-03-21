@@ -186,6 +186,8 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 - Can only pour onto a **matching color** at the top of the target container
 - Can **always pour into an empty container**
 - Can only pour if the target container has at least **one empty slot available**
+- **Re-select on failed pour** — If the target can't receive a pour (color mismatch or full), the source is deselected and the target becomes the new selection (if non-empty). This allows rapid sequential bottle selection without a wasted tap.
+- **Closed bottle** — A bottle that is completely full with the same color is "closed" (completed). It cannot be selected, poured from, or poured into. Tapping a closed bottle does nothing. This prevents accidental disruption of already-solved bottles.
 - Serves pillars: Relaxation (simple, intuitive), Visual Delight (satisfying pour animation)
 
 **2. Sort (Goal Mechanic)**
@@ -241,7 +243,7 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 
 - **Responsive:** Immediate visual feedback on tap — container lifts, scales up (108%), and glows golden with an ease-out-back bounce (0.15s)
 - **Satisfying:** Pour animation lifts source bottle, tilts toward target, transfers liquid slot-by-slot, then returns to rest (coroutine-based, ~0.5s total)
-- **Forgiving:** Tapping an invalid target does nothing (no error state, no punishment)
+- **Forgiving:** Tapping an invalid pour target re-selects that bottle instead of doing nothing — no dead taps, no frustration
 - **One-handed:** All interactions reachable with thumb on a standard phone
 
 ### Accessibility Controls

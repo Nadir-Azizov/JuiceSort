@@ -31,6 +31,8 @@ namespace JuiceSort.Game.Puzzle
 
         private static readonly Color SelectedFrameColor = new Color(1f, 0.88f, 0.3f, 1f);
         private static readonly Color IdleFrameColor = new Color(1f, 1f, 1f, 0.9f);
+        private static readonly Color CompletedFrameColor = new Color(0.6f, 1f, 0.6f, 0.7f);
+        private const float CompletedLiquidDim = 0.7f;
 
         // Cached assets
         private static Sprite _cachedMaskSprite;
@@ -202,6 +204,7 @@ namespace JuiceSort.Game.Puzzle
             if (_data == null || _slotRenderers == null)
                 return;
 
+            bool completed = _data.IsCompleted();
             int slotCount = _data.SlotCount;
 
             for (int i = 0; i < _slotRenderers.Length && i < slotCount; i++)
@@ -209,13 +212,35 @@ namespace JuiceSort.Game.Puzzle
                 var drinkColor = _data.GetSlot(i);
                 if (drinkColor != DrinkColor.None)
                 {
-                    _slotRenderers[i].color = ThemeConfig.GetDrinkColor(drinkColor);
+                    var color = ThemeConfig.GetDrinkColor(drinkColor);
+                    if (completed)
+                    {
+                        color.r *= CompletedLiquidDim;
+                        color.g *= CompletedLiquidDim;
+                        color.b *= CompletedLiquidDim;
+                    }
+                    _slotRenderers[i].color = color;
                     _slotRenderers[i].enabled = true;
                 }
                 else
                 {
                     _slotRenderers[i].enabled = false;
                 }
+            }
+
+            // Update frame color for completed state (only when idle — don't override selection)
+            if (completed && _state != ContainerState.Selected)
+            {
+                _state = ContainerState.Completed;
+                if (_frameRenderer != null)
+                    _frameRenderer.color = CompletedFrameColor;
+            }
+            else if (_state == ContainerState.Completed && !completed)
+            {
+                // Undo may un-complete a bottle
+                _state = ContainerState.Idle;
+                if (_frameRenderer != null)
+                    _frameRenderer.color = IdleFrameColor;
             }
         }
 
@@ -251,6 +276,9 @@ namespace JuiceSort.Game.Puzzle
 
         private void OnMouseDown()
         {
+            if (_state == ContainerState.Completed)
+                return;
+
             OnTapped?.Invoke(_containerIndex);
         }
 

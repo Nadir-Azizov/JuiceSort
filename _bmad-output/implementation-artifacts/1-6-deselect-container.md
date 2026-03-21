@@ -17,6 +17,7 @@ so that I can change my mind about which container to pour from.
 3. **Visual feedback** — Container returns to idle appearance (gray) after deselection
 4. **Selection state cleared** — SelectedContainerIndex returns to -1 after deselection
 5. **No action on double-deselect** — If nothing is selected and player taps empty space, nothing happens
+6. **Re-select on failed pour** — When a source is selected and the player taps a non-empty bottle that can't receive a pour (color mismatch or target full), the source deselects and the tapped bottle becomes the new selection. Empty bottles that can't receive are ignored (source stays selected).
 
 ## Tasks / Subtasks
 
@@ -29,6 +30,11 @@ so that I can change my mind about which container to pour from.
   - [x] 2.2 Full-screen transparent Image created in PuzzleBoardView before containers (renders behind)
   - [x] 2.3 BackgroundTapCatcher.OnTapped → PuzzleBoardView.OnBackgroundTapped → GameplayManager.DeselectCurrent()
   - [x] 2.4 Containers render on top — container taps take priority
+
+- [x] Task 4: Re-select on failed pour (AC: 6)
+  - [x] 4.1 In `GameplayManager.AttemptPour`, when `CanPour` returns false: `DeselectCurrent()` then `SelectContainer(targetIndex)` if non-empty and not completed
+  - [x] 4.2 Deselect SFX plays via `DeselectCurrent()` → `Deselect()`, select SFX plays via `SelectContainer()`
+  - [x] 4.3 Empty or completed bottles skip re-select — source would deselect but no new selection (handled by IsEmpty + IsCompleted guard)
 
 - [x] Task 3: Write tests (AC: all)
   - [x] 3.1 TapSameContainer_Deselects — selected → tap same → -1

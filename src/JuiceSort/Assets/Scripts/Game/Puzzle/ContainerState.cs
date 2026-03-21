@@ -5,6 +5,7 @@ namespace JuiceSort.Game.Puzzle
         Idle,
         Selected,
         Pouring,
-        Receiving
+        Receiving,
+        Completed
     }
 }

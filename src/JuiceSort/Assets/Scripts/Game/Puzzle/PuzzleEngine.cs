@@ -8,7 +8,8 @@ namespace JuiceSort.Game.Puzzle
     {
         /// <summary>
         /// Validates whether a pour from source to target is allowed.
-        /// Rules: source not empty, target not full, target empty OR top colors match.
+        /// Rules: source not empty, source not completed (closed), target not full,
+        /// target empty OR top colors match.
         /// </summary>
         public static bool CanPour(PuzzleState state, int sourceIndex, int targetIndex)
         {
@@ -16,6 +17,9 @@ namespace JuiceSort.Game.Puzzle
             var target = state.GetContainer(targetIndex);
 
             if (source.IsEmpty())
+                return false;
+
+            if (source.IsCompleted())
                 return false;
 
             if (target.IsFull())

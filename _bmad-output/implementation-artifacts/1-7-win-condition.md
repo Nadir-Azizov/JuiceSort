@@ -17,6 +17,8 @@ so that I know I've solved the puzzle and can feel accomplished.
 3. **Win feedback displayed** — When win is detected, a visible "Level Complete" message appears on screen
 4. **Gameplay paused on win** — After win detection, further container taps are ignored (no more pours or selections)
 5. **Move count shown** — The final move count is displayed alongside the win message
+6. **Closed bottle** — A bottle that is completely full with the same color (sorted and non-empty) is "closed": it cannot be selected, cannot be poured from, and cannot be poured into. Tapping a closed bottle does nothing.
+7. **Closed bottle visual** — Closed bottles have a distinct visual state (e.g., dimmed frame, lid/cap, or reduced opacity) so the player can see they are locked.
 
 ## Tasks / Subtasks
 
@@ -35,6 +37,19 @@ so that I know I've solved the puzzle and can feel accomplished.
   - [x] 3.2 Uses Unity UI Text with built-in font (LegacyRuntime.ttf)
   - [x] 3.3 Placeholder — Epic 4 replaces
   - [x] 3.4 Debug.Log with move count
+
+- [x] Task 5: Closed bottle logic (AC: 6)
+  - [x] 5.1 Added `IsCompleted()` to `ContainerData` — returns `!IsEmpty() && IsSorted()`
+  - [x] 5.2 In `GameplayManager.OnContainerTapped`, early return if `containerData.IsCompleted()`
+  - [x] 5.3 In `PuzzleEngine.CanPour`, reject pour if `source.IsCompleted()`
+  - [x] 5.4 Target already blocked by `IsFull()` check — IsCompleted implies IsFull
+  - [x] 5.5 In re-select logic, skip re-select if `tappedData.IsCompleted()`
+
+- [x] Task 6: Closed bottle visual (AC: 7)
+  - [x] 6.1 Added `ContainerState.Completed` to the enum
+  - [x] 6.2 In `Refresh()`, completed bottles get dimmed liquid (70% RGB) and green-tinted frame
+  - [x] 6.3 `OnMouseDown` returns early if `_state == ContainerState.Completed`
+  - [x] 6.4 Undo can un-complete a bottle — Refresh resets state back to Idle when no longer completed
 
 - [x] Task 4: Write tests (AC: 1, 2, 4)
   - [x] 4.1 IsAllSorted solved → true

@@ -51,8 +51,8 @@ A single hand-crafted test puzzle that can be played to completion with pour, so
 - **1.3** As a player, I can tap another container to pour liquid (all consecutive same-color units) → [1-3-pour-mechanic.md](implementation-artifacts/1-3-pour-mechanic.md)
 - **1.4** As a player, I can only pour onto matching colors or empty containers → [1-4-pour-color-validation.md](implementation-artifacts/1-4-pour-color-validation.md)
 - **1.5** As a player, I can only pour if the target has an empty slot → [1-5-pour-slot-validation.md](implementation-artifacts/1-5-pour-slot-validation.md)
-- **1.6** As a player, I can deselect by tapping the same container or empty space → [1-6-deselect-container.md](implementation-artifacts/1-6-deselect-container.md)
-- **1.7** As a player, I see the level complete when all containers are sorted → [1-7-win-condition.md](implementation-artifacts/1-7-win-condition.md)
+- **1.6** As a player, I can deselect or re-select by tapping (same container, empty space, or failed pour target) → [1-6-deselect-container.md](implementation-artifacts/1-6-deselect-container.md)
+- **1.7** As a player, I see the level complete when all containers are sorted; completed bottles are locked → [1-7-win-condition.md](implementation-artifacts/1-7-win-condition.md)
 - **1.8** As a player, I can undo my last pour (limited uses) → [1-8-undo-mechanic.md](implementation-artifacts/1-8-undo-mechanic.md)
 - **1.9** As a player, I can restart the level at any time → [1-9-level-restart.md](implementation-artifacts/1-9-level-restart.md)
 

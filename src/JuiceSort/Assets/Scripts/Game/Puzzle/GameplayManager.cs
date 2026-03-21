@@ -352,9 +352,14 @@ namespace JuiceSort.Game.Puzzle
             if (_isLevelComplete || _isAnimating)
                 return;
 
+            var containerData = _currentPuzzle.GetContainer(index);
+
+            // Closed bottles ignore all taps
+            if (containerData.IsCompleted())
+                return;
+
             if (_selectedContainerIndex < 0)
             {
-                var containerData = _currentPuzzle.GetContainer(index);
                 if (!containerData.IsEmpty())
                 {
                     SelectContainer(index);
@@ -376,7 +381,18 @@ namespace JuiceSort.Game.Puzzle
         private void AttemptPour(int sourceIndex, int targetIndex)
         {
             if (!PuzzleEngine.CanPour(_currentPuzzle, sourceIndex, targetIndex))
+            {
+                // Re-select: if tapped bottle is non-empty and not completed, switch selection to it
+                var tappedData = _currentPuzzle.GetContainer(targetIndex);
+                if (!tappedData.IsEmpty() && !tappedData.IsCompleted())
+                {
+                    if (Services.TryGet<IAudioManager>(out var reselectAudio))
+                        reselectAudio.PlaySFX(AudioClipType.Deselect);
+                    DeselectCurrent();
+                    SelectContainer(targetIndex);
+                }
                 return;
+            }
 
             var source = _currentPuzzle.GetContainer(sourceIndex);
             var target = _currentPuzzle.GetContainer(targetIndex);
