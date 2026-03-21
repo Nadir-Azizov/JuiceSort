@@ -23,9 +23,9 @@ namespace JuiceSort.Game.Puzzle
             float camHeight = cam != null ? cam.orthographicSize * 2f : 10f;
             float camWidth = camHeight * Screen.width / Screen.height;
 
-            // Bottle dimensions (from BottleContainerView: scaleX=0.9, scaleY=2.2)
-            float bottleWorldWidth = 0.9f;
-            float bottleWorldHeight = 2.2f;
+            // Bottle dimensions (mask sprite ~510x1017px at 100PPU, scaled 0.18)
+            float bottleWorldWidth = 0.92f;
+            float bottleWorldHeight = 1.83f;
 
             // Use 80% of screen width for bottles, leave margins
             float usableWidth = camWidth * 0.85f;
