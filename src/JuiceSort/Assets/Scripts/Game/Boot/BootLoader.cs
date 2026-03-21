@@ -6,6 +6,7 @@ using JuiceSort.Game.Save;
 using JuiceSort.Game.Puzzle;
 using JuiceSort.Game.Ads;
 using JuiceSort.Game.Audio;
+using JuiceSort.Game.Effects;
 using JuiceSort.Game.UI;
 using JuiceSort.Game.UI.Screens;
 
@@ -133,6 +134,9 @@ namespace JuiceSort.Game.Boot
             var settings = SettingsScreen.Create();
             DontDestroyOnLoad(settings);
             screenMgr.RegisterScreen(GameFlowState.Settings, settings);
+
+            // Ambient floating light particles (persistent across all screens)
+            FloatingLights.Create();
 
             // Refresh screens when transitioning to them
             screenMgr.OnStateChanged += (state) =>

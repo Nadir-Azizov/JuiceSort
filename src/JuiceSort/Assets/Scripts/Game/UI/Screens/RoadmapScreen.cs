@@ -156,6 +156,7 @@ namespace JuiceSort.Game.UI.Screens
             backImage.color = ThemeConfig.GetColor(LevelGen.LevelMood.Morning, ThemeColorType.ButtonSecondary);
 
             var backBtn = backGo.AddComponent<Button>();
+            backGo.AddComponent<ButtonBounce>();
             backBtn.onClick.AddListener(() =>
             {
                 if (Services.TryGet<ScreenManager>(out var sm))

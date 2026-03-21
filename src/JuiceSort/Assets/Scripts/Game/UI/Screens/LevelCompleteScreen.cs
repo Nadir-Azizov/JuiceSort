@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using JuiceSort.Game.Progression;
 using JuiceSort.Game.UI;
+using JuiceSort.Game.UI.Components;
 
 namespace JuiceSort.Game.UI.Screens
 {
@@ -133,6 +134,7 @@ namespace JuiceSort.Game.UI.Screens
             var btnImage = btnGo.AddComponent<Image>();
             btnImage.color = color;
             var button = btnGo.AddComponent<Button>();
+            btnGo.AddComponent<ButtonBounce>();
             button.onClick.AddListener(onClick);
 
             var textGo = new GameObject("Text");

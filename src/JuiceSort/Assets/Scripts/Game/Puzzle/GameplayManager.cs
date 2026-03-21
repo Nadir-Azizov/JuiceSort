@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using JuiceSort.Core;
@@ -405,6 +406,14 @@ namespace JuiceSort.Game.Puzzle
             int sourceTopIndex = source.GetTopIndex();
             int targetFirstEmpty = target.GetFirstEmptyIndex();
 
+            // Snapshot which containers are already completed before the pour
+            var wasCompleted = new HashSet<int>();
+            for (int i = 0; i < _currentPuzzle.ContainerCount; i++)
+            {
+                if (_currentPuzzle.GetContainer(i).IsCompleted())
+                    wasCompleted.Add(i);
+            }
+
             // Execute game logic immediately (data changes now)
             _undoStack.Push(_currentPuzzle.Clone());
             PuzzleEngine.ExecutePour(_currentPuzzle, sourceIndex, targetIndex);
@@ -418,6 +427,7 @@ namespace JuiceSort.Game.Puzzle
             // Play animation (visuals catch up to data)
             var targetView = _bottleBoard.GetContainerView(targetIndex);
             _isAnimating = true;
+            _bottleBoard.SetAllSparklesEnabled(false);
 
             StartCoroutine(PourAnimator.Animate(
                 sourceView, targetView, pourCount, pourColor,
@@ -429,16 +439,52 @@ namespace JuiceSort.Game.Puzzle
                 },
                 onComplete: () =>
                 {
-                    _isAnimating = false;
                     _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
                     Debug.Log($"[GameplayManager] Pour animated. Moves: {_moveCount}");
 
-                    if (_currentPuzzle.IsAllSorted())
+                    // Detect newly completed containers
+                    var newlyCompleted = new List<int>();
+                    for (int i = 0; i < _currentPuzzle.ContainerCount; i++)
                     {
-                        OnLevelComplete();
+                        if (_currentPuzzle.GetContainer(i).IsCompleted() && !wasCompleted.Contains(i))
+                            newlyCompleted.Add(i);
+                    }
+
+                    if (newlyCompleted.Count > 0)
+                    {
+                        PlayCompletionEffects(newlyCompleted);
+                    }
+                    else
+                    {
+                        _isAnimating = false;
+                        _bottleBoard?.SetAllSparklesEnabled(true);
+                        if (_currentPuzzle.IsAllSorted())
+                            OnLevelComplete();
                     }
                 }
             ));
+        }
+
+        private void PlayCompletionEffects(List<int> newlyCompletedIndices)
+        {
+            int remaining = newlyCompletedIndices.Count;
+            bool allSorted = _currentPuzzle.IsAllSorted();
+
+            foreach (int idx in newlyCompletedIndices)
+            {
+                var view = _bottleBoard.GetContainerView(idx);
+                view.PlayCompletionEffect(onComplete: () =>
+                {
+                    remaining--;
+                    if (remaining <= 0)
+                    {
+                        _isAnimating = false;
+                        _bottleBoard?.SetAllSparklesEnabled(true);
+                        if (allSorted)
+                            OnLevelComplete();
+                    }
+                });
+            }
         }
 
         public void Undo()

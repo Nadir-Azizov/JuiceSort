@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using JuiceSort.Core;
 using JuiceSort.Game.Audio;
 using JuiceSort.Game.Progression;
+using JuiceSort.Game.UI.Components;
 
 namespace JuiceSort.Game.UI.Screens
 {
@@ -114,6 +115,7 @@ namespace JuiceSort.Game.UI.Screens
             var backImage = backGo.AddComponent<Image>();
             backImage.color = ThemeConfig.GetColor(LevelGen.LevelMood.Morning, ThemeColorType.ButtonSecondary);
             var backBtn = backGo.AddComponent<Button>();
+            backGo.AddComponent<ButtonBounce>();
             backBtn.onClick.AddListener(() =>
             {
                 if (Services.TryGet<ScreenManager>(out var sm))
@@ -166,6 +168,7 @@ namespace JuiceSort.Game.UI.Screens
             var img = btnGo.AddComponent<Image>();
             img.color = ThemeConfig.GetColor(LevelGen.LevelMood.Morning, ThemeColorType.ButtonSecondary);
             var btn = btnGo.AddComponent<Button>();
+            btnGo.AddComponent<ButtonBounce>();
             btn.onClick.AddListener(onClick);
 
             var textGo = new GameObject("Text");

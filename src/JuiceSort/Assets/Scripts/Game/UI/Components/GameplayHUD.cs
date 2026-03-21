@@ -149,6 +149,7 @@ namespace JuiceSort.Game.UI.Components
             btnImage.color = color;
 
             var button = btnGo.AddComponent<Button>();
+            btnGo.AddComponent<ButtonBounce>();
 
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(btnGo.transform, false);

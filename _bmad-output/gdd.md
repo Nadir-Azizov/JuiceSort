@@ -462,7 +462,11 @@ All levels are drink-sorting puzzles. Variety comes from parameter differences, 
   - **Deselection:** Smooth return to rest (EaseOutCubic, 0.12s)
   - **Pour:** 4-phase sequence — lift → tilt toward target → slot-by-slot liquid transfer → return (EaseOutCubic, ~0.5s total)
   - **Input blocked** during pour animation to prevent state corruption
-  - Completion celebration: not yet implemented
+  - **Completion shimmer:** White diagonal sweep across sorted bottle + gold pulse (0.6s total)
+  - **Screen transitions:** Crossfade with vertical slide between all screens (0.6s, EaseInOutCubic)
+  - **Button bounce:** Scale punch on press (92%) → spring on release (105% → 100%), EaseOutBack
+  - **Glass sparkles:** Idle diamond-shaped particles on containers (1-2 per bottle every 2-3s)
+  - **Floating lights:** Warm bokeh circles drifting upward in background (6-10 particles, very subtle)
 
 #### Visual References
 
@@ -646,6 +650,7 @@ None — no voice acting planned.
 | 5 | Visual Theme | City backgrounds, landmarks, drink visuals, Tropical Fresh styling | Epic 1, 4 | 10-12 |
 | 6 | Audio | Music tracks, SFX, pour sounds | Epic 1 | 4-6 |
 | 7 | Monetization & Publishing | AdMob, extra bottle flow, Play Store build | Epic 1-6 | 5-7 |
+| 8 | Animation Polish | Completion shimmer, screen transitions, button bounce, ambient effects | Epic 1, 4, 5 | 5 |
 
 ### Recommended Sequence
 

@@ -59,6 +59,7 @@
     <Compile Include="Assets\Scripts\Game\LevelGen\PuzzleSolver.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\GameplayHUD.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\LevelNodeData.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\ButtonBounce.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\LevelCompleteScreen.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityAssigner.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\RoadmapScreen.cs" />
@@ -81,9 +82,11 @@
     <Compile Include="Assets\Scripts\Game\Boot\BootLoader.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerState.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleBoardView.cs" />
+    <Compile Include="Assets\Scripts\Game\Effects\FloatingLights.cs" />
     <Compile Include="Assets\Scripts\Game\Ads\IAdManager.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\ProgressionData.cs" />
     <Compile Include="Assets\Scripts\Game\Boot\GlobalExceptionHandler.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\CompletionShimmer.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\MainMenuScreen.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\LevelListView.cs" />
     <Compile Include="Assets\Scripts\Game\UI\GameFlowState.cs" />
@@ -95,6 +98,7 @@
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerView.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\UndoStack.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ScreenManager.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\GlassSparkle.cs" />
     <Compile Include="Assets\Scripts\Game\Audio\AudioClipType.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\TestPuzzleData.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\DrinkColorMap.cs" />

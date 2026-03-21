@@ -117,6 +117,16 @@ namespace JuiceSort.Game.Puzzle
 
         public int ContainerCount => _containerViews != null ? _containerViews.Length : 0;
 
+        public void SetAllSparklesEnabled(bool enabled)
+        {
+            if (_containerViews == null) return;
+            for (int i = 0; i < _containerViews.Length; i++)
+            {
+                if (_containerViews[i] != null)
+                    _containerViews[i].SetSparklesEnabled(enabled);
+            }
+        }
+
         public static BottleBoardView Create(PuzzleState puzzleState)
         {
             var go = new GameObject("BottleBoard");

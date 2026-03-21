@@ -23,6 +23,13 @@ namespace JuiceSort.Game.Puzzle
         private Vector3 _restLocalPosition;
         private Vector3 _baseScale;
 
+        // Completion shimmer
+        private CompletionShimmer _shimmer;
+        private Coroutine _completionPulseCoroutine;
+
+        // Glass sparkles
+        private GlassSparkle _sparkle;
+
         // Selection animation constants
         private const float SelectLiftHeight = 0.25f;
         private const float SelectScaleBump = 1.08f;
@@ -32,6 +39,10 @@ namespace JuiceSort.Game.Puzzle
         private static readonly Color SelectedFrameColor = new Color(1f, 0.88f, 0.3f, 1f);
         private static readonly Color IdleFrameColor = new Color(1f, 1f, 1f, 0.9f);
         private static readonly Color CompletedFrameColor = new Color(0.6f, 1f, 0.6f, 0.7f);
+        private static readonly Color GoldPulseColor = new Color(1f, 0.88f, 0.3f, 1f);
+        private static readonly Color CompletedTintColor = new Color(0.9f, 0.95f, 1f, 0.95f);
+        private const float GoldPulseDuration = 0.15f;
+        private const float CompletedTintDuration = 0.2f;
         private const float CompletedLiquidDim = 0.7f;
 
         // Cached assets
@@ -98,6 +109,8 @@ namespace JuiceSort.Game.Puzzle
         public void SetData(ContainerData data)
         {
             _data = data;
+            if (_sparkle != null)
+                _sparkle.SetData(data);
             Refresh();
         }
 
@@ -266,6 +279,81 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
+        /// Plays the completion shimmer + gold pulse effect. Returns true if animation started.
+        /// Call onComplete when all effects finish (for win-check gating).
+        /// </summary>
+        public void PlayCompletionEffect(Action onComplete = null)
+        {
+            bool shimmerDone = false;
+            bool pulseDone = false;
+
+            void CheckDone()
+            {
+                if (shimmerDone && pulseDone)
+                    onComplete?.Invoke();
+            }
+
+            // Play shimmer sweep
+            if (_shimmer != null)
+            {
+                _shimmer.Play(() => { shimmerDone = true; CheckDone(); });
+            }
+            else
+            {
+                shimmerDone = true;
+            }
+
+            // Play gold pulse on frame
+            if (_completionPulseCoroutine != null)
+                StopCoroutine(_completionPulseCoroutine);
+            _completionPulseCoroutine = StartCoroutine(AnimateCompletionPulse(() => { pulseDone = true; CheckDone(); }));
+        }
+
+        public bool IsCompletionEffectPlaying => (_shimmer != null && _shimmer.IsPlaying) || _completionPulseCoroutine != null;
+
+        public void SetSparklesEnabled(bool enabled)
+        {
+            if (_sparkle != null)
+                _sparkle.SetSparklesEnabled(enabled);
+        }
+
+        private IEnumerator AnimateCompletionPulse(Action onComplete)
+        {
+            if (_frameRenderer == null)
+            {
+                onComplete?.Invoke();
+                yield break;
+            }
+
+            Color fromColor = _frameRenderer.color;
+
+            // Phase 1: Pulse to gold
+            float elapsed = 0f;
+            while (elapsed < GoldPulseDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / GoldPulseDuration));
+                _frameRenderer.color = Color.Lerp(fromColor, GoldPulseColor, t);
+                yield return null;
+            }
+            _frameRenderer.color = GoldPulseColor;
+
+            // Phase 2: Settle to completed tint
+            elapsed = 0f;
+            while (elapsed < CompletedTintDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / CompletedTintDuration));
+                _frameRenderer.color = Color.Lerp(GoldPulseColor, CompletedTintColor, t);
+                yield return null;
+            }
+            _frameRenderer.color = CompletedTintColor;
+            _completionPulseCoroutine = null;
+
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
         /// Captures the rest position and scale. Must be called after the bottle is positioned.
         /// </summary>
         private void CaptureRestState()
@@ -341,6 +429,12 @@ namespace JuiceSort.Game.Puzzle
             frameRenderer.color = new Color(1f, 1f, 1f, 0.9f);
             frameRenderer.maskInteraction = SpriteMaskInteraction.None;
 
+            // Completion shimmer effect (clipped to bottle mask)
+            var shimmer = CompletionShimmer.Create(go.transform, spriteWidth, spriteHeight);
+
+            // Glass sparkle effect
+            var sparkle = go.AddComponent<GlassSparkle>();
+
             // Collider for tap detection
             var collider = go.AddComponent<BoxCollider2D>();
             if (maskSprite != null)
@@ -352,7 +446,10 @@ namespace JuiceSort.Game.Puzzle
             view._frameRenderer = frameRenderer;
             view._mask = mask;
             view._slotRenderers = slotRenderers;
+            view._shimmer = shimmer;
+            view._sparkle = sparkle;
             view.Initialize(data, containerIndex);
+            sparkle.Initialize(data, spriteWidth, spriteHeight);
 
             return view;
         }

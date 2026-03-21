@@ -11,8 +11,9 @@
 | 5 | Visual Theme | Epic 1, 4 | 4 implemented, 2 merged | Done |
 | 6 | Audio | Epic 1 | 2 implemented, 3 merged | Done |
 | 7 | Monetization & Publishing | Epic 1-6 | 2 implemented, 4 merged | Done |
+| 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
 
-**Total: 33 implemented stories / 46 originally planned (13 merged during development)**
+**Total: 38 implemented stories / 51 originally planned (13 merged during development)**
 
 ---
 
@@ -267,3 +268,36 @@ A published JuiceSort game on the Google Play Store with working ad monetization
 - **7.4** As a developer, the app meets Play Store requirements → [7-4-play-store-requirements.md](implementation-artifacts/7-4-play-store-requirements.md)
 - ~~**7.5** As a developer, the app is optimized for size and performance~~ *(merged into 7.4 — optimization is part of Play Store readiness)*
 - ~~**7.6** As a developer, the game is published and downloadable on the Play Store~~ *(merged into 7.4 — publication is the deliverable of Play Store requirements)*
+
+---
+
+## Epic 8: Animation Polish
+
+### Goal
+Add visual polish animations that elevate JuiceSort from functional to premium — satisfying completion feedback, smooth screen transitions, tactile button responses, and ambient visual effects.
+
+### Scope
+**Includes:**
+- Completion shimmer ripple on fully-sorted containers
+- Screen transitions (crossfade + slide) between all navigation screens
+- Button bounce feedback on all interactive UI buttons
+- Glass sparkle particles on idle containers
+- Floating light particles in background atmosphere
+
+**Excludes:**
+- Pour and selection animations (already implemented in Epic 1)
+- Sound effects for animations (Epic 6)
+- City-specific visual effects (post-MVP)
+
+### Dependencies
+Epic 1 (gameplay events for completion trigger), Epic 4 (UI screens for transitions and buttons), Epic 5 (container visuals for sparkle positioning)
+
+### Deliverable
+Every interaction feels satisfying and polished. Completing a bottle triggers a visible celebration. Navigating between screens is smooth. Buttons feel tactile. The game has subtle ambient visual life even when idle.
+
+### Stories
+- **8.1** As a player, I see a shimmer ripple across a container when it becomes fully sorted → [8-1-completion-shimmer.md](implementation-artifacts/8-1-completion-shimmer.md)
+- **8.2** As a player, I experience smooth crossfade transitions between all screens → [8-2-screen-transitions.md](implementation-artifacts/8-2-screen-transitions.md)
+- **8.3** As a player, buttons feel tactile with a satisfying bounce on tap → [8-3-button-bounce.md](implementation-artifacts/8-3-button-bounce.md)
+- **8.4** As a player, I see subtle sparkles on glass containers while idle → [8-4-glass-sparkles.md](implementation-artifacts/8-4-glass-sparkles.md)
+- **8.5** As a player, I see warm floating light particles drifting in the background → [8-5-floating-lights.md](implementation-artifacts/8-5-floating-lights.md)
