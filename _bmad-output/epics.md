@@ -13,7 +13,7 @@
 | 7 | Monetization & Publishing | Epic 1-6 | 2 implemented, 4 merged | Done |
 | 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
 | 9 | Coin Economy System | Epic 1, 3, 7 | 6 implemented | Done |
-| 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 stories | Backlog |
+| 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 implemented | Done |
 | 11 | UI/UX Overhaul | Epic 4, 5, 9 | 3 implemented, 4 remaining | In Progress |
 
 **Total: 47 implemented stories / 57 originally planned (13 merged during development)**
@@ -350,7 +350,7 @@ Replace the sprite-based liquid rendering with a shader-based system that delive
 
 ### Scope
 **Includes:**
-- Shader Graph liquid fill material (replaces sprite slot rendering)
+- HLSL/ShaderLab liquid fill shader (replaces sprite slot rendering)
 - Smooth pour animation (fill amount lerp + dynamic tilt angles)
 - Visible liquid stream between bottles during pour (LineRenderer/particle VFX)
 - Select/deselect liquid wobble (shader-driven damped oscillation)
@@ -368,12 +368,12 @@ Epic 1 (bottle container view, pour animator), Epic 5 (container visuals)
 Bottles render with smooth, animated liquid that wobbles on selection, flows visibly during pours, and celebrates with a cork animation on completion. The visual quality rivals Magic Sort.
 
 ### Stories
-- **10.1** As a player, I see smooth, gradient-filled liquid in each bottle (Shader Graph liquid fill material replaces sprite slots)
-- **10.2** As a player, I see the liquid level smoothly rise and fall during a pour (fill amount lerp + dynamic tilt angle based on pour count)
-- **10.3** As a player, I see a flowing liquid stream between bottles during a pour (LineRenderer/particle stream VFX)
-- **10.4** As a player, I see the liquid wobble/slosh when I select or deselect a bottle (shader-driven damped oscillation)
-- **10.5** As a player, I see a cork/cap close on a bottle when it becomes fully sorted (sprite drop + bounce + confetti burst)
-- **10.6** As a player, I see glass glow, refraction, and bloom effects on bottles (URP 2D lights + post-processing)
+- **10.1** As a player, I see smooth, gradient-filled liquid in each bottle (HLSL shader with contiguous color bands, 80% visual headroom) → [10-1-shader-liquid-fill.md](implementation-artifacts/10-1-shader-liquid-fill.md)
+- **10.2** As a player, I see the liquid level smoothly rise and fall during a pour (fill amount lerp + dynamic tilt angle based on pour count) → [10-2-smooth-pour-animation.md](implementation-artifacts/10-2-smooth-pour-animation.md)
+- **10.3** As a player, I see a flowing liquid stream between bottles during a pour (LineRenderer/particle stream VFX) → [10-3-pour-stream-vfx.md](implementation-artifacts/10-3-pour-stream-vfx.md)
+- **10.4** As a player, I see the liquid wobble/slosh when I select or deselect a bottle (shader-driven damped oscillation) → [10-4-select-wobble.md](implementation-artifacts/10-4-select-wobble.md)
+- **10.5** As a player, I see a cork/cap close on a bottle when it becomes fully sorted (sprite drop + bounce + confetti burst) → [10-5-bottle-cap-animation.md](implementation-artifacts/10-5-bottle-cap-animation.md)
+- **10.6** As a player, I see glass glow, refraction, and bloom effects on bottles (URP 2D lights + post-processing) → [10-6-glass-glow-bloom.md](implementation-artifacts/10-6-glass-glow-bloom.md)
 
 ---
 

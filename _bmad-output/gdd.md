@@ -843,41 +843,42 @@ The following features and items are explicitly NOT in scope for JuiceSort v1.0:
 
 The liquid rendering system is rebuilt from sprite-based slots to a shader-based approach, delivering Magic Sort-quality visual polish.
 
-### Shader Graph Liquid Fill
+### HLSL Liquid Fill Shader
 
-**Principle:** One material per bottle with parameterized fill amounts and colors.
+**Principle:** One runtime material per bottle with HLSL array uniforms for fill amounts and colors.
 
-**Shader Parameters:**
-- `_Fill0`, `_Fill1`, `_Fill2`, `_Fill3` — fill amount (0-1) per color layer
-- `_Color0`, `_Color1`, `_Color2`, `_Color3` — color per layer
+**Shader Uniforms:**
+- `_FillLevels[6]`, `_LayerColors[6]`, `_LayerCount` — contiguous color bands (up to 6, matching MaxSlots)
+- `_MaxVisualFill` — visual headroom cap (default 0.80; logically full bottles render to ~80% height)
+- `_DimMultiplier` — completed bottle dimming (default 1.0, set to 0.7 for sorted bottles)
 - `_WobbleX`, `_WobbleZ` — liquid surface wobble (damped oscillation)
-- `_WaveSpeed`, `_WaveAmplitude` — sinusoidal wave at water surface line
+- `_StencilRef`, `_StencilComp` — SpriteMask stencil support
 
 **Rendering:**
-- Shader renders pixels below the fill level as colored, above as transparent
+- Shader renders contiguous color bands from bottom up, merging consecutive same-color slots
+- Visual fill ≠ logical fill: all heights scaled by `_MaxVisualFill` (top ~20% always empty glass)
 - Small sinusoidal wave at the water surface: `sin(_Time.y * speed) * amplitude`
-- Bottle glass transparency and light refraction handled in shader
-- Compatible with URP 2D Renderer (Sprite-Unlit base)
+- Bottle glass transparency and light refraction handled in shader (refraction optional based on mobile perf)
+- Compatible with URP 2D Renderer (HLSL/ShaderLab `.shader` file, not Shader Graph)
 
 ### Pour Animation (Shader-Based)
 
 **Source bottle:**
-- `_FillAmount` smoothly decreases (Lerp via coroutine)
-- Tilt angle depends on layers being poured:
-  - 1 layer: 15° tilt | 2 layers: 25° | 3 layers: 35° | 4 layers: 45°
+- `_FillLevels[]` band values smoothly decrease (Lerp via coroutine, band-aware)
+- Tilt angle scales with pour count / slot count ratio (15°–35° range)
 - Tilt increases gradually (ease-in curve)
 - Shader water surface angle changes with bottle rotation
 
 **Liquid stream between bottles:**
-- `LineRenderer` or trail rendering a thin liquid stream
+- `LineRenderer` rendering a thin liquid stream (PourStreamVFX, pooled instance passed to PourAnimator)
 - Bezier curve from source mouth to target mouth
-- Color matches the liquid being poured
+- Color matches the liquid being poured (from ThemeConfig)
 - Width starts thin, slightly widens as flow continues
 - Optional: 3-5 water droplet particles
 
 **Target bottle:**
-- `_FillAmount` smoothly increases (synchronized with source)
-- Small splash effect when liquid lands (particle or shader wave)
+- `_FillLevels[]` band values smoothly increase (synchronized with source drain)
+- Small splash effect when liquid lands (wobble via `_WobbleX`)
 
 ### Select/Deselect Wobble
 
@@ -904,7 +905,7 @@ When a bottle becomes fully sorted:
 
 ### Free Resources
 
-- Unity Shader Graph (free with URP)
+- HLSL/ShaderLab custom shaders (URP 2D compatible, plain text for CLI workflow)
 - Minions Art "Liquid Shader" tutorial (free on Patreon)
 - GitHub: `aniruddhahar/URP-LiquidShadergraph` (free, MIT license)
 - URP 2D Lights, Post Processing, LineRenderer, Particle System — all built-in

@@ -29,9 +29,12 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 - Liquid layers visible through glass with a slight inner glow
 
 ### Shader-Based Liquid Fill (Epic 10)
-- **Rendering:** Shader Graph material per bottle replaces sprite slot system
-- **Fill parameters:** `_Fill0-3` (0-1) per color layer — smooth, continuous fill levels
-- **Color parameters:** `_Color0-3` — each layer independently colored
+- **Rendering:** HLSL/ShaderLab `.shader` file per bottle replaces sprite slot system
+- **Fill parameters:** HLSL arrays `_FillLevels[6]` (0-1) per contiguous color band — up to 6 bands matching MaxSlots
+- **Color parameters:** HLSL arrays `_LayerColors[6]` — each band independently colored (set via `SetFloatArray` / `SetVectorArray`)
+- **Contiguous bands:** Consecutive same-color slots merge into single visual bands (not 1:1 slot mapping)
+- **Visual headroom:** Bottles are never filled to the rim — `_MaxVisualFill = 0.80` means logically full bottles render liquid to ~80% height, leaving ~20% empty glass at top for natural appearance, wobble headroom, pour entry space, and cork placement
+- **Completed dimming:** `_DimMultiplier` (default 1.0, set to 0.7 for completed bottles)
 - **Water surface:** Sinusoidal wave at each fill boundary (`sin(_Time.y * speed) * amplitude`)
 - **Glass effect:** Shader handles transparency, subtle refraction, and inner glow
 - **Result:** Liquid looks fluid and alive, not stepped/blocky like sprite slots
@@ -113,11 +116,11 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 ### New Animations (Epics 10-11)
 
 #### Pour Animation (Shader-Based, replaces sprite slot toggle)
-- **Source bottle:** `_FillAmount` smoothly decreases via Lerp coroutine
-- **Dynamic tilt:** 1 layer=15°, 2 layers=25°, 3 layers=35°, 4 layers=45° (ease-in curve)
-- **Liquid stream:** LineRenderer bezier curve from source mouth to target mouth, color-matched
-- **Target bottle:** `_FillAmount` smoothly increases (synchronized with source drain)
-- **Splash:** Small particle/shader wave effect when liquid lands in target
+- **Source bottle:** `_FillLevels[]` band values smoothly decrease via Lerp coroutine (band-aware)
+- **Dynamic tilt:** Tilt angle scales with pourCount/slotCount ratio (15°–35° range, ease-in curve)
+- **Liquid stream:** LineRenderer bezier curve from source mouth to target mouth, color-matched (PourStreamVFX pooled instance)
+- **Target bottle:** `_FillLevels[]` band values smoothly increase (synchronized with source drain)
+- **Splash:** Wobble effect via `_WobbleX` when liquid lands in target
 
 #### Select/Deselect Wobble
 - **Trigger:** On bottle select or deselect
@@ -183,7 +186,7 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 - Warm golden filter applied through shader — fruit through golden light effect
 
 ### Free Resources (No Paid Assets)
-- Unity Shader Graph — free with URP
+- HLSL/ShaderLab custom shaders — URP 2D compatible (plain text, CLI-editable)
 - URP 2D Lights — built-in
 - URP Post Processing / Bloom — built-in
 - LineRenderer — built-in

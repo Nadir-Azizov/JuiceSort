@@ -40,6 +40,7 @@ namespace JuiceSort.Game.Puzzle
         private GameplayHUD _hud;
         private GameObject _hudCanvas;
         private BackgroundManager _backgroundManager;
+        private PourStreamVFX _pourStream;
         private bool _isAnimating;
 
         public int SelectedContainerIndex => _selectedContainerIndex;
@@ -105,6 +106,10 @@ namespace JuiceSort.Game.Puzzle
             if (_backgroundManager == null)
                 _backgroundManager = BackgroundManager.Create();
             _backgroundManager.SetBackground(definition.CityName ?? "", definition.Mood);
+
+            // Create reusable pour stream VFX (single instance across all pours)
+            if (_pourStream == null)
+                _pourStream = PourStreamVFX.Create();
 
             _moveCount = 0;
             _isLevelComplete = false;
@@ -515,6 +520,7 @@ namespace JuiceSort.Game.Puzzle
             StartCoroutine(PourAnimator.Animate(
                 sourceView, targetView, pourCount, pourColor,
                 sourceTopIndex, targetFirstEmpty,
+                _pourStream,
                 onMidPour: () =>
                 {
                     if (Services.TryGet<IAudioManager>(out var pourAudio))

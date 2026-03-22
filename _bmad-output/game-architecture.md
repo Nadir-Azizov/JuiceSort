@@ -70,7 +70,7 @@ This architecture document is being created through the GDS Architecture Workflo
 | Ad/Monetization System | Low | Google AdMob rewarded video for extra bottle mechanic |
 | UI Navigation | Medium | Main menu, roadmap, in-game HUD, level complete, settings, transitions |
 | Coin Economy System | Medium | Coin earning (completion, streak), spending (undo, extra bottle), persistence |
-| Liquid Shader System | High | Shader Graph liquid fill, wobble physics, pour stream VFX, glass effects |
+| Liquid Shader System | High | HLSL liquid fill shader, wobble physics, pour stream VFX, glass effects |
 | Responsive Layout System | Medium | Dynamic bottle positioning, multi-row layout, SafeArea support |
 
 ### Technical Requirements
@@ -545,7 +545,7 @@ Assets/
 | Touch Input | `Game/Input/` | Tap detection and routing |
 | Debug Tools | `Game/Debug/` | Development-only utilities |
 | Coin Economy | `Game/Economy/` | CoinManager, CoinConfig, streak tracking, coin persistence |
-| Liquid Shader | `Game/Liquid/` | Shader Graph materials, LiquidMaterialController, PourStreamVFX |
+| Liquid Shader | `Game/Puzzle/` | LiquidMaterialController, PourStreamVFX, BottleCapAnimation (shader at `Art/Shaders/LiquidFill.shader`) |
 | Responsive Layout | `Game/Layout/` | ResponsiveLayoutManager, dynamic bottle positioning |
 
 ### Naming Conventions
@@ -775,19 +775,26 @@ int colorCount = config.GetColorCount(levelNumber);
 ### Liquid Shader System (Epic 10)
 
 **Components:**
-- `LiquidShader.shadergraph` — Shader Graph material for bottle liquid rendering (URP 2D, Sprite-Unlit base)
-- `LiquidMaterialController` — MonoBehaviour managing per-bottle material instances, fill amounts, colors, wobble
-- `PourStreamVFX` — LineRenderer/particle system for visible liquid stream between bottles during pour
+- `Assets/Art/Shaders/LiquidFill.shader` — HLSL/ShaderLab shader for bottle liquid rendering (URP 2D compatible, plain text)
+- `LiquidMaterialController` — MonoBehaviour managing per-bottle runtime material instances, fill amounts, colors, wobble, dimming
+- `PourStreamVFX` — LineRenderer for visible liquid stream between bottles during pour (pooled, passed to PourAnimator)
 - `BottleCapAnimation` — cork/cap closing effect on sorted bottle completion
 
-**Shader Parameters:**
-- `_Fill0-3`, `_Color0-3` — per-layer fill and color
+**Shader Uniforms (HLSL arrays):**
+- `_FillLevels[6]`, `_LayerColors[6]`, `_LayerCount` — contiguous color bands (set via SetFloatArray/SetVectorArray)
+- `_MaxVisualFill` — visual headroom cap (default 0.80, logically full bottles render to 80% height)
+- `_DimMultiplier` — completed bottle dimming (default 1.0, set to 0.7 for sorted bottles)
 - `_WobbleX`, `_WobbleZ` — damped oscillation for select/deselect wobble
-- `_WaveSpeed`, `_WaveAmplitude` — sinusoidal water surface animation
+- `_StencilRef`, `_StencilComp` — SpriteMask stencil support (set by Unity)
+
+**Material Management:**
+- Runtime `new Material(shader)` per bottle — no `.mat` asset files
+- `Destroy(_material)` in OnDestroy to prevent leaks
+- Visual fill ≠ logical fill: game logic checks slots, shader renders visual height scaled by `_MaxVisualFill`
 
 **Refactoring:**
-- `BottleContainerView` — internally refactored to use shader material instead of sprite slots (external API preserved)
-- `PourAnimator` — internally refactored for smooth fill lerp + dynamic tilt angles (static class pattern preserved)
+- `BottleContainerView` — internally refactored to use shader material instead of sprite slots (external API preserved, stubs kept for PourAnimator compatibility until 10-2)
+- `PourAnimator` — internally refactored for smooth fill lerp + dynamic tilt angles (static class pattern preserved, PourStreamVFX passed as parameter)
 
 ### Responsive Layout System (Epic 11)
 

@@ -7,13 +7,14 @@ namespace JuiceSort.Game.Puzzle
 {
     /// <summary>
     /// SpriteRenderer-based container view using SpriteMask for liquid clipping.
-    /// Renders each liquid slot as an equal-height colored sprite inside the bottle mask.
+    /// Renders liquid via LiquidFill shader with contiguous color bands.
     /// </summary>
     public class BottleContainerView : MonoBehaviour
     {
         private SpriteRenderer _frameRenderer;
         private SpriteMask _mask;
-        private SpriteRenderer[] _slotRenderers;
+        private SpriteRenderer _liquidRenderer;
+        private LiquidMaterialController _liquidController;
         private ContainerData _data;
         private ContainerState _state;
         private int _containerIndex;
@@ -30,6 +31,9 @@ namespace JuiceSort.Game.Puzzle
         // Glass sparkles
         private GlassSparkle _sparkle;
 
+        // Bottle cap (completion effect)
+        private BottleCapAnimation _cap;
+
         // Selection animation constants
         private const float SelectLiftHeight = 0.25f;
         private const float SelectScaleBump = 1.08f;
@@ -42,7 +46,6 @@ namespace JuiceSort.Game.Puzzle
         private static readonly Color CompletedTintColor = new Color(0.9f, 0.95f, 1f, 0.95f);
         private const float GoldPulseDuration = 0.15f;
         private const float CompletedTintDuration = 0.2f;
-        private const float CompletedLiquidDim = 0.7f;
 
         // Cached assets
         private static Sprite _cachedMaskSprite;
@@ -53,6 +56,7 @@ namespace JuiceSort.Game.Puzzle
         public bool IsSelected => _state == ContainerState.Selected;
         public int ContainerIndex => _containerIndex;
         public ContainerData Data => _data;
+        public LiquidMaterialController LiquidController => _liquidController;
 
         public event Action<int> OnTapped;
 
@@ -118,6 +122,8 @@ namespace JuiceSort.Game.Puzzle
             _state = ContainerState.Selected;
             StopSelectionAnim();
             _selectionCoroutine = StartCoroutine(AnimateSelect());
+            if (_liquidController != null)
+                _liquidController.TriggerWobble(0.04f);
         }
 
         public void Deselect()
@@ -125,6 +131,8 @@ namespace JuiceSort.Game.Puzzle
             _state = ContainerState.Idle;
             StopSelectionAnim();
             _selectionCoroutine = StartCoroutine(AnimateDeselect());
+            if (_liquidController != null)
+                _liquidController.TriggerWobble(0.02f);
         }
 
         /// <summary>
@@ -138,6 +146,13 @@ namespace JuiceSort.Game.Puzzle
             transform.localScale = _baseScale;
             if (_frameRenderer != null)
                 _frameRenderer.color = IdleFrameColor;
+            if (_liquidController != null)
+            {
+                _liquidController.SetDimmed(false);
+                _liquidController.StopWobble();
+            }
+            if (_cap != null)
+                _cap.HideCap();
         }
 
         private void StopSelectionAnim()
@@ -213,31 +228,32 @@ namespace JuiceSort.Game.Puzzle
 
         public void Refresh()
         {
-            if (_data == null || _slotRenderers == null)
+            if (_data == null || _liquidController == null)
                 return;
 
-            bool completed = _data.IsCompleted();
-            int slotCount = _data.SlotCount;
+            // Update liquid shader bands from slot data
+            _liquidController.SetLayers(_data);
 
-            for (int i = 0; i < _slotRenderers.Length && i < slotCount; i++)
+            bool completed = _data.IsCompleted();
+
+            // Dim completed bottles via shader
+            _liquidController.SetDimmed(completed);
+
+            // Set glow color based on dominant (top) liquid color + mood
+            var topColor = _data.GetTopColor();
+            if (topColor != DrinkColor.None)
             {
-                var drinkColor = _data.GetSlot(i);
-                if (drinkColor != DrinkColor.None)
-                {
-                    var color = ThemeConfig.GetDrinkColor(drinkColor);
-                    if (completed)
-                    {
-                        color.r *= CompletedLiquidDim;
-                        color.g *= CompletedLiquidDim;
-                        color.b *= CompletedLiquidDim;
-                    }
-                    _slotRenderers[i].color = color;
-                    _slotRenderers[i].enabled = true;
-                }
-                else
-                {
-                    _slotRenderers[i].enabled = false;
-                }
+                Color drinkColor = ThemeConfig.GetDrinkColor(topColor);
+                // Blend drink color with mood-aware warm/cool tint
+                Color moodTint = ThemeConfig.CurrentMood == LevelGen.LevelMood.Morning
+                    ? new Color(1f, 0.9f, 0.6f)   // warm golden
+                    : new Color(0.6f, 0.8f, 1f);   // cool blue
+                Color glowColor = Color.Lerp(drinkColor, moodTint, 0.3f);
+                _liquidController.SetGlow(glowColor, completed ? 0.05f : 0.15f);
+            }
+            else
+            {
+                _liquidController.SetGlow(Color.clear, 0f);
             }
 
             // Update frame color for completed state (only when idle — don't override selection)
@@ -253,27 +269,8 @@ namespace JuiceSort.Game.Puzzle
                 _state = ContainerState.Idle;
                 if (_frameRenderer != null)
                     _frameRenderer.color = IdleFrameColor;
-            }
-        }
-
-        /// <summary>
-        /// Shows or hides a specific slot renderer (used by PourAnimator).
-        /// </summary>
-        public void SetSlotVisible(int slotIndex, bool visible)
-        {
-            if (_slotRenderers != null && slotIndex >= 0 && slotIndex < _slotRenderers.Length)
-                _slotRenderers[slotIndex].enabled = visible;
-        }
-
-        /// <summary>
-        /// Sets a slot's color and makes it visible (used by PourAnimator for target fill).
-        /// </summary>
-        public void SetSlotColorAndShow(int slotIndex, DrinkColor drinkColor)
-        {
-            if (_slotRenderers != null && slotIndex >= 0 && slotIndex < _slotRenderers.Length)
-            {
-                _slotRenderers[slotIndex].color = ThemeConfig.GetDrinkColor(drinkColor);
-                _slotRenderers[slotIndex].enabled = true;
+                if (_cap != null)
+                    _cap.HideCap();
             }
         }
 
@@ -286,16 +283,26 @@ namespace JuiceSort.Game.Puzzle
             bool shimmerDone = false;
             bool pulseDone = false;
 
-            void CheckDone()
+            void CheckShimmerPulseDone()
             {
                 if (shimmerDone && pulseDone)
-                    onComplete?.Invoke();
+                {
+                    // After shimmer+pulse, play cap drop
+                    if (_cap != null)
+                    {
+                        _cap.PlayCapClose(() => onComplete?.Invoke());
+                    }
+                    else
+                    {
+                        onComplete?.Invoke();
+                    }
+                }
             }
 
             // Play shimmer sweep
             if (_shimmer != null)
             {
-                _shimmer.Play(() => { shimmerDone = true; CheckDone(); });
+                _shimmer.Play(() => { shimmerDone = true; CheckShimmerPulseDone(); });
             }
             else
             {
@@ -305,7 +312,7 @@ namespace JuiceSort.Game.Puzzle
             // Play gold pulse on frame
             if (_completionPulseCoroutine != null)
                 StopCoroutine(_completionPulseCoroutine);
-            _completionPulseCoroutine = StartCoroutine(AnimateCompletionPulse(() => { pulseDone = true; CheckDone(); }));
+            _completionPulseCoroutine = StartCoroutine(AnimateCompletionPulse(() => { pulseDone = true; CheckShimmerPulseDone(); }));
         }
 
         public bool IsCompletionEffectPlaying => (_shimmer != null && _shimmer.IsPlaying) || _completionPulseCoroutine != null;
@@ -392,38 +399,28 @@ namespace JuiceSort.Game.Puzzle
             float bottleScale = scale;
             go.transform.localScale = new Vector3(bottleScale, bottleScale, 1f);
 
-            // SpriteMask clips liquid sprites to the bottle shape
+            // SpriteMask clips liquid to the bottle shape
             var mask = go.AddComponent<SpriteMask>();
             mask.sprite = maskSprite;
 
-            // Compute slot geometry from the mask sprite bounds
+            // Compute bottle geometry from the mask sprite bounds
             float spriteWidth = maskSprite != null ? maskSprite.bounds.size.x : 5f;
             float spriteHeight = maskSprite != null ? maskSprite.bounds.size.y : 10f;
 
-            int slotCount = data.SlotCount;
-            float slotHeight = spriteHeight / slotCount;
-            // Bottom of sprite is at -spriteHeight/2
-            float bottomY = -spriteHeight / 2f;
+            // Single liquid SpriteRenderer covering full bottle area — shader handles all coloring
+            var liquidGo = new GameObject("Liquid");
+            liquidGo.transform.SetParent(go.transform, false);
+            liquidGo.transform.localPosition = Vector3.zero;
+            liquidGo.transform.localScale = new Vector3(spriteWidth, spriteHeight, 1f);
 
-            // Create one colored sprite per slot (bottom-up: slot 0 = bottom)
-            var slotRenderers = new SpriteRenderer[slotCount];
-            for (int i = 0; i < slotCount; i++)
-            {
-                var slotGo = new GameObject($"Slot_{i}");
-                slotGo.transform.SetParent(go.transform, false);
+            var liquidRenderer = liquidGo.AddComponent<SpriteRenderer>();
+            liquidRenderer.sprite = whiteSprite;
+            liquidRenderer.sortingOrder = 0;
+            liquidRenderer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
 
-                float slotCenterY = bottomY + slotHeight * i + slotHeight / 2f;
-                slotGo.transform.localPosition = new Vector3(0f, slotCenterY, 0f);
-                // Scale the white sprite (1x1 unit) to fill the slot
-                slotGo.transform.localScale = new Vector3(spriteWidth, slotHeight, 1f);
-
-                var sr = slotGo.AddComponent<SpriteRenderer>();
-                sr.sprite = whiteSprite;
-                sr.sortingOrder = 0;
-                sr.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-
-                slotRenderers[i] = sr;
-            }
+            // LiquidMaterialController manages shader parameters
+            var liquidController = liquidGo.AddComponent<LiquidMaterialController>();
+            liquidController.Initialize(liquidRenderer, data.SlotCount);
 
             // Frame renderer: glass outline on top (not masked)
             var frameGo = new GameObject("Frame");
@@ -440,6 +437,9 @@ namespace JuiceSort.Game.Puzzle
             // Completion shimmer effect (clipped to bottle mask)
             var shimmer = CompletionShimmer.Create(go.transform, spriteWidth, spriteHeight);
 
+            // Bottle cap animation (drops on completion)
+            var cap = BottleCapAnimation.Create(go.transform, spriteWidth, spriteHeight);
+
             // Glass sparkle effect
             var sparkle = go.AddComponent<GlassSparkle>();
 
@@ -453,8 +453,10 @@ namespace JuiceSort.Game.Puzzle
             var view = go.AddComponent<BottleContainerView>();
             view._frameRenderer = frameRenderer;
             view._mask = mask;
-            view._slotRenderers = slotRenderers;
+            view._liquidRenderer = liquidRenderer;
+            view._liquidController = liquidController;
             view._shimmer = shimmer;
+            view._cap = cap;
             view._sparkle = sparkle;
             view.Initialize(data, containerIndex);
             sparkle.Initialize(data, spriteWidth, spriteHeight);

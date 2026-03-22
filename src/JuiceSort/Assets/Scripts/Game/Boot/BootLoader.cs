@@ -34,9 +34,16 @@ namespace JuiceSort.Game.Boot
             Services.Clear();
             CreateEventSystem();
             CreateGlobalExceptionHandler();
+            CreateBloomSetup();
             CreateServices();
 
             Debug.Log("[BootLoader] All services created.");
+        }
+
+        private void CreateBloomSetup()
+        {
+            var bloom = Effects.BloomSetup.Create();
+            DontDestroyOnLoad(bloom.gameObject);
         }
 
         private void CreateGlobalExceptionHandler()

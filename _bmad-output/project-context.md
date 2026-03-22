@@ -217,14 +217,25 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ---
 
-## Shader Graph Rules (Epic 10)
+## Liquid Shader Rules (Epic 10)
 
 **Liquid Shader:**
-- Base shader: Sprite-Unlit (URP 2D Renderer compatible)
-- Create Shader Graph in `Assets/Art/Shaders/LiquidFill.shadergraph`
-- Material instances: one per bottle — never share materials between bottles (each has unique fill/color state)
-- Use `MaterialPropertyBlock` where possible to avoid material instance explosion
-- Parameters exposed: `_Fill0-3`, `_Color0-3`, `_WobbleX`, `_WobbleZ`, `_WaveSpeed`, `_WaveAmplitude`
+- HLSL/ShaderLab `.shader` file (NOT Shader Graph — `.shadergraph` cannot be created/edited from CLI)
+- Location: `Assets/Art/Shaders/LiquidFill.shader` (plain text, URP 2D compatible)
+- Runtime `new Material(shader)` per bottle for independent properties; `Destroy(_material)` in OnDestroy
+- HLSL uniform arrays: `_FillLevels[6]`, `_LayerColors[6]`, `_LayerCount` — set via `SetFloatArray` / `SetVectorArray`
+- Additional uniforms: `_MaxVisualFill`, `_DimMultiplier`, `_WobbleX`, `_WobbleZ`, `_StencilRef`, `_StencilComp`
+
+**Visual Fill ≠ Logical Fill (CRITICAL):**
+- Visual fill is NOT the same as logical fill. Game logic checks slots; shader renders visual height
+- `_MaxVisualFill = 0.80` — logically full bottles render liquid to ~80% of bottle height
+- Top ~20% always shows empty glass (headroom for wobble, pour entry, cork placement)
+- All fill height calculations must multiply by `_MaxVisualFill`
+- Band heights use contiguous color bands, not 1:1 slot mapping — consecutive same-color slots merge
+
+**Completed Dimming:**
+- `_DimMultiplier` shader property (default 1.0, set to 0.7 for completed bottles)
+- Replaces the old `CompletedLiquidDim` color multiplication in C#
 
 **Performance:**
 - Shader-based rendering uses fewer draw calls than sprite-based (one draw per bottle vs multiple sprites)
@@ -232,10 +243,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Test shader on 3 aspect ratios: 16:9, 19.5:9, 20:9
 
 **Material Management:**
-- `LiquidMaterialController` on each bottle manages its material instance
-- Update fill amounts via `material.SetFloat("_Fill0", value)` — never in Update, only when state changes
+- `LiquidMaterialController` on each bottle manages per-bottle shader parameters
+- Update via `material.SetFloatArray()` / `material.SetVectorArray()` — never in Update, only when state changes
 - Wobble driven by coroutine (impulse → damped oscillation → zero), not Update loop
-- Release material instances when bottles are destroyed
+- Destroy runtime material in OnDestroy to prevent leaks
 
 ## Responsive Layout Rules (Epic 11)
 
