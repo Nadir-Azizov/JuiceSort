@@ -22,34 +22,34 @@ so that the atmosphere enhances my relaxation experience.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create IAudioManager, AudioClipType, and AudioManager (AC: 1, 2, 3, 4, 8)
-  - [ ] 1.1 Create `Scripts/Game/Audio/IAudioManager.cs` — interface in Game assembly
-  - [ ] 1.2 Methods: PlayMusic(LevelMood mood), StopMusic(), PlaySFX(AudioClipType type), SetMusicEnabled(bool), SetSoundEnabled(bool), bool MusicEnabled, bool SoundEnabled
-  - [ ] 1.3 Create `Scripts/Game/Audio/AudioClipType.cs` — enum: Pour, Select, Deselect, LevelComplete, StarAwarded, UITap
-  - [ ] 1.4 Create `Scripts/Game/Audio/AudioManager.cs` — MonoBehaviour implementing IAudioManager
-  - [ ] 1.5 Two AudioSources: _musicSource (looping), _sfxSource (one-shot)
-  - [ ] 1.6 PlayMusic: if same mood already playing → skip. Otherwise switch track. Placeholder: logs instead of actual playback
-  - [ ] 1.7 PlaySFX: checks _soundEnabled, plays one-shot. Placeholder: logs
-  - [ ] 1.8 Track _currentMood to avoid restarting same music
+- [x] Task 1: Create IAudioManager, AudioClipType, and AudioManager (AC: 1, 2, 3, 4, 8)
+  - [x]1.1 Create `Scripts/Game/Audio/IAudioManager.cs` — interface in Game assembly
+  - [x]1.2 Methods: PlayMusic(LevelMood mood), StopMusic(), PlaySFX(AudioClipType type), SetMusicEnabled(bool), SetSoundEnabled(bool), bool MusicEnabled, bool SoundEnabled
+  - [x]1.3 Create `Scripts/Game/Audio/AudioClipType.cs` — enum: Pour, Select, Deselect, LevelComplete, StarAwarded, UITap
+  - [x]1.4 Create `Scripts/Game/Audio/AudioManager.cs` — MonoBehaviour implementing IAudioManager
+  - [x]1.5 Two AudioSources: _musicSource (looping), _sfxSource (one-shot)
+  - [x]1.6 PlayMusic: if same mood already playing → skip. Otherwise switch track. Placeholder: logs instead of actual playback
+  - [x]1.7 PlaySFX: checks _soundEnabled, plays one-shot. Placeholder: logs
+  - [x]1.8 Track _currentMood to avoid restarting same music
 
-- [ ] Task 2: Register in BootLoader (AC: 1)
-  - [ ] 2.1 BootLoader creates AudioManager GO, registers as IAudioManager
-  - [ ] 2.2 Creation order: after SaveManager + ProgressionManager, before screens
+- [x] Task 2: Register in BootLoader (AC: 1)
+  - [x]2.1 BootLoader creates AudioManager GO, registers as IAudioManager
+  - [x]2.2 Creation order: after SaveManager + ProgressionManager, before screens
 
-- [ ] Task 3: Wire settings toggles (AC: 5, 6, 7)
-  - [ ] 3.1 AudioManager.Start reads MusicEnabled/SoundEnabled from ProgressionManager
-  - [ ] 3.2 SettingsScreen.ToggleSound also calls AudioManager.SetSoundEnabled
-  - [ ] 3.3 SettingsScreen.ToggleMusic also calls AudioManager.SetMusicEnabled
-  - [ ] 3.4 SetMusicEnabled(false) → stops _musicSource. SetMusicEnabled(true) → resumes PlayMusic with current mood
+- [x] Task 3: Wire settings toggles (AC: 5, 6, 7)
+  - [x]3.1 AudioManager.Start reads MusicEnabled/SoundEnabled from ProgressionManager
+  - [x]3.2 SettingsScreen.ToggleSound also calls AudioManager.SetSoundEnabled
+  - [x]3.3 SettingsScreen.ToggleMusic also calls AudioManager.SetMusicEnabled
+  - [x]3.4 SetMusicEnabled(false) → stops _musicSource. SetMusicEnabled(true) → resumes PlayMusic with current mood
 
-- [ ] Task 4: Wire music to level loading (AC: 3, 4)
-  - [ ] 4.1 GameplayManager.LoadLevel calls AudioManager.PlayMusic(mood) after setting ThemeConfig.CurrentMood
-  - [ ] 4.2 PlayMusic checks if _currentMood matches → skips restart if same
+- [x] Task 4: Wire music to level loading (AC: 3, 4)
+  - [x]4.1 GameplayManager.LoadLevel calls AudioManager.PlayMusic(mood) after setting ThemeConfig.CurrentMood
+  - [x]4.2 PlayMusic checks if _currentMood matches → skips restart if same
 
-- [ ] Task 5: Write tests (AC: all)
-  - [ ] 5.1 Create `Scripts/Tests/EditMode/AudioManagerTests.cs`
-  - [ ] 5.2 Test AudioClipType enum has all 6 values
-  - [ ] 5.3 Test IAudioManager interface has all required method signatures
+- [x] Task 5: Write tests (AC: all)
+  - [x]5.1 Create `Scripts/Tests/EditMode/AudioManagerTests.cs`
+  - [x]5.2 Test AudioClipType enum has all 6 values
+  - [x]5.3 Test IAudioManager interface has all required method signatures
 
 ## Dev Notes
 

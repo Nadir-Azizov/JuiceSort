@@ -51,6 +51,21 @@ namespace JuiceSort.Game.Puzzle
         {
             if (_loopCoroutine != null)
                 StopCoroutine(_loopCoroutine);
+
+            // Release any pool sparkles parented to this bottle back to idle,
+            // preventing _activeCount from drifting when destroyed mid-animation
+            if (_pool != null)
+            {
+                for (int i = 0; i < _pool.Length; i++)
+                {
+                    if (_pool[i] != null && _pool[i].enabled && _pool[i].transform.parent == transform)
+                    {
+                        _pool[i].enabled = false;
+                        _pool[i].transform.SetParent(null, false);
+                        _activeCount = Mathf.Max(0, _activeCount - 1);
+                    }
+                }
+            }
         }
 
         private IEnumerator SparkleLoop()

@@ -19,7 +19,7 @@ namespace JuiceSort.Game.LevelGen
         public string CountryName { get; set; }
         public LevelMood Mood { get; set; }
 
-        public LevelDefinition(int levelNumber, int containerCount, int colorCount, int slotCount, int emptyContainerCount, int shuffleMultiplier = 3)
+        public LevelDefinition(int levelNumber, int containerCount, int colorCount, int slotCount, int emptyContainerCount, int shuffleMultiplier = 4)
         {
             LevelNumber = levelNumber;
             ContainerCount = containerCount;

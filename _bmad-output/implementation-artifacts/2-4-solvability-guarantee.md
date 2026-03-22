@@ -19,22 +19,22 @@ so that I always have a fair chance to complete the level.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create PuzzleSolver (AC: 1, 3)
-  - [ ] 1.1 Create `Scripts/Game/LevelGen/PuzzleSolver.cs` — DFS solver with depth limit
-  - [ ] 1.2 Method: `Solve(PuzzleState state, int maxDepth)` → returns SolveResult (isSolvable bool, moveCount int)
-  - [ ] 1.3 Use DFS with iterative deepening — faster than BFS, avoids OOM on large puzzles
-  - [ ] 1.4 State hashing for visited set to avoid revisiting states
-  - [ ] 1.5 Default maxDepth = 200 (generous limit — most puzzles solvable in far fewer moves)
-  - [ ] 1.6 Optimal move count (for star rating) deferred to Epic 3 — this solver finds *a* solution, not necessarily the shortest
+- [x] Task 1: Create PuzzleSolver (AC: 1, 3)
+  - [x] 1.1 Create `Scripts/Game/LevelGen/PuzzleSolver.cs` — DFS solver with depth limit
+  - [x] 1.2 Method: `Solve(PuzzleState state, int maxDepth)` → returns SolveResult (isSolvable bool, moveCount int)
+  - [x] 1.3 Use DFS with iterative deepening — faster than BFS, avoids OOM on large puzzles
+  - [x] 1.4 State hashing for visited set to avoid revisiting states
+  - [x] 1.5 Default maxDepth = 200 (generous limit — most puzzles solvable in far fewer moves)
+  - [x] 1.6 Optimal move count (for star rating) deferred to Epic 3 — this solver finds *a* solution, not necessarily the shortest
 
-- [ ] Task 2: Write solvability verification tests (AC: 2, 4)
-  - [ ] 2.1 Create `Scripts/Tests/EditMode/SolvabilityTests.cs`
-  - [ ] 2.2 Test: hand-crafted test puzzle is solvable
-  - [ ] 2.3 Test: generated puzzle at level 1 is solvable
-  - [ ] 2.4 Test: generated puzzles at levels 1, 5, 10, 20, 50 are all solvable
-  - [ ] 2.5 Test: solver returns a positive move count for solvable puzzles
-  - [ ] 2.6 Test: solver identifies an intentionally unsolvable state correctly
-  - [ ] 2.7 Batch test: generate 20 puzzles across various levels, verify all solvable
+- [x] Task 2: Write solvability verification tests (AC: 2, 4)
+  - [x] 2.1 Create `Scripts/Tests/EditMode/SolvabilityTests.cs`
+  - [x] 2.2 Test: hand-crafted test puzzle is solvable
+  - [x] 2.3 Test: generated puzzle at level 1 is solvable
+  - [x] 2.4 Test: generated puzzles at levels 1, 5, 10, 20, 50 are all solvable
+  - [x] 2.5 Test: solver returns a positive move count for solvable puzzles
+  - [x] 2.6 Test: solver identifies an intentionally unsolvable state correctly
+  - [x] 2.7 Batch test: generate 20 puzzles across various levels, verify all solvable
 
 ## Dev Notes
 

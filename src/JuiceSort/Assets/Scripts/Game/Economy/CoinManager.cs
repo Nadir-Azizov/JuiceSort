@@ -61,8 +61,6 @@ namespace JuiceSort.Game.Economy
             if (amount <= 0) return;
 
             _balance += amount;
-            Debug.Log($"[CoinManager] Added {amount} coins. Balance: {_balance}");
-
             OnBalanceChanged?.Invoke(_balance);
             TriggerSave();
         }
@@ -72,14 +70,9 @@ namespace JuiceSort.Game.Economy
             if (amount <= 0) return true;
 
             if (_balance < amount)
-            {
-                Debug.Log($"[CoinManager] Insufficient coins. Need {amount}, have {_balance}");
                 return false;
-            }
 
             _balance -= amount;
-            Debug.Log($"[CoinManager] Spent {amount} coins. Balance: {_balance}");
-
             OnBalanceChanged?.Invoke(_balance);
             TriggerSave();
             return true;
@@ -88,13 +81,11 @@ namespace JuiceSort.Game.Economy
         public void IncrementStreak()
         {
             _streakCount++;
-            Debug.Log($"[CoinManager] Streak incremented to {_streakCount}");
         }
 
         public void ResetStreak()
         {
             _streakCount = 0;
-            Debug.Log("[CoinManager] Streak reset to 0");
             TriggerSave();
         }
 

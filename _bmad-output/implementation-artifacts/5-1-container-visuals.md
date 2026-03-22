@@ -20,30 +20,30 @@ so that the puzzle feels premium and inviting.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ThemeConfig with mood palettes (AC: 1, 6)
-  - [ ] 1.1 Create `Scripts/Game/UI/ThemeConfig.cs` — static class with all visual constants
-  - [ ] 1.2 Drink colors: Tropical Fresh palette (warm golden Mango, luxurious Berry, ocean Teal, soft Rose, sunlit Lime)
-  - [ ] 1.3 Container colors: idle morning (warm glass), idle night (cool glass), selected (golden glow)
-  - [ ] 1.4 UI colors: background morning/night, button primary/secondary, text, star gold
-  - [ ] 1.5 Morning palette: warm golden backgrounds, bright text, sunlit accents
-  - [ ] 1.6 Night palette: deep blue backgrounds, soft white text, warm amber accents
-  - [ ] 1.7 Enum `ThemeColorType`: Background, ContainerIdle, ContainerSelected, ButtonPrimary, ButtonSecondary, TextPrimary, TextSecondary, StarGold, EmptySlot
-  - [ ] 1.8 Method: `GetColor(LevelMood mood, ThemeColorType type)` for mood-aware retrieval
-  - [ ] 1.9 Method: `GetDrinkColor(DrinkColor)` replacing DrinkColorMap
+- [x] Task 1: Create ThemeConfig with mood palettes (AC: 1, 6)
+  - [x]1.1 Create `Scripts/Game/UI/ThemeConfig.cs` — static class with all visual constants
+  - [x]1.2 Drink colors: Tropical Fresh palette (warm golden Mango, luxurious Berry, ocean Teal, soft Rose, sunlit Lime)
+  - [x]1.3 Container colors: idle morning (warm glass), idle night (cool glass), selected (golden glow)
+  - [x]1.4 UI colors: background morning/night, button primary/secondary, text, star gold
+  - [x]1.5 Morning palette: warm golden backgrounds, bright text, sunlit accents
+  - [x]1.6 Night palette: deep blue backgrounds, soft white text, warm amber accents
+  - [x]1.7 Enum `ThemeColorType`: Background, ContainerIdle, ContainerSelected, ButtonPrimary, ButtonSecondary, TextPrimary, TextSecondary, StarGold, EmptySlot
+  - [x]1.8 Method: `GetColor(LevelMood mood, ThemeColorType type)` for mood-aware retrieval
+  - [x]1.9 Method: `GetDrinkColor(DrinkColor)` replacing DrinkColorMap
 
-- [ ] Task 2: Update DrinkColorMap (AC: 2)
-  - [ ] 2.1 DrinkColorMap.GetColor now delegates to ThemeConfig.GetDrinkColor
-  - [ ] 2.2 Richer warm tones per visual direction
+- [x] Task 2: Update DrinkColorMap (AC: 2)
+  - [x]2.1 DrinkColorMap.GetColor now delegates to ThemeConfig.GetDrinkColor
+  - [x]2.2 Richer warm tones per visual direction
 
-- [ ] Task 3: Update ContainerView styling (AC: 3, 4, 5)
-  - [ ] 3.1 ContainerView.IdleColor and SelectedColor read from ThemeConfig
-  - [ ] 3.2 SlotView empty color from ThemeConfig.GetColor(EmptySlot)
+- [x] Task 3: Update ContainerView styling (AC: 3, 4, 5)
+  - [x]3.1 ContainerView.IdleColor and SelectedColor read from ThemeConfig
+  - [x]3.2 SlotView empty color from ThemeConfig.GetColor(EmptySlot)
 
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1 Create `Scripts/Tests/EditMode/ThemeConfigTests.cs`
-  - [ ] 4.2 Test GetColor returns different values for morning vs night
-  - [ ] 4.3 Test all DrinkColor enum values produce non-transparent colors
-  - [ ] 4.4 Test ThemeColorType has all required values
+- [x] Task 4: Write tests (AC: all)
+  - [x]4.1 Create `Scripts/Tests/EditMode/ThemeConfigTests.cs`
+  - [x]4.2 Test GetColor returns different values for morning vs night
+  - [x]4.3 Test all DrinkColor enum values produce non-transparent colors
+  - [x]4.4 Test ThemeColorType has all required values
 
 ## Dev Notes
 

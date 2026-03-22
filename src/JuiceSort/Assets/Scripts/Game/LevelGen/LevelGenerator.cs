@@ -1,3 +1,4 @@
+using UnityEngine;
 using JuiceSort.Game.Puzzle;
 
 namespace JuiceSort.Game.LevelGen
@@ -52,7 +53,7 @@ namespace JuiceSort.Game.LevelGen
             int containerCount = definition.ContainerCount;
 
             // Many raw pours to thoroughly mix colors
-            int totalPours = definition.ColorCount * definition.SlotCount * 4;
+            int totalPours = definition.ColorCount * definition.SlotCount * definition.ShuffleMultiplier;
             int maxAttempts = totalPours * 8;
             int successfulPours = 0;
 
@@ -141,6 +142,11 @@ namespace JuiceSort.Game.LevelGen
 
                 if (source.IsEmpty())
                     emptyCount++;
+            }
+
+            if (emptyCount < emptyNeeded)
+            {
+                Debug.LogWarning($"[LevelGenerator] EnsureEmptyContainers: only achieved {emptyCount}/{emptyNeeded} empty containers for level {definition.LevelNumber}");
             }
         }
     }

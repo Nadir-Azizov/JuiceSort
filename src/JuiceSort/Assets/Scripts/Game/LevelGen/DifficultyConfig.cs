@@ -15,11 +15,6 @@ namespace JuiceSort.Game.LevelGen
         [SerializeField] private int _colorsPerLevelStep = 20;
         [SerializeField] private int _maxColors = 5;
 
-        [Header("Container Scaling")]
-        [SerializeField] private int _baseExtraContainers = 1;
-        [SerializeField] private int _containersPerLevelStep = 10;
-        [SerializeField] private int _maxContainers = 10;
-
         [Header("Slot Scaling")]
         [SerializeField] private int _baseSlotCount = 4;
         [SerializeField] private int _slotsPerLevelStep = 100;
@@ -29,14 +24,11 @@ namespace JuiceSort.Game.LevelGen
         [SerializeField] private int _emptyContainerCount = 1;
 
         [Header("Shuffle")]
-        [SerializeField] private int _shuffleMultiplier = 3;
+        [SerializeField] private int _shuffleMultiplier = 4;
 
         public int BaseColorCount => _baseColorCount;
         public int ColorsPerLevelStep => _colorsPerLevelStep;
         public int MaxColors => _maxColors;
-        public int BaseExtraContainers => _baseExtraContainers;
-        public int ContainersPerLevelStep => _containersPerLevelStep;
-        public int MaxContainers => _maxContainers;
         public int BaseSlotCount => _baseSlotCount;
         public int SlotsPerLevelStep => _slotsPerLevelStep;
         public int MaxSlots => _maxSlots;

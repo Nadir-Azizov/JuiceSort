@@ -20,7 +20,6 @@ namespace JuiceSort.Game.Save
             try
             {
                 File.WriteAllText(SavePath, json);
-                Debug.Log($"[SaveManager] Saved to {SavePath}");
             }
             catch (Exception e)
             {
@@ -35,9 +34,7 @@ namespace JuiceSort.Game.Save
                 if (!File.Exists(SavePath))
                     return null;
 
-                string json = File.ReadAllText(SavePath);
-                Debug.Log("[SaveManager] Loaded save data.");
-                return json;
+                return File.ReadAllText(SavePath);
             }
             catch (Exception e)
             {

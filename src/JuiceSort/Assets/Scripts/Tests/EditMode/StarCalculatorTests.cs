@@ -108,5 +108,21 @@ namespace JuiceSort.Tests.EditMode
 
             Assert.AreEqual(first, second, "Cached result should match");
         }
+
+        [Test]
+        public void OptimalMoveEstimator_HighLevel_ReturnsReasonableEstimate()
+        {
+            OptimalMoveEstimator.ClearCache();
+            // Level 150: 5 colors, 5 slots — solver may fall back to heuristic
+            var def = DifficultyScaler.GetLevelDefinition(150);
+            int estimate = OptimalMoveEstimator.Estimate(150, def);
+
+            Assert.Greater(estimate, 0, "Estimate should be positive");
+            // Heuristic should not wildly overestimate — must be less than colorCount * slotCount * 2
+            // to avoid making 3 stars trivially easy
+            int maxReasonable = def.ColorCount * def.SlotCount * 2;
+            Assert.LessOrEqual(estimate, maxReasonable,
+                $"Estimate {estimate} should not exceed {maxReasonable} for {def.ColorCount} colors, {def.SlotCount} slots");
+        }
     }
 }

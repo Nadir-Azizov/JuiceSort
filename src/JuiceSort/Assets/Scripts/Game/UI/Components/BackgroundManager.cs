@@ -10,9 +10,12 @@ namespace JuiceSort.Game.UI.Components
     public class BackgroundManager : MonoBehaviour
     {
         private SpriteRenderer _bgRenderer;
+        private static Sprite _cachedBgSprite;
 
         public void SetBackground(string cityName, LevelMood mood)
         {
+            if (_bgRenderer == null) return;
+
             float cityHueShift = GetCityHueShift(cityName);
 
             var topColor = ThemeConfig.GetBackgroundGradientTop(mood);
@@ -48,16 +51,19 @@ namespace JuiceSort.Game.UI.Components
         {
             var go = new GameObject("BackgroundManager");
 
-            // Create a large white sprite for background
-            var tex = new Texture2D(4, 4);
-            for (int x = 0; x < 4; x++)
-                for (int y = 0; y < 4; y++)
-                    tex.SetPixel(x, y, Color.white);
-            tex.Apply();
-            var sprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
+            // Create and cache a white sprite for background
+            if (_cachedBgSprite == null)
+            {
+                var tex = new Texture2D(4, 4);
+                for (int x = 0; x < 4; x++)
+                    for (int y = 0; y < 4; y++)
+                        tex.SetPixel(x, y, Color.white);
+                tex.Apply();
+                _cachedBgSprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4f);
+            }
 
             var bgRenderer = go.AddComponent<SpriteRenderer>();
-            bgRenderer.sprite = sprite;
+            bgRenderer.sprite = _cachedBgSprite;
             bgRenderer.color = ThemeConfig.GetColor(LevelMood.Morning, ThemeColorType.Background);
             bgRenderer.sortingOrder = -10; // behind everything
 

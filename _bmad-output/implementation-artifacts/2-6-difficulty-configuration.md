@@ -20,21 +20,21 @@ so that I can balance puzzle difficulty through playtesting without code changes
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create DifficultyConfig ScriptableObject (AC: 1, 3, 5)
-  - [ ] 1.1 Create `Scripts/Game/LevelGen/DifficultyConfig.cs` — ScriptableObject with fields for all scaling parameters
-  - [ ] 1.2 Fields: baseColorCount, colorsPerLevelStep, maxColors, baseContainerCount, containersPerLevelStep, maxContainers, baseSlotCount, slotsPerLevelStep, maxSlots, emptyContainerCount, minShuffleMultiplier
-  - [ ] 1.3 Default values matching GDD estimates
-  - [ ] 1.4 Create asset instance in `Data/Difficulty/` folder (or note for Unity Editor creation)
+- [x] Task 1: Create DifficultyConfig ScriptableObject (AC: 1, 3, 5)
+  - [x] 1.1 Create `Scripts/Game/LevelGen/DifficultyConfig.cs` — ScriptableObject with fields for all scaling parameters
+  - [x] 1.2 Fields: baseColorCount, colorsPerLevelStep, maxColors, baseContainerCount, containersPerLevelStep, maxContainers, baseSlotCount, slotsPerLevelStep, maxSlots, emptyContainerCount, minShuffleMultiplier
+  - [x] 1.3 Default values matching GDD estimates
+  - [x] 1.4 Create asset instance in `Data/Difficulty/` folder (or note for Unity Editor creation)
 
-- [ ] Task 2: Refactor DifficultyScaler to use config (AC: 2, 4)
-  - [ ] 2.1 Change DifficultyScaler to accept DifficultyConfig parameter or access via Service Locator
-  - [ ] 2.2 Replace hardcoded formulas with config-driven calculations
-  - [ ] 2.3 Since SO config is read at generation time, runtime changes naturally apply to next level
+- [x] Task 2: Refactor DifficultyScaler to use config (AC: 2, 4)
+  - [x] 2.1 Change DifficultyScaler to accept DifficultyConfig parameter or access via Service Locator
+  - [x] 2.2 Replace hardcoded formulas with config-driven calculations
+  - [x] 2.3 Since SO config is read at generation time, runtime changes naturally apply to next level
 
-- [ ] Task 3: Write tests (AC: all)
-  - [ ] 3.1 Test DifficultyScaler with custom config produces expected parameters
-  - [ ] 3.2 Test default config values produce same results as previous hardcoded values
-  - [ ] 3.3 Test edge cases: config with extreme values doesn't break generation
+- [x] Task 3: Write tests (AC: all)
+  - [x] 3.1 Test DifficultyScaler with custom config produces expected parameters
+  - [x] 3.2 Test default config values produce same results as previous hardcoded values
+  - [x] 3.3 Test edge cases: config with extreme values doesn't break generation
 
 ## Dev Notes
 

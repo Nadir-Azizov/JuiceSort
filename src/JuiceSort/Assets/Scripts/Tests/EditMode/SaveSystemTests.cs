@@ -116,5 +116,39 @@ namespace JuiceSort.Tests.EditMode
             Assert.AreEqual(1, data.CurrentLevel);
             Assert.AreEqual(0, data.GetTotalStars());
         }
+
+        [Test]
+        public void SaveData_CoinAndStreak_SurviveJsonRoundTrip()
+        {
+            var data = new ProgressionData();
+            data.CurrentLevel = 10;
+            data.SetLevelRecord(new LevelRecord(1, "Paris", "France", LevelMood.Morning, 3));
+
+            var saveData = SaveData.FromProgressionData(data, coinBalance: 1500, consecutiveWinStreak: 4);
+
+            string json = JsonUtility.ToJson(saveData);
+            var loaded = JsonUtility.FromJson<SaveData>(json);
+
+            Assert.AreEqual(1500, loaded.coinBalance, "Coin balance should survive JSON round-trip");
+            Assert.AreEqual(4, loaded.consecutiveWinStreak, "Win streak should survive JSON round-trip");
+            Assert.AreEqual(10, loaded.currentLevel);
+            Assert.AreEqual(1, loaded.levelRecords.Length);
+        }
+
+        [Test]
+        public void SaveData_SettingsFlags_SurviveJsonRoundTrip()
+        {
+            var data = new ProgressionData();
+            data.SoundEnabled = false;
+            data.MusicEnabled = false;
+
+            var saveData = SaveData.FromProgressionData(data);
+            string json = JsonUtility.ToJson(saveData);
+            var loaded = JsonUtility.FromJson<SaveData>(json);
+            var restored = loaded.ToProgressionData();
+
+            Assert.IsFalse(restored.SoundEnabled, "SoundEnabled=false should survive round-trip");
+            Assert.IsFalse(restored.MusicEnabled, "MusicEnabled=false should survive round-trip");
+        }
     }
 }

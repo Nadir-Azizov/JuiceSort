@@ -5,12 +5,13 @@ namespace JuiceSort.Game.Progression
 {
     /// <summary>
     /// Estimates optimal move count for a level.
-    /// Tries PuzzleSolver with tight depth limit, falls back to heuristic.
+    /// Tries PuzzleSolver with increasing depth limits, falls back to scaled heuristic.
     /// Caches results per level number to avoid re-solving on replay.
     /// </summary>
     public static class OptimalMoveEstimator
     {
-        private const int SolverDepthLimit = 30;
+        private const int SolverDepthLimit = 50;
+        private const int MaxCacheSize = 200;
         private static readonly Dictionary<int, int> _cache = new Dictionary<int, int>();
 
         /// <summary>
@@ -21,12 +22,17 @@ namespace JuiceSort.Game.Progression
             if (_cache.TryGetValue(levelNumber, out int cached))
                 return cached;
 
-            int estimate = TrySolver(levelNumber, definition);
+            int estimate = TrySolver(definition);
+
+            // Evict oldest entries if cache grows too large (mobile memory)
+            if (_cache.Count >= MaxCacheSize)
+                _cache.Clear();
+
             _cache[levelNumber] = estimate;
             return estimate;
         }
 
-        private static int TrySolver(int levelNumber, LevelDefinition definition)
+        private static int TrySolver(LevelDefinition definition)
         {
             var state = LevelGenerator.Generate(definition);
             var result = PuzzleSolver.Solve(state, SolverDepthLimit);
@@ -34,8 +40,11 @@ namespace JuiceSort.Game.Progression
             if (result.IsSolvable && result.MoveCount > 0)
                 return result.MoveCount;
 
-            // Heuristic fallback
-            return definition.ColorCount * definition.SlotCount * 2;
+            // Scaled heuristic fallback: base estimate from puzzle complexity
+            // Lower multiplier produces tighter thresholds so stars aren't given away
+            int baseEstimate = definition.ColorCount * (definition.SlotCount - 1);
+            int complexityBonus = (definition.ColorCount - 3) * 2;
+            return baseEstimate + complexityBonus;
         }
 
         /// <summary>

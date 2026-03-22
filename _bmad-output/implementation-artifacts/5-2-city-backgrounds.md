@@ -18,24 +18,24 @@ so that each puzzle feels like visiting a new destination.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create BackgroundManager (AC: 1, 4, 5)
-  - [ ] 1.1 Create `Scripts/Game/UI/Components/BackgroundManager.cs` — manages background display
-  - [ ] 1.2 Creates a full-screen Image behind all gameplay elements (low sorting order)
-  - [ ] 1.3 Method: SetBackground(string cityName, LevelMood mood) — sets gradient based on city+mood
-  - [ ] 1.4 Placeholder: generate gradient colors procedurally from city name hash (each city gets unique warm hues)
+- [x] Task 1: Create BackgroundManager (AC: 1, 4, 5)
+  - [x]1.1 Create `Scripts/Game/UI/Components/BackgroundManager.cs` — manages background display
+  - [x]1.2 Creates a full-screen Image behind all gameplay elements (low sorting order)
+  - [x]1.3 Method: SetBackground(string cityName, LevelMood mood) — sets gradient based on city+mood
+  - [x]1.4 Placeholder: generate gradient colors procedurally from city name hash (each city gets unique warm hues)
 
-- [ ] Task 2: Create morning/night gradients (AC: 2, 3)
-  - [ ] 2.1 Morning: warm sunrise gradient (golden top → soft peach bottom)
-  - [ ] 2.2 Night: cool twilight gradient (deep blue top → warm purple bottom)
-  - [ ] 2.3 City variation: shift hue slightly based on city index for variety
+- [x] Task 2: Create morning/night gradients (AC: 2, 3)
+  - [x]2.1 Morning: warm sunrise gradient (golden top → soft peach bottom)
+  - [x]2.2 Night: cool twilight gradient (deep blue top → warm purple bottom)
+  - [x]2.3 City variation: shift hue slightly based on city index for variety
 
-- [ ] Task 3: Integrate into GameplayManager (AC: 5)
-  - [ ] 3.1 When LoadLevel runs, call BackgroundManager.SetBackground with city/mood from LevelDefinition
-  - [ ] 3.2 Background updates on NextLevel and RestartLevel
+- [x] Task 3: Integrate into GameplayManager (AC: 5)
+  - [x]3.1 When LoadLevel runs, call BackgroundManager.SetBackground with city/mood from LevelDefinition
+  - [x]3.2 Background updates on NextLevel and RestartLevel
 
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1 Test gradient generation produces different colors for morning vs night
-  - [ ] 4.2 Test different cities produce different gradients
+- [x] Task 4: Write tests (AC: all)
+  - [x]4.1 Test gradient generation produces different colors for morning vs night
+  - [x]4.2 Test different cities produce different gradients
 
 ## Dev Notes
 

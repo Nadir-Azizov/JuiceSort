@@ -20,18 +20,18 @@ so that every interaction feels responsive and rewarding.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add SFX trigger points in GameplayManager (AC: 1, 2, 3, 4, 5)
-  - [ ] 1.1 After successful pour in AttemptPour → PlaySFX(AudioClipType.Pour)
-  - [ ] 1.2 In SelectContainer → PlaySFX(AudioClipType.Select)
-  - [ ] 1.3 In DeselectCurrent → PlaySFX(AudioClipType.Deselect)
-  - [ ] 1.4 In OnLevelComplete → PlaySFX(AudioClipType.LevelComplete)
-  - [ ] 1.5 In OnLevelComplete after star calculation → PlaySFX(AudioClipType.StarAwarded)
+- [x] Task 1: Add SFX trigger points in GameplayManager (AC: 1, 2, 3, 4, 5)
+  - [x]1.1 After successful pour in AttemptPour → PlaySFX(AudioClipType.Pour)
+  - [x]1.2 In SelectContainer → PlaySFX(AudioClipType.Select)
+  - [x]1.3 In DeselectCurrent → PlaySFX(AudioClipType.Deselect)
+  - [x]1.4 In OnLevelComplete → PlaySFX(AudioClipType.LevelComplete)
+  - [x]1.5 In OnLevelComplete after star calculation → PlaySFX(AudioClipType.StarAwarded)
 
-- [ ] Task 2: Respect sound toggle (AC: 6)
-  - [ ] 2.1 AudioManager.PlaySFX checks _soundEnabled before playing — already handled in AudioManager
+- [x] Task 2: Respect sound toggle (AC: 6)
+  - [x]2.1 AudioManager.PlaySFX checks _soundEnabled before playing — already handled in AudioManager
 
-- [ ] Task 3: Write tests (AC: all)
-  - [ ] 3.1 Test AudioClipType enum covers all gameplay events
+- [x] Task 3: Write tests (AC: all)
+  - [x]3.1 Test AudioClipType enum covers all gameplay events
 
 ## Dev Notes
 

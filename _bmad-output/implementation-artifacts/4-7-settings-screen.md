@@ -19,27 +19,27 @@ so that I can toggle sound and music preferences.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add settings to ProgressionData (AC: 6)
-  - [ ] 1.1 Add `SoundEnabled` (bool, default true) and `MusicEnabled` (bool, default true) to ProgressionData
-  - [ ] 1.2 Add matching properties to IProgressionManager and ProgressionManager
-  - [ ] 1.3 SaveData.FromProgressionData/ToProgressionData includes sound/music settings
+- [x] Task 1: Add settings to ProgressionData (AC: 6)
+  - [x]1.1 Add `SoundEnabled` (bool, default true) and `MusicEnabled` (bool, default true) to ProgressionData
+  - [x]1.2 Add matching properties to IProgressionManager and ProgressionManager
+  - [x]1.3 SaveData.FromProgressionData/ToProgressionData includes sound/music settings
 
-- [ ] Task 2: Create SettingsScreen (AC: 1, 2, 3, 5)
-  - [ ] 2.1 Create `Scripts/Game/UI/Screens/SettingsScreen.cs`
-  - [ ] 2.2 Sound toggle button: shows "Sound: ON" / "Sound: OFF", toggles on tap
-  - [ ] 2.3 Music toggle button: shows "Music: ON" / "Music: OFF", toggles on tap
-  - [ ] 2.4 "Back" button → ScreenManager.TransitionTo(MainMenu)
+- [x] Task 2: Create SettingsScreen (AC: 1, 2, 3, 5)
+  - [x]2.1 Create `Scripts/Game/UI/Screens/SettingsScreen.cs`
+  - [x]2.2 Sound toggle button: shows "Sound: ON" / "Sound: OFF", toggles on tap
+  - [x]2.3 Music toggle button: shows "Music: ON" / "Music: OFF", toggles on tap
+  - [x]2.4 "Back" button → ScreenManager.TransitionTo(MainMenu)
 
-- [ ] Task 3: Persist on toggle (AC: 4)
-  - [ ] 3.1 On toggle change → update ProgressionManager settings → auto-save
+- [x] Task 3: Persist on toggle (AC: 4)
+  - [x]3.1 On toggle change → update ProgressionManager settings → auto-save
 
-- [ ] Task 4: Register in BootLoader
-  - [ ] 4.1 Create SettingsScreen, register with ScreenManager
+- [x] Task 4: Register in BootLoader
+  - [x]4.1 Create SettingsScreen, register with ScreenManager
 
-- [ ] Task 5: Write tests (AC: all)
-  - [ ] 5.1 Test settings default to true
-  - [ ] 5.2 Test toggle changes value
-  - [ ] 5.3 Test settings survive save/load round-trip
+- [x] Task 5: Write tests (AC: all)
+  - [x]5.1 Test settings default to true
+  - [x]5.2 Test toggle changes value
+  - [x]5.3 Test settings survive save/load round-trip
 
 ## Dev Notes
 

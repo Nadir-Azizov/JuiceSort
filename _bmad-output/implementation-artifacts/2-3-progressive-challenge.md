@@ -21,33 +21,33 @@ so that I feel a sense of progression and mastery.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace TestPuzzleData with LevelGenerator in GameplayManager (AC: 1, 2)
-  - [ ] 1.1 Add `_currentLevelNumber` field (int, starts at 1) to GameplayManager
-  - [ ] 1.2 Replace `TestPuzzleData.CreateTestPuzzle()` with `LevelGenerator.Generate(DifficultyScaler.GetLevelDefinition(_currentLevelNumber))`
-  - [ ] 1.3 Expose `CurrentLevelNumber` property
-  - [ ] 1.4 Keep TestPuzzleData.cs for test use but remove it from gameplay flow
+- [x] Task 1: Replace TestPuzzleData with LevelGenerator in GameplayManager (AC: 1, 2)
+  - [x] 1.1 Add `_currentLevelNumber` field (int, starts at 1) to GameplayManager
+  - [x] 1.2 Replace `TestPuzzleData.CreateTestPuzzle()` with `LevelGenerator.Generate(DifficultyScaler.GetLevelDefinition(_currentLevelNumber))`
+  - [x] 1.3 Expose `CurrentLevelNumber` property
+  - [x] 1.4 Keep TestPuzzleData.cs for test use but remove it from gameplay flow
 
-- [ ] Task 2: Implement next level flow with board recreation (AC: 3)
-  - [ ] 2.1 Add `NextLevel()` public method to GameplayManager — increments level number, generates new puzzle, resets state
-  - [ ] 2.2 Add a placeholder "Next Level" button on the win overlay
-  - [ ] 2.3 NextLevel must DESTROY old PuzzleBoardView and CREATE a new one (container count changes per level)
-  - [ ] 2.4 Unsubscribe from old board events (OnContainerTapped, OnBackgroundTapped) before destroying
-  - [ ] 2.5 Subscribe to new board events after creation
-  - [ ] 2.6 Recreate undo/restart buttons on new board (they're children of board Canvas)
+- [x] Task 2: Implement next level flow with board recreation (AC: 3)
+  - [x] 2.1 Add `NextLevel()` public method to GameplayManager — increments level number, generates new puzzle, resets state
+  - [x] 2.2 Add a placeholder "Next Level" button on the win overlay
+  - [x] 2.3 NextLevel must DESTROY old PuzzleBoardView and CREATE a new one (container count changes per level)
+  - [x] 2.4 Unsubscribe from old board events (OnContainerTapped, OnBackgroundTapped) before destroying
+  - [x] 2.5 Subscribe to new board events after creation
+  - [x] 2.6 Recreate undo/restart buttons on new board (they're children of board Canvas)
 
-- [ ] Task 3: Display level number (AC: 4)
-  - [ ] 3.1 Add a placeholder level number text on the gameplay Canvas (e.g., "Level 1")
-  - [ ] 3.2 Update text when level changes
+- [x] Task 3: Display level number (AC: 4)
+  - [x] 3.1 Add a placeholder level number text on the gameplay Canvas (e.g., "Level 1")
+  - [x] 3.2 Update text when level changes
 
-- [ ] Task 4: Update RestartLevel for generated puzzles (AC: 6)
-  - [ ] 4.1 RestartLevel should regenerate from the same level number (same seed = same puzzle)
-  - [ ] 4.2 No need to store _initialPuzzle separately — regeneration produces identical puzzle
+- [x] Task 4: Update RestartLevel for generated puzzles (AC: 6)
+  - [x] 4.1 RestartLevel should regenerate from the same level number (same seed = same puzzle)
+  - [x] 4.2 No need to store _initialPuzzle separately — regeneration produces identical puzzle
 
-- [ ] Task 5: Write tests (AC: all)
-  - [ ] 5.1 Test level 1 generates a valid puzzle
-  - [ ] 5.2 Test NextLevel increments level number
-  - [ ] 5.3 Test same level number produces same puzzle (seeded consistency)
-  - [ ] 5.4 Test level 20 has more parameters than level 1
+- [x] Task 5: Write tests (AC: all)
+  - [x] 5.1 Test level 1 generates a valid puzzle
+  - [x] 5.2 Test NextLevel increments level number
+  - [x] 5.3 Test same level number produces same puzzle (seeded consistency)
+  - [x] 5.4 Test level 20 has more parameters than level 1
 
 ## Dev Notes
 

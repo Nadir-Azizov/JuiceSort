@@ -70,6 +70,8 @@ namespace JuiceSort.Game.Puzzle
 
         public BottleContainerView GetContainerView(int index)
         {
+            if (_containerViews == null || index < 0 || index >= _containerViews.Length)
+                return null;
             return _containerViews[index];
         }
 

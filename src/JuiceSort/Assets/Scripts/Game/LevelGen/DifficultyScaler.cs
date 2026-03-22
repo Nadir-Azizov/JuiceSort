@@ -12,9 +12,6 @@ namespace JuiceSort.Game.LevelGen
         private const int DefaultBaseColorCount = 3;
         private const int DefaultColorsPerStep = 20;
         private const int DefaultMaxColors = 5;
-        private const int DefaultBaseExtraContainers = 1;
-        private const int DefaultContainersPerStep = 10;
-        private const int DefaultMaxContainers = 10;
         private const int DefaultBaseSlotCount = 4;
         private const int DefaultSlotsPerStep = 100;
         private const int DefaultMaxSlots = 6;

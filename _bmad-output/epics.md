@@ -12,11 +12,11 @@
 | 6 | Audio | Epic 1 | 2 implemented, 3 merged | Done |
 | 7 | Monetization & Publishing | Epic 1-6 | 2 implemented, 4 merged | Done |
 | 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
-| 9 | Coin Economy System | Epic 1, 3, 7 | 6 stories | Backlog |
+| 9 | Coin Economy System | Epic 1, 3, 7 | 6 implemented | Done |
 | 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 stories | Backlog |
-| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 7 stories | Backlog |
+| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 3 implemented, 4 remaining | In Progress |
 
-**Total: 38 implemented stories / 51 originally planned (13 merged during development)**
+**Total: 47 implemented stories / 57 originally planned (13 merged during development)**
 
 ---
 
@@ -334,12 +334,12 @@ Epic 1 (puzzle engine), Epic 3 (progression system), Epic 7 (ads)
 Players earn coins by completing levels efficiently, maintain streaks for bonus coins, and spend coins on undo and extra bottle instead of getting them for free/ads.
 
 ### Stories
-- **9.1** As a player, I see my coin balance on the gameplay HUD and it persists across sessions
-- **9.2** As a player, I earn coins when completing a level (base reward scaled by difficulty)
-- **9.3** As a player, I earn bonus coins for consecutive level wins (streak system)
-- **9.4** As a player, I can spend coins to undo a move (cost increases with each use per level)
-- **9.5** As a player, I can spend coins to add an extra bottle (cost increases, max 2 per level)
-- **9.6** As a player, I can watch a rewarded ad to earn coins
+- **9.1** As a player, I see my coin balance on the gameplay HUD and it persists across sessions → [9-1-coin-balance-hud.md](implementation-artifacts/9-1-coin-balance-hud.md)
+- **9.2** As a player, I earn coins when completing a level (base reward scaled by difficulty) → [9-2-level-completion-reward.md](implementation-artifacts/9-2-level-completion-reward.md)
+- **9.3** As a player, I earn bonus coins for consecutive level wins (streak system) → [9-3-streak-bonus.md](implementation-artifacts/9-3-streak-bonus.md)
+- **9.4** As a player, I can spend coins to undo a move (cost increases with each use per level) → [9-4-coin-undo.md](implementation-artifacts/9-4-coin-undo.md)
+- **9.5** As a player, I can spend coins to add an extra bottle (cost increases, max 2 per level) → [9-5-coin-extra-bottle.md](implementation-artifacts/9-5-coin-extra-bottle.md)
+- **9.6** As a player, I can watch a rewarded ad to earn coins → [9-6-rewarded-ad-coins.md](implementation-artifacts/9-6-rewarded-ad-coins.md)
 
 ---
 

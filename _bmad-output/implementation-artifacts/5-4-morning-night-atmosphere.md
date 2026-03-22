@@ -20,28 +20,28 @@ so that the mood system adds variety and I know which destination I'm visiting.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Wire mood into ContainerView (AC: 1, 2, 3)
-  - [ ] 1.1 ContainerView receives current LevelMood on Initialize (or via ThemeConfig static state)
-  - [ ] 1.2 Idle color = ThemeConfig.GetColor(mood, ContainerIdle)
-  - [ ] 1.3 Selected color stays golden (consistent selection feedback across moods)
+- [x] Task 1: Wire mood into ContainerView (AC: 1, 2, 3)
+  - [x]1.1 ContainerView receives current LevelMood on Initialize (or via ThemeConfig static state)
+  - [x]1.2 Idle color = ThemeConfig.GetColor(mood, ContainerIdle)
+  - [x]1.3 Selected color stays golden (consistent selection feedback across moods)
 
-- [ ] Task 2: Wire mood into GameplayHUD (AC: 4, 6)
-  - [ ] 2.1 GameplayHUD.SetLevelInfo shows: "Level N — CityName, Country ☀/☾"
-  - [ ] 2.2 HUD text colors from ThemeConfig.GetColor(mood, TextPrimary/Secondary)
-  - [ ] 2.3 Button colors from ThemeConfig.GetColor(mood, ButtonPrimary/Secondary)
+- [x] Task 2: Wire mood into GameplayHUD (AC: 4, 6)
+  - [x]2.1 GameplayHUD.SetLevelInfo shows: "Level N — CityName, Country ☀/☾"
+  - [x]2.2 HUD text colors from ThemeConfig.GetColor(mood, TextPrimary/Secondary)
+  - [x]2.3 Button colors from ThemeConfig.GetColor(mood, ButtonPrimary/Secondary)
 
-- [ ] Task 3: Wire mood into BackgroundManager (AC: 5)
-  - [ ] 3.1 BackgroundManager.SetBackground uses ThemeConfig.GetColor(mood, Background) as base
-  - [ ] 3.2 Morning gradient: golden top → soft peach bottom
-  - [ ] 3.3 Night gradient: deep blue top → warm purple bottom
+- [x] Task 3: Wire mood into BackgroundManager (AC: 5)
+  - [x]3.1 BackgroundManager.SetBackground uses ThemeConfig.GetColor(mood, Background) as base
+  - [x]3.2 Morning gradient: golden top → soft peach bottom
+  - [x]3.3 Night gradient: deep blue top → warm purple bottom
 
-- [ ] Task 4: Wire mood in GameplayManager.LoadLevel (AC: 7)
-  - [ ] 4.1 Pass mood to ContainerView, GameplayHUD, BackgroundManager after level loads
-  - [ ] 4.2 Set ThemeConfig.CurrentMood static property so all components can access it
+- [x] Task 4: Wire mood in GameplayManager.LoadLevel (AC: 7)
+  - [x]4.1 Pass mood to ContainerView, GameplayHUD, BackgroundManager after level loads
+  - [x]4.2 Set ThemeConfig.CurrentMood static property so all components can access it
 
-- [ ] Task 5: Write tests (AC: all)
-  - [ ] 5.1 Test ThemeConfig.GetColor returns different colors for Morning vs Night for each type
-  - [ ] 5.2 Test morning and night colors are valid (non-zero alpha)
+- [x] Task 5: Write tests (AC: all)
+  - [x]5.1 Test ThemeConfig.GetColor returns different colors for Morning vs Night for each type
+  - [x]5.2 Test morning and night colors are valid (non-zero alpha)
 
 ## Dev Notes
 

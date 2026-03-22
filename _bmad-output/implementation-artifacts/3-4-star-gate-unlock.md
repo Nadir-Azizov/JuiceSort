@@ -21,33 +21,33 @@ so that I'm motivated to replay levels for better ratings.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add batch gate logic to ProgressionManager (AC: 1, 2, 7)
-  - [ ] 1.1 Add `IsAtBatchGate(int levelNumber)` — returns true if level % LevelsPerBatch == 0
-  - [ ] 1.2 Add `CanPassBatchGate()` — checks total stars in current batch >= required
-  - [ ] 1.3 Add `GetCurrentBatchNumber()` — returns (CurrentLevel - 1) / LevelsPerBatch + 1
-  - [ ] 1.4 Add `GetBatchStarCount(int batchNumber)` — sums stars for levels in that batch
-  - [ ] 1.5 Add `GetBatchRequiredStars()` — returns LevelsPerBatch * StarsPerLevel * StarGatePercent (120)
+- [x] Task 1: Add batch gate logic to ProgressionManager (AC: 1, 2, 7)
+  - [x] 1.1 Add `IsAtBatchGate(int levelNumber)` — returns true if level % LevelsPerBatch == 0
+  - [x] 1.2 Add `CanPassBatchGate()` — checks total stars in current batch >= required
+  - [x] 1.3 Add `GetCurrentBatchNumber()` — returns (CurrentLevel - 1) / LevelsPerBatch + 1
+  - [x] 1.4 Add `GetBatchStarCount(int batchNumber)` — sums stars for levels in that batch
+  - [x] 1.5 Add `GetBatchRequiredStars()` — returns LevelsPerBatch * StarsPerLevel * StarGatePercent (120)
 
-- [ ] Task 2: Create placeholder gate screen with level list (AC: 3, 4, 5, 6)
-  - [ ] 2.1 In GameplayManager.NextLevel, check if current level is batch boundary AND gate fails
-  - [ ] 2.2 If gate blocked → show gate overlay instead of loading next level
-  - [ ] 2.3 Gate overlay shows: "Batch Gate — Need X more stars" text
-  - [ ] 2.4 Gate overlay shows scrollable list of completed levels from GetAllLevelRecords: "Level 1 - Paris ★★☆" format
-  - [ ] 2.5 Each level entry is a button — tap to call LoadSpecificLevel (from Story 3.5)
-  - [ ] 2.6 Use Unity UI ScrollRect + VerticalLayoutGroup for the level list
-  - [ ] 2.7 This is placeholder — Epic 4 builds the proper visual roadmap
+- [x] Task 2: Create placeholder gate screen with level list (AC: 3, 4, 5, 6)
+  - [x] 2.1 In GameplayManager.NextLevel, check if current level is batch boundary AND gate fails
+  - [x] 2.2 If gate blocked → show gate overlay instead of loading next level
+  - [x] 2.3 Gate overlay shows: "Batch Gate — Need X more stars" text
+  - [x] 2.4 Gate overlay shows scrollable list of completed levels from GetAllLevelRecords: "Level 1 - Paris ★★☆" format
+  - [x] 2.5 Each level entry is a button — tap to call LoadSpecificLevel (from Story 3.5)
+  - [x] 2.6 Use Unity UI ScrollRect + VerticalLayoutGroup for the level list
+  - [x] 2.7 This is placeholder — Epic 4 builds the proper visual roadmap
 
-- [ ] Task 3: Gate re-check after replay (AC: 7, 8)
-  - [ ] 3.1 After completing a replay while gate is active, re-check CanPassBatchGate
-  - [ ] 3.2 If now passing → show "Gate Unlocked! Continue?" button
-  - [ ] 3.3 If still not passing → return to gate screen with updated star counts
+- [x] Task 3: Gate re-check after replay (AC: 7, 8)
+  - [x] 3.1 After completing a replay while gate is active, re-check CanPassBatchGate
+  - [x] 3.2 If now passing → show "Gate Unlocked! Continue?" button
+  - [x] 3.3 If still not passing → return to gate screen with updated star counts
 
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1 Test batch boundaries: level 50, 100, 150 are gates
-  - [ ] 4.2 Test gate pass with 120+ stars in batch
-  - [ ] 4.3 Test gate block with <120 stars
-  - [ ] 4.4 Test GetBatchStarCount sums correctly
-  - [ ] 4.5 Test gate re-check after star improvement
+- [x] Task 4: Write tests (AC: all)
+  - [x] 4.1 Test batch boundaries: level 50, 100, 150 are gates
+  - [x] 4.2 Test gate pass with 120+ stars in batch
+  - [x] 4.3 Test gate block with <120 stars
+  - [x] 4.4 Test GetBatchStarCount sums correctly
+  - [x] 4.5 Test gate re-check after star improvement
 
 ## Dev Notes
 

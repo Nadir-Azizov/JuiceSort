@@ -22,33 +22,33 @@ so that I have a goal beyond just completing the puzzle and know how well I perf
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create StarCalculator (AC: 1, 2, 3, 4, 5)
-  - [ ] 1.1 Create `Scripts/Game/Progression/StarCalculator.cs` — pure C# static class
-  - [ ] 1.2 Implement `CalculateStars(int moveCount, int estimatedOptimal)` → returns 1, 2, or 3
-  - [ ] 1.3 Logic: 3 stars if moveCount <= optimal * 1.2, 2 stars if moveCount <= optimal * 1.5, else 1 star
-  - [ ] 1.4 Guard: always return at least 1, never more than 3
-  - [ ] 1.5 Add `GetStarText(int stars)` helper → "★★★", "★★☆", "★☆☆"
+- [x] Task 1: Create StarCalculator (AC: 1, 2, 3, 4, 5)
+  - [x] 1.1 Create `Scripts/Game/Progression/StarCalculator.cs` — pure C# static class
+  - [x] 1.2 Implement `CalculateStars(int moveCount, int estimatedOptimal)` → returns 1, 2, or 3
+  - [x] 1.3 Logic: 3 stars if moveCount <= optimal * 1.2, 2 stars if moveCount <= optimal * 1.5, else 1 star
+  - [x] 1.4 Guard: always return at least 1, never more than 3
+  - [x] 1.5 Add `GetStarText(int stars)` helper → "★★★", "★★☆", "★☆☆"
 
-- [ ] Task 2: Create OptimalMoveEstimator (AC: 6)
-  - [ ] 2.1 Create `Scripts/Game/Progression/OptimalMoveEstimator.cs` — caches results per level
-  - [ ] 2.2 Try PuzzleSolver first with tight depth limit 30 for speed (avoids UI stutter on complex puzzles)
-  - [ ] 2.3 Fallback heuristic if solver fails or exceeds limit: estimate = colorCount * slotCount * 2
-  - [ ] 2.4 Cache via Dictionary<int, int> (levelNumber → optimal moves) to avoid re-solving on replay
+- [x] Task 2: Create OptimalMoveEstimator (AC: 6)
+  - [x] 2.1 Create `Scripts/Game/Progression/OptimalMoveEstimator.cs` — caches results per level
+  - [x] 2.2 Try PuzzleSolver first with tight depth limit 30 for speed (avoids UI stutter on complex puzzles)
+  - [x] 2.3 Fallback heuristic if solver fails or exceeds limit: estimate = colorCount * slotCount * 2
+  - [x] 2.4 Cache via Dictionary<int, int> (levelNumber → optimal moves) to avoid re-solving on replay
 
-- [ ] Task 3: Integrate into GameplayManager win overlay (AC: 7, 8)
-  - [ ] 3.1 In OnLevelComplete, estimate optimal moves and calculate stars
-  - [ ] 3.2 Update ShowWinOverlay to display star text: "★★☆" format
-  - [ ] 3.3 Show move count and estimated optimal: "Moves: 12 (Optimal: ~8)"
+- [x] Task 3: Integrate into GameplayManager win overlay (AC: 7, 8)
+  - [x] 3.1 In OnLevelComplete, estimate optimal moves and calculate stars
+  - [x] 3.2 Update ShowWinOverlay to display star text: "★★☆" format
+  - [x] 3.3 Show move count and estimated optimal: "Moves: 12 (Optimal: ~8)"
 
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1 Create `Scripts/Tests/EditMode/StarCalculatorTests.cs`
-  - [ ] 4.2 Test: exact optimal moves = 3 stars
-  - [ ] 4.3 Test: 1.2x optimal = 3 stars (boundary)
-  - [ ] 4.4 Test: 1.5x optimal = 2 stars (boundary)
-  - [ ] 4.5 Test: 2x optimal = 1 star
-  - [ ] 4.6 Test: always returns at least 1, never more than 3
-  - [ ] 4.7 Test: GetStarText produces correct symbols
-  - [ ] 4.8 Test: OptimalMoveEstimator returns positive value for level 1
+- [x] Task 4: Write tests (AC: all)
+  - [x] 4.1 Create `Scripts/Tests/EditMode/StarCalculatorTests.cs`
+  - [x] 4.2 Test: exact optimal moves = 3 stars
+  - [x] 4.3 Test: 1.2x optimal = 3 stars (boundary)
+  - [x] 4.4 Test: 1.5x optimal = 2 stars (boundary)
+  - [x] 4.5 Test: 2x optimal = 1 star
+  - [x] 4.6 Test: always returns at least 1, never more than 3
+  - [x] 4.7 Test: GetStarText produces correct symbols
+  - [x] 4.8 Test: OptimalMoveEstimator returns positive value for level 1
 
 ## Dev Notes
 

@@ -23,40 +23,40 @@ so that I can continue my journey from where I left off with all my level record
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ISaveManager interface (AC: 3)
-  - [ ] 1.1 Create `Scripts/Core/Interfaces/ISaveManager.cs` — interface with Save(string json), LoadJson() → string, HasSave() → bool, DeleteSave(). Uses string (not SaveData) so Core has no Game dependency. SaveManager in Game handles serialization.
+- [x] Task 1: Create ISaveManager interface (AC: 3)
+  - [x] 1.1 Create `Scripts/Core/Interfaces/ISaveManager.cs` — interface with Save(string json), LoadJson() → string, HasSave() → bool, DeleteSave(). Uses string (not SaveData) so Core has no Game dependency. SaveManager in Game handles serialization.
 
-- [ ] Task 2: Create SaveData class (AC: 2, 7)
-  - [ ] 2.1 Create `Scripts/Game/Save/SaveData.cs` — `[System.Serializable]` class
-  - [ ] 2.2 Fields: currentLevel (int), levelRecords (SavedLevelRecord[] — serializable version of LevelRecord)
-  - [ ] 2.3 Create `SavedLevelRecord` — `[System.Serializable]` with: levelNumber, cityName, countryName, mood (int), stars
-  - [ ] 2.4 Static methods: FromProgressionData(ProgressionData) → SaveData, ToProgressionData() → ProgressionData
-  - [ ] 2.5 Settings fields: soundEnabled (bool), musicEnabled (bool) — defaults true
+- [x] Task 2: Create SaveData class (AC: 2, 7)
+  - [x] 2.1 Create `Scripts/Game/Save/SaveData.cs` — `[System.Serializable]` class
+  - [x] 2.2 Fields: currentLevel (int), levelRecords (SavedLevelRecord[] — serializable version of LevelRecord)
+  - [x] 2.3 Create `SavedLevelRecord` — `[System.Serializable]` with: levelNumber, cityName, countryName, mood (int), stars
+  - [x] 2.4 Static methods: FromProgressionData(ProgressionData) → SaveData, ToProgressionData() → ProgressionData
+  - [x] 2.5 Settings fields: soundEnabled (bool), musicEnabled (bool) — defaults true
 
-- [ ] Task 3: Create SaveManager (AC: 3, 4, 9)
-  - [ ] 3.1 Create `Scripts/Game/Save/SaveManager.cs` — MonoBehaviour implementing ISaveManager
-  - [ ] 3.2 Save: JsonUtility.ToJson → File.WriteAllText to persistentDataPath/save.json
-  - [ ] 3.3 Load: File.ReadAllText → JsonUtility.FromJson, try-catch at I/O boundary
-  - [ ] 3.4 HasSave: File.Exists check
-  - [ ] 3.5 On deserialization failure → return null, log warning
-  - [ ] 3.6 Update BootLoader: create SaveManager GO FIRST, register as ISaveManager
+- [x] Task 3: Create SaveManager (AC: 3, 4, 9)
+  - [x] 3.1 Create `Scripts/Game/Save/SaveManager.cs` — MonoBehaviour implementing ISaveManager
+  - [x] 3.2 Save: JsonUtility.ToJson → File.WriteAllText to persistentDataPath/save.json
+  - [x] 3.3 Load: File.ReadAllText → JsonUtility.FromJson, try-catch at I/O boundary
+  - [x] 3.4 HasSave: File.Exists check
+  - [x] 3.5 On deserialization failure → return null, log warning
+  - [x] 3.6 Update BootLoader: create SaveManager GO FIRST, register as ISaveManager
 
-- [ ] Task 4: Auto-save on level complete (AC: 1)
-  - [ ] 4.1 In ProgressionManager.CompleteLevelWithStars → call ISaveManager.Save after updating data
+- [x] Task 4: Auto-save on level complete (AC: 1)
+  - [x] 4.1 In ProgressionManager.CompleteLevelWithStars → call ISaveManager.Save after updating data
 
-- [ ] Task 5: Load on startup in ProgressionManager.Start() (AC: 5, 6, 7, 8)
-  - [ ] 5.1 ProgressionManager loads save in **Start()** (not Awake) — ensures SaveManager is registered first
-  - [ ] 5.2 If ISaveManager.HasSave() → load, convert SaveData to ProgressionData
-  - [ ] 5.3 If no save or load fails → fresh ProgressionData (level 1, no records)
-  - [ ] 5.4 BootLoader creation order: SaveManager first, ProgressionManager second
+- [x] Task 5: Load on startup in ProgressionManager.Start() (AC: 5, 6, 7, 8)
+  - [x] 5.1 ProgressionManager loads save in **Start()** (not Awake) — ensures SaveManager is registered first
+  - [x] 5.2 If ISaveManager.HasSave() → load, convert SaveData to ProgressionData
+  - [x] 5.3 If no save or load fails → fresh ProgressionData (level 1, no records)
+  - [x] 5.4 BootLoader creation order: SaveManager first, ProgressionManager second
 
-- [ ] Task 6: Write tests (AC: all)
-  - [ ] 6.1 Create `Scripts/Tests/EditMode/SaveSystemTests.cs`
-  - [ ] 6.2 Test SaveData serialization round-trip (JsonUtility.ToJson → FromJson → same values)
-  - [ ] 6.3 Test SaveData ↔ ProgressionData conversion with level records
-  - [ ] 6.4 Test level records preserved through save/load (city, mood, stars all match)
-  - [ ] 6.5 Test load with no save → fresh start values
-  - [ ] 6.6 Test SavedLevelRecord preserves all fields through JSON
+- [x] Task 6: Write tests (AC: all)
+  - [x] 6.1 Create `Scripts/Tests/EditMode/SaveSystemTests.cs`
+  - [x] 6.2 Test SaveData serialization round-trip (JsonUtility.ToJson → FromJson → same values)
+  - [x] 6.3 Test SaveData ↔ ProgressionData conversion with level records
+  - [x] 6.4 Test level records preserved through save/load (city, mood, stars all match)
+  - [x] 6.5 Test load with no save → fresh start values
+  - [x] 6.6 Test SavedLevelRecord preserves all fields through JSON
 
 ## Dev Notes
 

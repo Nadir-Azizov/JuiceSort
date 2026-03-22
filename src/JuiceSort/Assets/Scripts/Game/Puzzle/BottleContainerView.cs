@@ -36,10 +36,9 @@ namespace JuiceSort.Game.Puzzle
         private const float SelectAnimDuration = 0.15f;
         private const float DeselectAnimDuration = 0.12f;
 
-        private static readonly Color SelectedFrameColor = new Color(1f, 0.88f, 0.3f, 1f);
+        private static Color SelectedFrameColor => ThemeConfig.GetColor(ThemeColorType.ContainerSelected);
         private static readonly Color IdleFrameColor = new Color(1f, 1f, 1f, 0.9f);
         private static readonly Color CompletedFrameColor = new Color(0.6f, 1f, 0.6f, 0.7f);
-        private static readonly Color GoldPulseColor = new Color(1f, 0.88f, 0.3f, 1f);
         private static readonly Color CompletedTintColor = new Color(0.9f, 0.95f, 1f, 0.95f);
         private const float GoldPulseDuration = 0.15f;
         private const float CompletedTintDuration = 0.2f;
@@ -333,10 +332,10 @@ namespace JuiceSort.Game.Puzzle
             {
                 elapsed += Time.deltaTime;
                 float t = EaseOutCubic(Mathf.Clamp01(elapsed / GoldPulseDuration));
-                _frameRenderer.color = Color.Lerp(fromColor, GoldPulseColor, t);
+                _frameRenderer.color = Color.Lerp(fromColor, SelectedFrameColor, t);
                 yield return null;
             }
-            _frameRenderer.color = GoldPulseColor;
+            _frameRenderer.color = SelectedFrameColor;
 
             // Phase 2: Settle to completed tint
             elapsed = 0f;
@@ -344,7 +343,7 @@ namespace JuiceSort.Game.Puzzle
             {
                 elapsed += Time.deltaTime;
                 float t = EaseOutCubic(Mathf.Clamp01(elapsed / CompletedTintDuration));
-                _frameRenderer.color = Color.Lerp(GoldPulseColor, CompletedTintColor, t);
+                _frameRenderer.color = Color.Lerp(SelectedFrameColor, CompletedTintColor, t);
                 yield return null;
             }
             _frameRenderer.color = CompletedTintColor;

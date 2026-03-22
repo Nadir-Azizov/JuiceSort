@@ -22,49 +22,49 @@ so that I can see my journey and replay any previous level from a roadmap.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create LevelRecord data class (AC: 2, 6)
-  - [ ] 1.1 Create `Scripts/Game/Progression/LevelRecord.cs` — plain C# class
-  - [ ] 1.2 Fields: LevelNumber (int), CityName (string), CountryName (string), Mood (LevelMood), Stars (int)
-  - [ ] 1.3 This class is what the roadmap UI (Epic 4) will render per level node
+- [x] Task 1: Create LevelRecord data class (AC: 2, 6)
+  - [x] 1.1 Create `Scripts/Game/Progression/LevelRecord.cs` — plain C# class
+  - [x] 1.2 Fields: LevelNumber (int), CityName (string), CountryName (string), Mood (LevelMood), Stars (int)
+  - [x] 1.3 This class is what the roadmap UI (Epic 4) will render per level node
 
-- [ ] Task 2: Create IProgressionManager interface (AC: 7)
-  - [ ] 2.1 Create `Scripts/Game/Progression/IProgressionManager.cs` — in Game assembly (not Core), since it references Game types (LevelRecord, LevelDefinition)
-  - [ ] 2.2 Methods: CompleteLevelWithStars(int level, int stars, LevelDefinition definition), GetStarRating(int level), GetTotalStars(), GetLevelRecord(int level), GetAllLevelRecords() → List<LevelRecord>, CurrentLevel, HighestCompletedLevel, IsLevelCompleted(int level)
-  - [ ] 2.3 Note: interface stays in Game because LevelRecord and LevelDefinition are Game types. Core can't reference Game. This is fine — only GameplayManager (also in Game) consumes it.
+- [x] Task 2: Create IProgressionManager interface (AC: 7)
+  - [x] 2.1 Create `Scripts/Game/Progression/IProgressionManager.cs` — in Game assembly (not Core), since it references Game types (LevelRecord, LevelDefinition)
+  - [x] 2.2 Methods: CompleteLevelWithStars(int level, int stars, LevelDefinition definition), GetStarRating(int level), GetTotalStars(), GetLevelRecord(int level), GetAllLevelRecords() → List<LevelRecord>, CurrentLevel, HighestCompletedLevel, IsLevelCompleted(int level)
+  - [x] 2.3 Note: interface stays in Game because LevelRecord and LevelDefinition are Game types. Core can't reference Game. This is fine — only GameplayManager (also in Game) consumes it.
 
-- [ ] Task 3: Create ProgressionData (AC: 3, 5, 9)
-  - [ ] 3.1 Create `Scripts/Game/Progression/ProgressionData.cs` — plain C# class
-  - [ ] 3.2 Internal storage: Dictionary<int, LevelRecord> (levelNumber → record)
-  - [ ] 3.3 CurrentLevel (int) — next level to play
-  - [ ] 3.4 SetLevelRecord(LevelRecord) — stores record, keeps best stars if record already exists
-  - [ ] 3.5 GetStarRating(level) → stars from record, 0 if not completed
-  - [ ] 3.6 GetTotalStars() → sum of all record stars
-  - [ ] 3.7 GetAllLevelRecords() → List<LevelRecord> ordered by level number
-  - [ ] 3.8 IsLevelCompleted(level) → true if record exists
-  - [ ] 3.9 HighestCompletedLevel → max level number in records
+- [x] Task 3: Create ProgressionData (AC: 3, 5, 9)
+  - [x] 3.1 Create `Scripts/Game/Progression/ProgressionData.cs` — plain C# class
+  - [x] 3.2 Internal storage: Dictionary<int, LevelRecord> (levelNumber → record)
+  - [x] 3.3 CurrentLevel (int) — next level to play
+  - [x] 3.4 SetLevelRecord(LevelRecord) — stores record, keeps best stars if record already exists
+  - [x] 3.5 GetStarRating(level) → stars from record, 0 if not completed
+  - [x] 3.6 GetTotalStars() → sum of all record stars
+  - [x] 3.7 GetAllLevelRecords() → List<LevelRecord> ordered by level number
+  - [x] 3.8 IsLevelCompleted(level) → true if record exists
+  - [x] 3.9 HighestCompletedLevel → max level number in records
 
-- [ ] Task 4: Create ProgressionManager (AC: 4, 7, 8)
-  - [ ] 4.1 Create `Scripts/Game/Progression/ProgressionManager.cs` — MonoBehaviour implementing IProgressionManager
-  - [ ] 4.2 Holds ProgressionData instance
-  - [ ] 4.3 CompleteLevelWithStars: creates LevelRecord from LevelDefinition metadata (city, mood), stores in data, advances CurrentLevel if completing current
-  - [ ] 4.4 Update BootLoader to create ProgressionManager GO and register
+- [x] Task 4: Create ProgressionManager (AC: 4, 7, 8)
+  - [x] 4.1 Create `Scripts/Game/Progression/ProgressionManager.cs` — MonoBehaviour implementing IProgressionManager
+  - [x] 4.2 Holds ProgressionData instance
+  - [x] 4.3 CompleteLevelWithStars: creates LevelRecord from LevelDefinition metadata (city, mood), stores in data, advances CurrentLevel if completing current
+  - [x] 4.4 Update BootLoader to create ProgressionManager GO and register
 
-- [ ] Task 5: Integrate with GameplayManager (AC: 1, 4)
-  - [ ] 5.1 In OnLevelComplete, call ProgressionManager.CompleteLevelWithStars with level number, stars, and current LevelDefinition (for city/mood metadata)
-  - [ ] 5.2 In Start, read CurrentLevel from ProgressionManager
-  - [ ] 5.3 Store current LevelDefinition as field so it's available at win time for record creation
+- [x] Task 5: Integrate with GameplayManager (AC: 1, 4)
+  - [x] 5.1 In OnLevelComplete, call ProgressionManager.CompleteLevelWithStars with level number, stars, and current LevelDefinition (for city/mood metadata)
+  - [x] 5.2 In Start, read CurrentLevel from ProgressionManager
+  - [x] 5.3 Store current LevelDefinition as field so it's available at win time for record creation
 
-- [ ] Task 6: Write tests (AC: all)
-  - [ ] 6.1 Create `Scripts/Tests/EditMode/ProgressionDataTests.cs`
-  - [ ] 6.2 Test: SetLevelRecord stores record with city/mood/stars
-  - [ ] 6.3 Test: SetLevelRecord keeps best stars (3 then 2 → keeps 3)
-  - [ ] 6.4 Test: SetLevelRecord upgrades stars (1 then 3 → stores 3)
-  - [ ] 6.5 Test: GetTotalStars sums all ratings
-  - [ ] 6.6 Test: IsLevelCompleted returns true after completion
-  - [ ] 6.7 Test: CurrentLevel advances after completing current level
-  - [ ] 6.8 Test: Completing non-current level doesn't advance CurrentLevel
-  - [ ] 6.9 Test: GetAllLevelRecords returns ordered list with city/mood data
-  - [ ] 6.10 Test: LevelRecord preserves city and mood on star upgrade
+- [x] Task 6: Write tests (AC: all)
+  - [x] 6.1 Create `Scripts/Tests/EditMode/ProgressionDataTests.cs`
+  - [x] 6.2 Test: SetLevelRecord stores record with city/mood/stars
+  - [x] 6.3 Test: SetLevelRecord keeps best stars (3 then 2 → keeps 3)
+  - [x] 6.4 Test: SetLevelRecord upgrades stars (1 then 3 → stores 3)
+  - [x] 6.5 Test: GetTotalStars sums all ratings
+  - [x] 6.6 Test: IsLevelCompleted returns true after completion
+  - [x] 6.7 Test: CurrentLevel advances after completing current level
+  - [x] 6.8 Test: Completing non-current level doesn't advance CurrentLevel
+  - [x] 6.9 Test: GetAllLevelRecords returns ordered list with city/mood data
+  - [x] 6.10 Test: LevelRecord preserves city and mood on star upgrade
 
 ## Dev Notes
 

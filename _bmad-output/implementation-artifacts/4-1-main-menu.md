@@ -20,38 +20,38 @@ so that I have a clear starting point for the game.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create GameFlowState enum (AC: 6)
-  - [ ] 1.1 Create `Scripts/Game/UI/GameFlowState.cs` — enum: MainMenu, Roadmap, Playing, LevelComplete, Settings, Gate
+- [x] Task 1: Create GameFlowState enum (AC: 6)
+  - [x]1.1 Create `Scripts/Game/UI/GameFlowState.cs` — enum: MainMenu, Roadmap, Playing, LevelComplete, Settings, Gate
 
-- [ ] Task 2: Create ScreenManager (AC: 5)
-  - [ ] 2.1 Create `Scripts/Game/UI/ScreenManager.cs` — MonoBehaviour managing screen transitions
-  - [ ] 2.2 Dictionary<GameFlowState, GameObject> mapping states to screen root GameObjects
-  - [ ] 2.3 RegisterScreen(GameFlowState, GameObject) — registers a screen
-  - [ ] 2.4 TransitionTo(GameFlowState) — hides current screen, shows new one, updates CurrentState
-  - [ ] 2.5 CurrentState property
-  - [ ] 2.6 Created by BootLoader, registered via Services
+- [x] Task 2: Create ScreenManager (AC: 5)
+  - [x]2.1 Create `Scripts/Game/UI/ScreenManager.cs` — MonoBehaviour managing screen transitions
+  - [x]2.2 Dictionary<GameFlowState, GameObject> mapping states to screen root GameObjects
+  - [x]2.3 RegisterScreen(GameFlowState, GameObject) — registers a screen
+  - [x]2.4 TransitionTo(GameFlowState) — hides current screen, shows new one, updates CurrentState
+  - [x]2.5 CurrentState property
+  - [x]2.6 Created by BootLoader, registered via Services
 
-- [ ] Task 3: Create MainMenuScreen (AC: 1, 2, 3, 4)
-  - [ ] 3.1 Create `Scripts/Game/UI/Screens/MainMenuScreen.cs` — creates Canvas with title and buttons
-  - [ ] 3.2 "JuiceSort" title text (large, centered top)
-  - [ ] 3.3 "Play" button → ScreenManager.TransitionTo(Roadmap)
-  - [ ] 3.4 "Settings" button → ScreenManager.TransitionTo(Settings)
+- [x] Task 3: Create MainMenuScreen (AC: 1, 2, 3, 4)
+  - [x]3.1 Create `Scripts/Game/UI/Screens/MainMenuScreen.cs` — creates Canvas with title and buttons
+  - [x]3.2 "JuiceSort" title text (large, centered top)
+  - [x]3.3 "Play" button → ScreenManager.TransitionTo(Roadmap)
+  - [x]3.4 "Settings" button → ScreenManager.TransitionTo(Settings)
 
-- [ ] Task 4: Refactor GameplayManager lifecycle (AC: 7)
-  - [ ] 4.1 Remove `Start() { LoadLevel(_currentLevelNumber); }` auto-load
-  - [ ] 4.2 Add public `StartLevel(int levelNumber)` method — does what LoadLevel does but callable externally
-  - [ ] 4.3 Add public `StartReplay(int levelNumber)` method — wrapper for LoadSpecificLevel
-  - [ ] 4.4 GameplayManager is now passive until ScreenManager tells it to start a level
+- [x] Task 4: Refactor GameplayManager lifecycle (AC: 7)
+  - [x]4.1 Remove `Start() { LoadLevel(_currentLevelNumber); }` auto-load
+  - [x]4.2 Add public `StartLevel(int levelNumber)` method — does what LoadLevel does but callable externally
+  - [x]4.3 Add public `StartReplay(int levelNumber)` method — wrapper for LoadSpecificLevel
+  - [x]4.4 GameplayManager is now passive until ScreenManager tells it to start a level
 
-- [ ] Task 5: Update BootLoader (AC: 1)
-  - [ ] 5.1 BootLoader creates ScreenManager, registers as service
-  - [ ] 5.2 BootLoader creates MainMenuScreen, registers with ScreenManager
-  - [ ] 5.3 BootLoader creates GameplayManager (passive, no auto-load)
-  - [ ] 5.4 Initial state: ScreenManager.TransitionTo(MainMenu)
-  - [ ] 5.5 Remove direct "Gameplay" scene loading
+- [x] Task 5: Update BootLoader (AC: 1)
+  - [x]5.1 BootLoader creates ScreenManager, registers as service
+  - [x]5.2 BootLoader creates MainMenuScreen, registers with ScreenManager
+  - [x]5.3 BootLoader creates GameplayManager (passive, no auto-load)
+  - [x]5.4 Initial state: ScreenManager.TransitionTo(MainMenu)
+  - [x]5.5 Remove direct "Gameplay" scene loading
 
-- [ ] Task 6: Write tests (AC: all)
-  - [ ] 6.1 Test GameFlowState enum has all required values
+- [x] Task 6: Write tests (AC: all)
+  - [x]6.1 Test GameFlowState enum has all required values
 
 ## Dev Notes
 

@@ -19,9 +19,16 @@ namespace JuiceSort.Game.UI.Screens
         private LevelListView _levelList;
         private Text _headerText;
 
+        private void OnEnable()
+        {
+            // Guard: OnEnable fires during AddComponent before fields are assigned in Create()
+            if (_levelList != null)
+                Refresh();
+        }
+
         public void Refresh()
         {
-            if (!Services.TryGet<IProgressionManager>(out var progression))
+            if (_levelList == null || !Services.TryGet<IProgressionManager>(out var progression))
                 return;
 
             var nodes = BuildNodeList(progression);

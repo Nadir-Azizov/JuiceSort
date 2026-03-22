@@ -19,22 +19,22 @@ so that I can earn more stars to pass batch gates.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add LoadSpecificLevel to GameplayManager (AC: 1, 4, 5)
-  - [ ] 1.1 Add `LoadSpecificLevel(int levelNumber)` public method
-  - [ ] 1.2 Guard: check ProgressionManager.IsLevelCompleted(levelNumber) — if not, log warning and return
-  - [ ] 1.3 Set `_isReplay = true` flag so OnLevelComplete knows it's a replay
-  - [ ] 1.4 DestroyBoard + LoadLevel(levelNumber) as normal
+- [x] Task 1: Add LoadSpecificLevel to GameplayManager (AC: 1, 4, 5)
+  - [x] 1.1 Add `LoadSpecificLevel(int levelNumber)` public method
+  - [x] 1.2 Guard: check ProgressionManager.IsLevelCompleted(levelNumber) — if not, log warning and return
+  - [x] 1.3 Set `_isReplay = true` flag so OnLevelComplete knows it's a replay
+  - [x] 1.4 DestroyBoard + LoadLevel(levelNumber) as normal
 
-- [ ] Task 2: Handle replay completion (AC: 2, 3, 6)
-  - [ ] 2.1 In OnLevelComplete, if `_isReplay` → call CompleteLevelWithStars (ProgressionData keeps best)
-  - [ ] 2.2 After replay completion, if gate was active → re-check gate and show result
-  - [ ] 2.3 After replay completion, if no gate → show "Return to current level?" or just show win overlay
+- [x] Task 2: Handle replay completion (AC: 2, 3, 6)
+  - [x] 2.1 In OnLevelComplete, if `_isReplay` → call CompleteLevelWithStars (ProgressionData keeps best)
+  - [x] 2.2 After replay completion, if gate was active → re-check gate and show result
+  - [x] 2.3 After replay completion, if no gate → show "Return to current level?" or just show win overlay
 
-- [ ] Task 3: Write tests (AC: all)
-  - [ ] 3.1 Test replay keeps better star rating (1→3 upgrades)
-  - [ ] 3.2 Test replay with worse rating doesn't overwrite (3→1 stays 3)
-  - [ ] 3.3 Test total stars updates correctly after improvement
-  - [ ] 3.4 Test LoadSpecificLevel with uncompleted level → rejected
+- [x] Task 3: Write tests (AC: all)
+  - [x] 3.1 Test replay keeps better star rating (1→3 upgrades)
+  - [x] 3.2 Test replay with worse rating doesn't overwrite (3→1 stays 3)
+  - [x] 3.3 Test total stars updates correctly after improvement
+  - [x] 3.4 Test LoadSpecificLevel with uncompleted level → rejected
 
 ## Dev Notes
 

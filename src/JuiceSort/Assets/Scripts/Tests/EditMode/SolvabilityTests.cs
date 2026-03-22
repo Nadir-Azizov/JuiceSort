@@ -100,5 +100,42 @@ namespace JuiceSort.Tests.EditMode
                 Assert.IsTrue(result.IsSolvable, $"Level {level} should be solvable (batch test)");
             }
         }
+
+        [Test]
+        public void HighDifficultyLevels_AllSolvable()
+        {
+            // Test across all difficulty tiers:
+            // Level 41+ = 5 colors (max), Level 101+ = 5 slots, Level 201+ = 6 slots (max)
+            int[] levels = { 30, 41, 50, 75, 101, 150 };
+
+            foreach (int level in levels)
+            {
+                var def = DifficultyScaler.GetLevelDefinition(level);
+                var state = LevelGenerator.Generate(def);
+                var result = PuzzleSolver.Solve(state);
+
+                Assert.IsTrue(result.IsSolvable, $"Level {level} (colors={def.ColorCount}, slots={def.SlotCount}) should be solvable");
+            }
+        }
+
+        [Test]
+        public void Generate_EnsuresRequiredEmptyContainers()
+        {
+            for (int level = 1; level <= 50; level++)
+            {
+                var def = DifficultyScaler.GetLevelDefinition(level);
+                var state = LevelGenerator.Generate(def);
+
+                int emptyCount = 0;
+                for (int i = 0; i < state.ContainerCount; i++)
+                {
+                    if (state.GetContainer(i).IsEmpty())
+                        emptyCount++;
+                }
+
+                Assert.GreaterOrEqual(emptyCount, def.EmptyContainerCount,
+                    $"Level {level} should have at least {def.EmptyContainerCount} empty containers, got {emptyCount}");
+            }
+        }
     }
 }

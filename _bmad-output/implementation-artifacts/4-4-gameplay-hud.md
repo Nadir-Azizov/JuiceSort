@@ -19,20 +19,20 @@ so that I have the information and tools I need while solving the puzzle.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create GameplayHUD component (AC: 1, 2, 3, 4, 5)
-  - [ ] 1.1 Create `Scripts/Game/UI/Components/GameplayHUD.cs` — MonoBehaviour managing all HUD elements
-  - [ ] 1.2 Creates: move counter text, undo button with count, restart button, level/city info text
-  - [ ] 1.3 Method: Initialize(GameplayManager) — wires button callbacks
-  - [ ] 1.4 Method: UpdateDisplay(int moves, int undoRemaining) — refreshes text
-  - [ ] 1.5 Positioned in top area of screen (above containers)
+- [x] Task 1: Create GameplayHUD component (AC: 1, 2, 3, 4, 5)
+  - [x]1.1 Create `Scripts/Game/UI/Components/GameplayHUD.cs` — MonoBehaviour managing all HUD elements
+  - [x]1.2 Creates: move counter text, undo button with count, restart button, level/city info text
+  - [x]1.3 Method: Initialize(GameplayManager) — wires button callbacks
+  - [x]1.4 Method: UpdateDisplay(int moves, int undoRemaining) — refreshes text
+  - [x]1.5 Positioned in top area of screen (above containers)
 
-- [ ] Task 2: Extract HUD code from GameplayManager (AC: 5, 6)
-  - [ ] 2.1 Remove CreateUndoButton, CreateRestartButton, CreateLevelNumberDisplay, UpdateUndoButton from GameplayManager
-  - [ ] 2.2 GameplayManager creates GameplayHUD instead, calls UpdateDisplay after pours/undos
-  - [ ] 2.3 Significant reduction in GameplayManager line count
+- [x] Task 2: Extract HUD code from GameplayManager (AC: 5, 6)
+  - [x]2.1 Remove CreateUndoButton, CreateRestartButton, CreateLevelNumberDisplay, UpdateUndoButton from GameplayManager
+  - [x]2.2 GameplayManager creates GameplayHUD instead, calls UpdateDisplay after pours/undos
+  - [x]2.3 Significant reduction in GameplayManager line count
 
-- [ ] Task 3: Write tests (AC: all)
-  - [ ] 3.1 Test HUD display formatting
+- [x] Task 3: Write tests (AC: all)
+  - [x]3.1 Test HUD display formatting
 
 ## Dev Notes
 

@@ -17,8 +17,16 @@ namespace JuiceSort.Game.UI.Screens
         private bool _soundEnabled = true;
         private bool _musicEnabled = true;
 
+        private void OnEnable()
+        {
+            // Guard: OnEnable fires during AddComponent before fields are assigned in Create()
+            if (_soundText != null)
+                Refresh();
+        }
+
         public void Refresh()
         {
+            if (_soundText == null) return;
             if (Services.TryGet<IProgressionManager>(out var progression))
             {
                 _soundEnabled = progression.SoundEnabled;
@@ -179,7 +187,7 @@ namespace JuiceSort.Game.UI.Screens
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
             var text = textGo.AddComponent<Text>();
-            text.text = "Toggle";
+            text.text = name;
             text.fontSize = 40;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;

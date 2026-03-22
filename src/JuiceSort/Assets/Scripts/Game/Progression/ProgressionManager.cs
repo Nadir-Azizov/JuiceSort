@@ -133,16 +133,19 @@ namespace JuiceSort.Game.Progression
 
         public bool CanPassBatchGate()
         {
-            int batchNumber = (_data.CurrentLevel - 1) / GameConstants.LevelsPerBatch;
-            if (batchNumber < 1) batchNumber = 1;
             return GetCurrentBatchStars() >= GetBatchRequiredStars();
         }
 
         public int GetCurrentBatchStars()
         {
-            int batchNumber = (_data.CurrentLevel - 1) / GameConstants.LevelsPerBatch;
-            if (batchNumber < 1) batchNumber = 1;
+            int batchNumber = GetCurrentBatchNumber();
             return _data.GetBatchStarCount(batchNumber, GameConstants.LevelsPerBatch);
+        }
+
+        private int GetCurrentBatchNumber()
+        {
+            int batch = (_data.CurrentLevel - 1) / GameConstants.LevelsPerBatch;
+            return batch < 1 ? 1 : batch;
         }
 
         public int GetBatchRequiredStars()

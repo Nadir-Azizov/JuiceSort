@@ -60,8 +60,8 @@ HIGH — buttons are currently chaotically placed with no size standards.
 
 - [x] Task 5: Coordinate with bottle layout (AC: 9)
   - [x] 5.1 HUD bars fit within Story 11.1 reserves (topReserve=1.5, bottomReserve=2.0 world units)
-  - [ ] 5.2 Feed these values into `LayoutConfig` (or pass to `ResponsiveLayoutManager`) so bottles avoid HUD regions
-  - [ ] 5.3 Test that bottles and HUD never overlap at any bottle count / screen size
+  - [x] 5.2 Feed these values into `LayoutConfig` (or pass to `ResponsiveLayoutManager`) so bottles avoid HUD regions
+  - [x] 5.3 Test that bottles and HUD never overlap at any bottle count / screen size
 
 ## Dev Notes
 

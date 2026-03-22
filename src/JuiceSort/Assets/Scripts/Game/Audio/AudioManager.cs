@@ -15,7 +15,7 @@ namespace JuiceSort.Game.Audio
         private AudioSource _sfxSource;
         private bool _musicEnabled = true;
         private bool _soundEnabled = true;
-        private LevelMood _currentMood = (LevelMood)(-1); // invalid initial so first PlayMusic always triggers
+        private LevelMood? _currentMood = null; // null = not initialized, first PlayMusic always triggers
 
         public bool MusicEnabled => _musicEnabled;
         public bool SoundEnabled => _soundEnabled;
@@ -47,7 +47,7 @@ namespace JuiceSort.Game.Audio
                 return;
 
             // Don't restart if already playing the same mood
-            if (mood == _currentMood && _musicSource.isPlaying)
+            if (_currentMood.HasValue && mood == _currentMood.Value && _musicSource.isPlaying)
                 return;
 
             _currentMood = mood;
@@ -62,7 +62,6 @@ namespace JuiceSort.Game.Audio
         public void StopMusic()
         {
             _musicSource.Stop();
-            Debug.Log("[AudioManager] Music stopped");
         }
 
         public void PlaySFX(AudioClipType type)
@@ -85,18 +84,15 @@ namespace JuiceSort.Game.Audio
             {
                 _musicSource.Stop();
             }
-            else if (_currentMood != (LevelMood)(-1))
+            else if (_currentMood.HasValue)
             {
-                PlayMusic(_currentMood);
+                PlayMusic(_currentMood.Value);
             }
-
-            Debug.Log($"[AudioManager] Music {(enabled ? "enabled" : "disabled")}");
         }
 
         public void SetSoundEnabled(bool enabled)
         {
             _soundEnabled = enabled;
-            Debug.Log($"[AudioManager] Sound {(enabled ? "enabled" : "disabled")}");
         }
     }
 }

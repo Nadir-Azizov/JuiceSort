@@ -20,25 +20,25 @@ so that levels have thematic variety for the visual layer (Epic 5).
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define city data (AC: 1)
-  - [ ] 1.1 Create `Scripts/Game/LevelGen/CityData.cs` — plain C# class with CityName, CountryName fields
-  - [ ] 1.2 Create `Scripts/Game/LevelGen/CityDatabase.cs` — static class with a hardcoded list of 38 cities (name + country pairs)
+- [x] Task 1: Define city data (AC: 1)
+  - [x] 1.1 Create `Scripts/Game/LevelGen/CityData.cs` — plain C# class with CityName, CountryName fields
+  - [x] 1.2 Create `Scripts/Game/LevelGen/CityDatabase.cs` — static class with a hardcoded list of 38 cities (name + country pairs)
 
-- [ ] Task 2: Create CityAssigner (AC: 1, 2, 3, 4)
-  - [ ] 2.1 Create `Scripts/Game/LevelGen/CityAssigner.cs` — plain C# class
-  - [ ] 2.2 Implement `AssignCity(int levelNumber)` — returns CityData using `levelNumber % 38` to cycle through cities
-  - [ ] 2.3 Implement `AssignMood(int levelNumber)` — returns "Morning" or "Night" using seeded random (alternating or random per level)
+- [x] Task 2: Create CityAssigner (AC: 1, 2, 3, 4)
+  - [x] 2.1 Create `Scripts/Game/LevelGen/CityAssigner.cs` — plain C# class
+  - [x] 2.2 Implement `AssignCity(int levelNumber)` — returns CityData using `levelNumber % 38` to cycle through cities
+  - [x] 2.3 Implement `AssignMood(int levelNumber)` — returns "Morning" or "Night" using seeded random (alternating or random per level)
 
-- [ ] Task 3: Extend LevelDefinition (AC: 5)
-  - [ ] 3.1 Add `CityName`, `CountryName`, `Mood` (enum: Morning/Night) fields to LevelDefinition
-  - [ ] 3.2 CityAssigner populates city/mood on LevelDefinition AFTER DifficultyScaler creates it — keep CityAssigner independent from DifficultyScaler to avoid circular dependency
-  - [ ] 3.3 GameplayManager (or a future LevelLoader) calls both: DifficultyScaler for params, then CityAssigner for theme
+- [x] Task 3: Extend LevelDefinition (AC: 5)
+  - [x] 3.1 Add `CityName`, `CountryName`, `Mood` (enum: Morning/Night) fields to LevelDefinition
+  - [x] 3.2 CityAssigner populates city/mood on LevelDefinition AFTER DifficultyScaler creates it — keep CityAssigner independent from DifficultyScaler to avoid circular dependency
+  - [x] 3.3 GameplayManager (or a future LevelLoader) calls both: DifficultyScaler for params, then CityAssigner for theme
 
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1 Test city assignment is deterministic (same level → same city)
-  - [ ] 4.2 Test all 38 cities appear across levels 1-38
-  - [ ] 4.3 Test mood assignment is deterministic
-  - [ ] 4.4 Test LevelDefinition has city/mood populated
+- [x] Task 4: Write tests (AC: all)
+  - [x] 4.1 Test city assignment is deterministic (same level → same city)
+  - [x] 4.2 Test all 38 cities appear across levels 1-38
+  - [x] 4.3 Test mood assignment is deterministic
+  - [x] 4.4 Test LevelDefinition has city/mood populated
 
 ## Dev Notes
 

@@ -23,37 +23,37 @@ so that I can celebrate achievements and understand progression gates.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create LevelCompleteScreen (AC: 1, 2, 3, 4, 5, 8)
-  - [ ] 1.1 Create `Scripts/Game/UI/Screens/LevelCompleteScreen.cs`
-  - [ ] 1.2 Show(int level, string cityName, int stars, int moves, int optimal, bool isReplay) — populates all elements
-  - [ ] 1.3 Star display: large filled/empty symbols with golden color
-  - [ ] 1.4 Move text: "Moves: X (Optimal: ~Y)"
-  - [ ] 1.5 "Next Level" button → calls GameplayManager.NextLevel + ScreenManager transition
-  - [ ] 1.6 "Replay" button → calls GameplayManager.RestartLevel
-  - [ ] 1.7 "Roadmap" button → ScreenManager.TransitionTo(Roadmap)
-  - [ ] 1.8 When isReplay → show "Continue" button instead of "Next Level" (checks gate, returns to roadmap)
+- [x] Task 1: Create LevelCompleteScreen (AC: 1, 2, 3, 4, 5, 8)
+  - [x]1.1 Create `Scripts/Game/UI/Screens/LevelCompleteScreen.cs`
+  - [x]1.2 Show(int level, string cityName, int stars, int moves, int optimal, bool isReplay) — populates all elements
+  - [x]1.3 Star display: large filled/empty symbols with golden color
+  - [x]1.4 Move text: "Moves: X (Optimal: ~Y)"
+  - [x]1.5 "Next Level" button → calls GameplayManager.NextLevel + ScreenManager transition
+  - [x]1.6 "Replay" button → calls GameplayManager.RestartLevel
+  - [x]1.7 "Roadmap" button → ScreenManager.TransitionTo(Roadmap)
+  - [x]1.8 When isReplay → show "Continue" button instead of "Next Level" (checks gate, returns to roadmap)
 
-- [ ] Task 2: Create StarGateScreen (AC: 6, 7, 9)
-  - [ ] 2.1 Create `Scripts/Game/UI/Screens/StarGateScreen.cs`
-  - [ ] 2.2 Show(IProgressionManager) — displays star deficit text + LevelListView
-  - [ ] 2.3 Reuses LevelListView from Story 4.2 for the level list
-  - [ ] 2.4 LevelListView.OnLevelTapped → GameplayManager.StartReplay + ScreenManager.TransitionTo(Playing)
-  - [ ] 2.5 After replay completes and gate passes → shows "Batch Unlocked!" then proceeds
+- [x] Task 2: Create StarGateScreen (AC: 6, 7, 9)
+  - [x]2.1 Create `Scripts/Game/UI/Screens/StarGateScreen.cs`
+  - [x]2.2 Show(IProgressionManager) — displays star deficit text + LevelListView
+  - [x]2.3 Reuses LevelListView from Story 4.2 for the level list
+  - [x]2.4 LevelListView.OnLevelTapped → GameplayManager.StartReplay + ScreenManager.TransitionTo(Playing)
+  - [x]2.5 After replay completes and gate passes → shows "Batch Unlocked!" then proceeds
 
-- [ ] Task 3: Extract from GameplayManager (AC: 8, 9)
-  - [ ] 3.1 Remove ShowWinOverlay, CreateNextLevelButton, CreateReturnToGateButton from GameplayManager
-  - [ ] 3.2 Remove ShowGateScreen, CreateGateLevelList, CreateGateLevelEntry from GameplayManager
-  - [ ] 3.3 GameplayManager.OnLevelComplete → creates/shows LevelCompleteScreen
-  - [ ] 3.4 GameplayManager.NextLevel gate check → shows StarGateScreen
-  - [ ] 3.5 This removes ~250 lines from GameplayManager
+- [x] Task 3: Extract from GameplayManager (AC: 8, 9)
+  - [x]3.1 Remove ShowWinOverlay, CreateNextLevelButton, CreateReturnToGateButton from GameplayManager
+  - [x]3.2 Remove ShowGateScreen, CreateGateLevelList, CreateGateLevelEntry from GameplayManager
+  - [x]3.3 GameplayManager.OnLevelComplete → creates/shows LevelCompleteScreen
+  - [x]3.4 GameplayManager.NextLevel gate check → shows StarGateScreen
+  - [x]3.5 This removes ~250 lines from GameplayManager
 
-- [ ] Task 4: Register screens in BootLoader
-  - [ ] 4.1 Create LevelCompleteScreen and StarGateScreen in BootLoader
-  - [ ] 4.2 Register with ScreenManager
+- [x] Task 4: Register screens in BootLoader
+  - [x]4.1 Create LevelCompleteScreen and StarGateScreen in BootLoader
+  - [x]4.2 Register with ScreenManager
 
-- [ ] Task 5: Write tests (AC: all)
-  - [ ] 5.1 Test star display formatting
-  - [ ] 5.2 Test gate deficit calculation
+- [x] Task 5: Write tests (AC: all)
+  - [x]5.1 Test star display formatting
+  - [x]5.2 Test gate deficit calculation
 
 ## Dev Notes
 
