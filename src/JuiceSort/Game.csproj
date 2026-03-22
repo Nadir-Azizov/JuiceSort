@@ -65,7 +65,9 @@
     <Compile Include="Assets\Scripts\Game\UI\Screens\RoadmapScreen.cs" />
     <Compile Include="Assets\Scripts\Game\Audio\IAudioManager.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleEngine.cs" />
+    <Compile Include="Assets\Scripts\Game\Layout\BottleLayout.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityData.cs" />
+    <Compile Include="Assets\Scripts\Game\Economy\CoinConfig.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\LevelRecord.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityDatabase.cs" />
     <Compile Include="Assets\Scripts\Game\Audio\AudioManager.cs" />
@@ -76,6 +78,7 @@
     <Compile Include="Assets\Scripts\Game\UI\Screens\SettingsScreen.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\ProgressionManager.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\StarCalculator.cs" />
+    <Compile Include="Assets\Scripts\Game\Economy\CoinManager.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PourAnimator.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ThemeColorType.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\OptimalMoveEstimator.cs" />
@@ -91,10 +94,12 @@
     <Compile Include="Assets\Scripts\Game\UI\Components\LevelListView.cs" />
     <Compile Include="Assets\Scripts\Game\UI\GameFlowState.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelGenerator.cs" />
+    <Compile Include="Assets\Scripts\Game\Layout\LayoutConfig.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\DifficultyConfig.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerData.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelDefinition.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\DifficultyScaler.cs" />
+    <Compile Include="Assets\Scripts\Game\Economy\CoinRewardCalculator.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerView.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\UndoStack.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ScreenManager.cs" />
@@ -102,9 +107,11 @@
     <Compile Include="Assets\Scripts\Game\Audio\AudioClipType.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\TestPuzzleData.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\DrinkColorMap.cs" />
+    <Compile Include="Assets\Scripts\Game\Layout\ResponsiveLayoutManager.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\DrinkColor.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\GameplayManager.cs" />
     <Compile Include="Assets\Scripts\Game\Ads\AdManager.cs" />
+    <Compile Include="Assets\Scripts\Game\Economy\StreakBonusCalculator.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\SolveResult.cs" />
   </ItemGroup>
   <ItemGroup>

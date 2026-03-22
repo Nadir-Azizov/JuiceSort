@@ -69,6 +69,9 @@ This architecture document is being created through the GDS Architecture Workflo
 | Theme/Mood System | Low | City + mood assignment, background loading, morning/night visuals |
 | Ad/Monetization System | Low | Google AdMob rewarded video for extra bottle mechanic |
 | UI Navigation | Medium | Main menu, roadmap, in-game HUD, level complete, settings, transitions |
+| Coin Economy System | Medium | Coin earning (completion, streak), spending (undo, extra bottle), persistence |
+| Liquid Shader System | High | Shader Graph liquid fill, wobble physics, pour stream VFX, glass effects |
+| Responsive Layout System | Medium | Dynamic bottle positioning, multi-row layout, SafeArea support |
 
 ### Technical Requirements
 
@@ -211,12 +214,16 @@ Transitions load the new scene additively, then unload the previous one.
 - Difficulty curves (container/color/slot scaling per level)
 - Drink color palettes
 - SO Event Channel assets
+- `CoinConfig` — all coin earning/spending values (base reward, streak bonuses, undo costs, extra bottle costs, ad reward amounts)
+- `LayoutConfig` — responsive layout parameters (margins, row thresholds, min/max scale)
+- `LiquidShaderConfig` — wave speed, wobble damping, pour tilt angles per layer count
 
 **Plain C# (runtime state):**
 - PuzzleState (container contents, selected container)
 - UndoStack (fixed stack of 3 snapshots)
 - ProgressionData (current level, stars earned, batch progress)
 - GameFlowState (current game state enum)
+- CoinData (current balance, streak count, undo uses this level, extra bottles this level)
 
 ### Asset Loading
 
@@ -259,6 +266,9 @@ Transitions load the new scene additively, then unload the previous one.
 - StarEarned event
 - PourExecuted event
 - UndoExecuted event
+- CoinEarnedEvent — triggers coin balance UI update, save
+- CoinSpentEvent — triggers coin balance UI update, save
+- StreakUpdatedEvent — triggers streak bonus display
 
 ### Project Structure
 
@@ -448,7 +458,8 @@ Assets/
 │   │   │   ├── ISaveManager.cs
 │   │   │   ├── IAudioManager.cs
 │   │   │   ├── ILevelGenerator.cs
-│   │   │   └── IProgressionManager.cs
+│   │   │   ├── IProgressionManager.cs
+│   │   │   └── ICoinManager.cs
 │   │   └── GameConstants.cs
 │   ├── Game/                      # Game.asmdef (references Core)
 │   │   ├── Boot/
@@ -489,6 +500,16 @@ Assets/
 │   │   │   └── Components/
 │   │   │       ├── StarDisplay.cs
 │   │   │       └── RoadmapNode.cs
+│   │   ├── Economy/
+│   │   │   ├── CoinManager.cs
+│   │   │   ├── CoinConfig.cs
+│   │   │   └── CoinData.cs
+│   │   ├── Liquid/
+│   │   │   ├── LiquidMaterialController.cs
+│   │   │   ├── PourStreamVFX.cs
+│   │   │   └── BottleCapAnimation.cs
+│   │   ├── Layout/
+│   │   │   └── ResponsiveLayoutManager.cs
 │   │   ├── Input/
 │   │   │   └── TouchInputHandler.cs
 │   │   └── Debug/
@@ -523,6 +544,9 @@ Assets/
 | UI Components | `Game/UI/Components/` | Reusable UI widgets |
 | Touch Input | `Game/Input/` | Tap detection and routing |
 | Debug Tools | `Game/Debug/` | Development-only utilities |
+| Coin Economy | `Game/Economy/` | CoinManager, CoinConfig, streak tracking, coin persistence |
+| Liquid Shader | `Game/Liquid/` | Shader Graph materials, LiquidMaterialController, PourStreamVFX |
+| Responsive Layout | `Game/Layout/` | ResponsiveLayoutManager, dynamic bottle positioning |
 
 ### Naming Conventions
 
@@ -721,6 +745,68 @@ int colorCount = config.GetColorCount(levelNumber);
 
 ---
 
+## New Systems (Epics 9-11)
+
+### Coin Economy System (Epic 9)
+
+**Service:** `ICoinManager` / `CoinManager` — registered in Service Locator during Boot.
+
+**Responsibilities:**
+- Track coin balance (persisted via SaveManager)
+- Calculate level completion rewards (base + difficulty scaling + move efficiency bonus)
+- Track consecutive win streak, award streak bonuses
+- Process coin spending (undo, extra bottle) with escalating costs per level
+- Expose coin balance for UI display
+
+**Data:**
+- `CoinConfig` ScriptableObject — all earning/spending values, tunable in Inspector
+- `CoinData` — runtime state (balance, streak, per-level usage counts)
+
+**Events:**
+- `CoinEarnedEvent` (SO Event Channel) — raised on level complete, ad reward
+- `CoinSpentEvent` (SO Event Channel) — raised on undo/extra bottle purchase
+- `StreakUpdatedEvent` (SO Event Channel) — raised on streak change
+
+**Integration:**
+- Listens to `LevelCompletedEvent` to award coins
+- Called by GameplayHUD when player taps undo/extra bottle
+- Balance persisted in SaveData JSON alongside star data
+
+### Liquid Shader System (Epic 10)
+
+**Components:**
+- `LiquidShader.shadergraph` — Shader Graph material for bottle liquid rendering (URP 2D, Sprite-Unlit base)
+- `LiquidMaterialController` — MonoBehaviour managing per-bottle material instances, fill amounts, colors, wobble
+- `PourStreamVFX` — LineRenderer/particle system for visible liquid stream between bottles during pour
+- `BottleCapAnimation` — cork/cap closing effect on sorted bottle completion
+
+**Shader Parameters:**
+- `_Fill0-3`, `_Color0-3` — per-layer fill and color
+- `_WobbleX`, `_WobbleZ` — damped oscillation for select/deselect wobble
+- `_WaveSpeed`, `_WaveAmplitude` — sinusoidal water surface animation
+
+**Refactoring:**
+- `BottleContainerView` — internally refactored to use shader material instead of sprite slots (external API preserved)
+- `PourAnimator` — internally refactored for smooth fill lerp + dynamic tilt angles (static class pattern preserved)
+
+### Responsive Layout System (Epic 11)
+
+**Component:** `ResponsiveLayoutManager` — calculates bottle positions, scale, and row arrangement.
+
+**Algorithm:**
+- Input: bottle count, `Camera.main.orthographicSize`, `Screen.safeArea`, `Camera.main.aspect`
+- Output: position array, uniform scale, row count
+- Single row for 1-6 bottles, two rows for 7+
+- 5-8% margin on each side
+- Supports 16:9 to 20:9 aspect ratios
+
+**Integration:**
+- Called by `BottleContainerView.Create()` at level start
+- Re-invoked when extra bottle is added mid-level (smooth re-layout animation)
+- Accounts for HUD regions (top bar, bottom bar) in available play area
+
+---
+
 ## Architecture Validation
 
 ### Validation Summary
@@ -735,13 +821,13 @@ int colorCount = config.GetColorCount(levelNumber);
 
 ### Coverage Report
 
-**Systems Covered:** 7/7
+**Systems Covered:** 10/10 (7 original + 3 new: Coin Economy, Liquid Shader, Responsive Layout)
 **Patterns Defined:** 4 standard + 8 consistency rules
 **Decisions Made:** 8
 
 ### Validation Date
 
-2026-03-20
+2026-03-22 (updated for Epics 9-11)
 
 ---
 

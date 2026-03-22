@@ -336,17 +336,30 @@ Select Level → Pour & Sort Drinks → Puzzle Complete?
 
 **Pattern:** Gentle linear with multi-dimensional scaling
 
-**Challenge Scaling (example values — to be balanced through playtesting):**
+**Challenge Scaling (Magic Sort benchmark — all parameters in ScriptableObjects):**
+
+| Level Range | Bottle Count | Color Count | Slots Per Bottle | Empty Bottles | Notes |
+|-------------|-------------|-------------|-----------------|---------------|-------|
+| 1-20 | 4-5 | 3-4 | 4 | 1-2 | Onboarding, very easy |
+| 21-50 | 5-6 | 4-5 | 4 | 1-2 | Gradually harder |
+| 51-100 | 6-8 | 5-6 | 4 | 1-2 | Medium difficulty |
+| 101-200 | 8-10 | 6-8 | 4 | 1-2 | Hard |
+| 200-500 | 10-12 | 7-9 | 4 | 1-2 | Very hard |
+| 500+ | 12-14 | 8-10 | 4 | 1 | Super hard, hidden colors |
+
+**Key insight from Magic Sort:** Slots per bottle is almost always 4. Difficulty is primarily controlled by bottle count, color count, and empty bottle count. All parameters must be in ScriptableObjects for quick tuning.
+
+**Legacy scaling (original estimates):**
 
 | Parameter | Scaling Rate | Example |
 |---|---|---|
 | **Colors** | Every ~20 levels | 4 colors (L1-20) → 5 (L20-40) → 6 (L40-60) → ... |
 | **Containers** | Every ~10 levels | +1 container at L10, L20, L30... up to L100 |
-| **Slots per container** | Every ~100 levels | 4 slots (L1-100) → 5 (L100-200) → 6 (L200-300) |
+| **Slots per container** | Fixed at 4 | Per Magic Sort benchmark |
 | **Hidden layers** | Post-MVP | Introduced at higher levels |
 | **Locked containers** | Post-MVP | Introduced at higher levels |
 
-*All numbers are initial estimates — final values require calculation and playtesting.*
+*Final values require playtesting. Magic Sort benchmark table is the primary reference.*
 
 #### Star Gate System
 
@@ -378,7 +391,40 @@ Stars are awarded based on **move efficiency** relative to optimal move count:
 
 ### Economy and Resources
 
-_This game does not feature an in-game currency or resource system. Stars serve as the sole progression gate. Monetization is through rewarded ads (extra bottles) only._
+#### Dual Currency System
+
+JuiceSort uses two parallel currencies:
+- **Stars** — progression currency (roadmap advancement, batch gates)
+- **Coins** — booster currency (undo, extra bottle, earned through play and ads)
+
+#### Coin Earning
+
+All values are configured via `CoinConfig` ScriptableObject for quick Inspector tuning — never hardcoded.
+
+| Element | Value | Notes |
+|---------|-------|-------|
+| Level completion reward (base) | 50-100 coins | Scales with difficulty |
+| Move efficiency bonus | +25-50% of base | Fewer moves = more coins |
+| Consecutive win streak (3) | 200 bonus coins | Resets on failure |
+| Consecutive win streak (5) | 500 bonus coins | Resets on failure |
+| Watch rewarded ad | 200-300 coins | Monetization gateway |
+
+#### Coin Spending
+
+| Action | Cost | Notes |
+|--------|------|-------|
+| Undo (1st use per level) | 100 coins | Cheap, encourages use |
+| Undo (2nd use per level) | 200 coins | Escalating cost |
+| Undo (3rd+ use per level) | 300 coins | Maximum cost |
+| Extra bottle (1st per level) | 500 coins | Slightly cheaper than Magic Sort |
+| Extra bottle (2nd per level) | 900 coins | Same as Magic Sort |
+
+**Max extra bottles per level:** 2
+
+#### Future Monetization (Post-MVP)
+
+- In-app purchase coin packs ($0.99 - $19.99 tiers)
+- Continue after failure: 900 coins
 
 ---
 
@@ -791,10 +837,114 @@ The following features and items are explicitly NOT in scope for JuiceSort v1.0:
 
 ---
 
+## Liquid Visual System
+
+### Overview
+
+The liquid rendering system is rebuilt from sprite-based slots to a shader-based approach, delivering Magic Sort-quality visual polish.
+
+### Shader Graph Liquid Fill
+
+**Principle:** One material per bottle with parameterized fill amounts and colors.
+
+**Shader Parameters:**
+- `_Fill0`, `_Fill1`, `_Fill2`, `_Fill3` — fill amount (0-1) per color layer
+- `_Color0`, `_Color1`, `_Color2`, `_Color3` — color per layer
+- `_WobbleX`, `_WobbleZ` — liquid surface wobble (damped oscillation)
+- `_WaveSpeed`, `_WaveAmplitude` — sinusoidal wave at water surface line
+
+**Rendering:**
+- Shader renders pixels below the fill level as colored, above as transparent
+- Small sinusoidal wave at the water surface: `sin(_Time.y * speed) * amplitude`
+- Bottle glass transparency and light refraction handled in shader
+- Compatible with URP 2D Renderer (Sprite-Unlit base)
+
+### Pour Animation (Shader-Based)
+
+**Source bottle:**
+- `_FillAmount` smoothly decreases (Lerp via coroutine)
+- Tilt angle depends on layers being poured:
+  - 1 layer: 15° tilt | 2 layers: 25° | 3 layers: 35° | 4 layers: 45°
+- Tilt increases gradually (ease-in curve)
+- Shader water surface angle changes with bottle rotation
+
+**Liquid stream between bottles:**
+- `LineRenderer` or trail rendering a thin liquid stream
+- Bezier curve from source mouth to target mouth
+- Color matches the liquid being poured
+- Width starts thin, slightly widens as flow continues
+- Optional: 3-5 water droplet particles
+
+**Target bottle:**
+- `_FillAmount` smoothly increases (synchronized with source)
+- Small splash effect when liquid lands (particle or shader wave)
+
+### Select/Deselect Wobble
+
+- On select/deselect: impulse applied to `_WobbleX`
+- Spring-damper physics: `wobble = amplitude * sin(frequency * time) * exp(-damping * time)`
+- Decays over 0.3-0.5 seconds
+- Shader water surface tilts according to wobble value
+
+### Bottle Cap/Cork Animation
+
+When a bottle becomes fully sorted:
+1. Shimmer sweep (existing, preserved)
+2. Cork/cap sprite drops from above (bounce easing)
+3. Small confetti/sparkle particle burst
+4. Scale punch (bottle grows to 105%, settles to 100%)
+
+### Glass Effects
+
+- **Glass refraction:** URP Distortion node in bottle shader
+- **Inner glow:** URP Post Processing Bloom (low intensity for mobile)
+- **Color contrast:** Saturated liquid colors with increased contrast against background
+- **Ambient light:** Sprite-based halo behind bottles (additive blending)
+- **URP 2D Light:** Point light 2D on bottles, soft glow in liquid color
+
+### Free Resources
+
+- Unity Shader Graph (free with URP)
+- Minions Art "Liquid Shader" tutorial (free on Patreon)
+- GitHub: `aniruddhahar/URP-LiquidShadergraph` (free, MIT license)
+- URP 2D Lights, Post Processing, LineRenderer, Particle System — all built-in
+
+---
+
+## Responsive Layout System
+
+### Problem
+
+Current `BottleContainerView.Create()` uses fixed `xPosition` and `bottleScale = 0.18f`, not adaptive to screen size. Bottles get cut off on edges.
+
+### Solution
+
+Dynamic bottle positioning calculated at level start based on screen dimensions and bottle count.
+
+**Layout Algorithm:**
+- Calculate available width using `Camera.main.orthographicSize` and `Screen.width/height`
+- Compute scale, spacing, and row count based on bottle count
+- Switch to two rows when 7+ bottles (upper row + lower row)
+- Always leave minimum margin (5-8% of screen on each side)
+- Account for `Screen.safeArea` (notch, navigation bar)
+- Re-run layout calculation when extra bottle is added mid-level
+
+**Supported Aspect Ratios:**
+- Minimum: 16:9
+- Maximum: 20:9 (tall Android phones)
+- Use `Camera.main.aspect` and `Screen.safeArea` for calculations
+
+**Row Logic:**
+- 1-6 bottles: single row
+- 7+ bottles: two rows (upper and lower)
+- Extra bottle addition: recalculate all positions, pop-in animation (small scale to full size)
+
+---
+
 ## Document Information
 
 **Document:** JuiceSort - Game Design Document
-**Version:** 1.0
+**Version:** 1.1
 **Created:** 2026-03-18
 **Author:** Nadir
 **Status:** Complete
@@ -804,3 +954,4 @@ The following features and items are explicitly NOT in scope for JuiceSort v1.0:
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | 2026-03-18 | Initial GDD complete |
+| 1.1 | 2026-03-22 | Added Coin Economy, Liquid Visual System, Responsive Layout sections. Updated difficulty scaling with Magic Sort benchmark |

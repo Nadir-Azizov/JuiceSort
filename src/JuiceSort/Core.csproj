@@ -48,6 +48,7 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.71f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Core\Interfaces\ICoinManager.cs" />
     <Compile Include="Assets\Scripts\Core\Interfaces\ISaveManager.cs" />
     <Compile Include="Assets\Scripts\Core\GameConstants.cs" />
     <Compile Include="Assets\Scripts\Core\Services\Services.cs" />

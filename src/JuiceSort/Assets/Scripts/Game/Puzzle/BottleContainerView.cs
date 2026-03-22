@@ -362,6 +362,15 @@ namespace JuiceSort.Game.Puzzle
             _baseScale = transform.localScale;
         }
 
+        /// <summary>
+        /// Updates the cached rest position and scale after external repositioning (e.g., re-layout on extra bottle add).
+        /// Call this after changing transform.localPosition or localScale from outside.
+        /// </summary>
+        public void UpdateRestState()
+        {
+            CaptureRestState();
+        }
+
         private void OnMouseDown()
         {
             if (_state == ContainerState.Completed)
@@ -370,7 +379,7 @@ namespace JuiceSort.Game.Puzzle
             OnTapped?.Invoke(_containerIndex);
         }
 
-        public static BottleContainerView Create(Transform parent, ContainerData data, int containerIndex, float xPosition)
+        public static BottleContainerView Create(Transform parent, ContainerData data, int containerIndex, float xPosition, float yPosition = 0f, float scale = 0.18f)
         {
             var maskSprite = LoadMaskSprite();
             var frameSprite = LoadFrameSprite();
@@ -378,10 +387,10 @@ namespace JuiceSort.Game.Puzzle
 
             var go = new GameObject($"Bottle_{containerIndex}");
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(xPosition, 0f, 0f);
+            go.transform.localPosition = new Vector3(xPosition, yPosition, 0f);
 
             // Scale the bottle
-            float bottleScale = 0.18f;
+            float bottleScale = scale;
             go.transform.localScale = new Vector3(bottleScale, bottleScale, 1f);
 
             // SpriteMask clips liquid sprites to the bottle shape

@@ -217,6 +217,64 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ---
 
+## Shader Graph Rules (Epic 10)
+
+**Liquid Shader:**
+- Base shader: Sprite-Unlit (URP 2D Renderer compatible)
+- Create Shader Graph in `Assets/Art/Shaders/LiquidFill.shadergraph`
+- Material instances: one per bottle — never share materials between bottles (each has unique fill/color state)
+- Use `MaterialPropertyBlock` where possible to avoid material instance explosion
+- Parameters exposed: `_Fill0-3`, `_Color0-3`, `_WobbleX`, `_WobbleZ`, `_WaveSpeed`, `_WaveAmplitude`
+
+**Performance:**
+- Shader-based rendering uses fewer draw calls than sprite-based (one draw per bottle vs multiple sprites)
+- Bloom post-processing: use sparingly on mobile — low intensity (0.1-0.3), threshold above 1.0
+- Test shader on 3 aspect ratios: 16:9, 19.5:9, 20:9
+
+**Material Management:**
+- `LiquidMaterialController` on each bottle manages its material instance
+- Update fill amounts via `material.SetFloat("_Fill0", value)` — never in Update, only when state changes
+- Wobble driven by coroutine (impulse → damped oscillation → zero), not Update loop
+- Release material instances when bottles are destroyed
+
+## Responsive Layout Rules (Epic 11)
+
+**Layout Calculation:**
+- Use `Camera.main.orthographicSize` and `Camera.main.aspect` for world-space calculations
+- Use `Screen.safeArea` for UI-space calculations (notch, navigation bar avoidance)
+- Minimum supported aspect ratio: 16:9, maximum: 20:9
+- Always leave 5-8% margin on each side of the screen
+
+**Row Logic:**
+- 1-6 bottles: single row, centered
+- 7+ bottles: two rows — top row centered, bottom row centered below
+- Extra bottle addition mid-level: re-run full layout calculation, animate all bottles to new positions
+
+**Integration Points:**
+- `ResponsiveLayoutManager` called by `BottleContainerView.Create()` at level start
+- Also called by extra bottle flow when a new bottle is added
+- Must account for HUD regions (top bar height, bottom bar height) in available play area
+
+## Coin System Rules (Epic 9)
+
+**Persistence:**
+- Coin balance stored in SaveData JSON (same file as star data)
+- Auto-save on coin earn and coin spend (same pattern as star save)
+- Streak count resets on level failure, persists across sessions otherwise
+
+**ScriptableObject Config:**
+- ALL coin values in `CoinConfig` ScriptableObject — never hardcode
+- Values: `baseLevelReward`, `moveEfficiencyBonusPercent`, `streakBonus3`, `streakBonus5`, `undoCosts[]`, `extraBottleCosts[]`, `adRewardAmount`
+- Tunable in Inspector for quick balancing
+
+**Integration:**
+- `ICoinManager` registered in Service Locator during Boot
+- GameplayHUD checks coin balance before allowing undo/extra bottle purchase
+- Insufficient coins → show "watch ad for coins" prompt
+- `CoinEarnedEvent` and `CoinSpentEvent` SO Event Channels for cross-system notification
+
+---
+
 ## Usage Guidelines
 
 **For AI Agents:**
@@ -233,4 +291,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-03-20
+Last Updated: 2026-03-22

@@ -14,6 +14,7 @@ namespace JuiceSort.Game.UI.Screens
     {
         private Text _starText;
         private Text _infoText;
+        private Text _coinRewardText;
         private GameObject _nextLevelBtn;
         private GameObject _replayBtn;
         private GameObject _roadmapBtn;
@@ -24,10 +25,13 @@ namespace JuiceSort.Game.UI.Screens
         public event Action OnRoadmap;
         public event Action OnContinue;
 
-        public void Show(int levelNumber, string cityName, int stars, int moves, int optimal, bool isReplay)
+        public void Show(int levelNumber, string cityName, int stars, int moves, int optimal, bool isReplay, int coinReward = 0)
         {
             _starText.text = StarCalculator.GetStarText(stars);
             _infoText.text = $"Level {levelNumber} - {cityName}\nMoves: {moves} (Optimal: ~{optimal})";
+
+            if (_coinRewardText != null)
+                _coinRewardText.text = coinReward > 0 ? $"+{coinReward} coins" : "";
 
             _nextLevelBtn.SetActive(!isReplay);
             _continueBtn.SetActive(isReplay);
@@ -76,6 +80,11 @@ namespace JuiceSort.Game.UI.Screens
             // Info text
             var infoGo = CreateText(go.transform, "Info", new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.55f), 34);
             screen._infoText = infoGo.GetComponent<Text>();
+
+            // Coin reward text
+            var coinGo = CreateText(go.transform, "CoinReward", new Vector2(0.2f, 0.38f), new Vector2(0.8f, 0.44f), 30);
+            screen._coinRewardText = coinGo.GetComponent<Text>();
+            screen._coinRewardText.color = ThemeConfig.GetColor(ThemeColorType.StarGold);
 
             // Next Level button
             screen._nextLevelBtn = CreateActionButton(go.transform, "Next Level",

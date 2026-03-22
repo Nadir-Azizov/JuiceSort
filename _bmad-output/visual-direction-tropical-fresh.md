@@ -28,6 +28,14 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 - **Feel:** Soft, bubbly shapes — not clinical, not cartoonish
 - Liquid layers visible through glass with a slight inner glow
 
+### Shader-Based Liquid Fill (Epic 10)
+- **Rendering:** Shader Graph material per bottle replaces sprite slot system
+- **Fill parameters:** `_Fill0-3` (0-1) per color layer — smooth, continuous fill levels
+- **Color parameters:** `_Color0-3` — each layer independently colored
+- **Water surface:** Sinusoidal wave at each fill boundary (`sin(_Time.y * speed) * amplitude`)
+- **Glass effect:** Shader handles transparency, subtle refraction, and inner glow
+- **Result:** Liquid looks fluid and alive, not stepped/blocky like sprite slots
+
 ---
 
 ## Background & Atmosphere
@@ -102,6 +110,33 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 - **Layer:** Behind containers, in front of background — on a dedicated sorting layer
 - **Details:** Simple particle system or coroutine-driven pool. Should feel like distant bokeh lights or fireflies. Does not interact with gameplay
 
+### New Animations (Epics 10-11)
+
+#### Pour Animation (Shader-Based, replaces sprite slot toggle)
+- **Source bottle:** `_FillAmount` smoothly decreases via Lerp coroutine
+- **Dynamic tilt:** 1 layer=15°, 2 layers=25°, 3 layers=35°, 4 layers=45° (ease-in curve)
+- **Liquid stream:** LineRenderer bezier curve from source mouth to target mouth, color-matched
+- **Target bottle:** `_FillAmount` smoothly increases (synchronized with source drain)
+- **Splash:** Small particle/shader wave effect when liquid lands in target
+
+#### Select/Deselect Wobble
+- **Trigger:** On bottle select or deselect
+- **Effect:** Liquid surface tilts and oscillates — spring-damper physics
+- **Formula:** `wobble = amplitude * sin(frequency * time) * exp(-damping * time)`
+- **Duration:** 0.3-0.5s decay to zero
+- **Implementation:** Shader `_WobbleX` parameter driven by coroutine
+
+#### Bottle Cap/Cork Close
+- **Trigger:** When bottle becomes fully sorted (after shimmer)
+- **Sequence:** Cork sprite drops from above (bounce easing) → confetti/sparkle burst → scale punch (105% → 100%)
+- **Duration:** ~0.5s total
+- **Cork sprite:** Simple rounded shape, colored to match bottle — procedurally generated
+
+#### Extra Bottle Pop-In (Epic 11)
+- **Trigger:** When extra bottle is added mid-level
+- **Effect:** All bottles smoothly animate to new positions (re-layout), new bottle scales from 0 to full size
+- **Duration:** 0.3s re-layout + 0.2s pop-in
+
 ### Design Goals
 - Every interaction should feel satisfying and organic
 - No external tween libraries — pure coroutine-based with easing functions
@@ -118,12 +153,52 @@ Premium casual aesthetic — a fusion of playful organic warmth and elegant trop
 
 ---
 
+## Lighting & Effects (Epic 10)
+
+### Glass Refraction
+- URP Distortion node in bottle shader
+- Subtle distortion behind glass — objects/background slightly warped through bottle
+- Low intensity to avoid performance cost on mobile
+
+### Bloom / Inner Glow
+- URP Post Processing Bloom on liquid colors
+- Low intensity (0.1-0.3), high threshold (>1.0) — only bright liquid colors bloom
+- Creates soft glow inside bottles, especially vivid colors like Mango Amber and Tropical Teal
+- Performance: use sparingly — expensive on mobile, test on low-end target devices
+
+### Ambient Light
+- Sprite-based halo behind each bottle (additive blending)
+- Color tinted to match the dominant liquid color in the bottle
+- Very subtle (0.05-0.15 alpha) — enhances depth without overpowering
+
+### URP 2D Point Lights
+- One 2D point light per bottle (or per row of bottles)
+- Soft glow in the dominant liquid color
+- Radius sized to cover bottle + small margin
+- Intensity: low (0.3-0.5) — ambiance, not spotlight
+
+### Color Enhancement
+- Liquid colors more saturated than current sprite-based system
+- Increased contrast against dark gradient backgrounds
+- Warm golden filter applied through shader — fruit through golden light effect
+
+### Free Resources (No Paid Assets)
+- Unity Shader Graph — free with URP
+- URP 2D Lights — built-in
+- URP Post Processing / Bloom — built-in
+- LineRenderer — built-in
+- Particle System — built-in
+- All shapes/sprites can be created procedurally
+
+---
+
 ## Target Impression
 | Element | Description |
 |---|---|
 | Colors | Saturated but warm — fruit through golden light |
-| Containers | Rounded glass with realistic transparency |
-| Background | Tropical warmth, sunset atmosphere |
-| UI | Minimal, elegant, soft-touch |
-| Animations | Organic, liquid, satisfying |
-| Overall | Premium smoothie bar on a tropical island |
+| Containers | Rounded glass with shader-based liquid, refraction, and glow |
+| Background | Tropical warmth, sunset gradient (#1a0a2e → #2d1b4e → #ff6b35) |
+| UI | Minimal, elegant, soft-touch, organized HUD with coin display |
+| Animations | Organic, liquid, satisfying — smooth pours, wobble, cork close |
+| Lighting | Soft glow, bloom, 2D point lights — premium depth |
+| Overall | Premium smoothie bar on a tropical island — Magic Sort quality |

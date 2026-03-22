@@ -68,6 +68,11 @@ namespace JuiceSort.Game.Boot
             DontDestroyOnLoad(pmGo);
             Services.Register<IProgressionManager>(pmGo.AddComponent<ProgressionManager>());
 
+            // CoinManager — loads balance from SaveManager in Start()
+            var cmGo = new GameObject("CoinManager");
+            DontDestroyOnLoad(cmGo);
+            Services.Register<ICoinManager>(cmGo.AddComponent<Economy.CoinManager>());
+
             // AudioManager — reads settings from ProgressionManager in Start()
             var amGo = new GameObject("AudioManager");
             DontDestroyOnLoad(amGo);

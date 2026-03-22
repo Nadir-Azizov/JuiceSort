@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-21T00:00:00
+last_updated: 2026-03-22T00:00:00
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -103,3 +103,40 @@ development_status:
   7-1-rewarded-ad-extra-bottle: done  # also covers 7.2 (max 2 per level), 7.3 (no forced ads)
   7-4-play-store-requirements: done   # also covers 7.5 (optimization), 7.6 (publication)
   epic-7-retrospective: optional
+
+  # Epic 8: Animation Polish (5 implemented)
+  epic-8: done
+  8-1-completion-shimmer: done
+  8-2-screen-transitions: done
+  8-3-button-bounce: done
+  8-4-glass-sparkles: done
+  8-5-floating-lights: done
+  epic-8-retrospective: optional
+
+  # Epic 9: Coin Economy System (6 stories)
+  epic-9: done
+  9-1-coin-balance-hud: done
+  9-2-level-completion-reward: done
+  9-3-streak-bonus: done
+  9-4-coin-undo: done
+  9-5-coin-extra-bottle: done
+  9-6-rewarded-ad-coins: done
+
+  # Epic 10: Liquid Visual Overhaul (6 stories)
+  epic-10: backlog
+  10-1-shader-liquid-fill: backlog
+  10-2-smooth-pour-animation: backlog
+  10-3-pour-stream-vfx: backlog
+  10-4-select-wobble: backlog
+  10-5-bottle-cap-animation: backlog
+  10-6-glass-glow-bloom: backlog
+
+  # Epic 11: UI/UX Overhaul (7 stories)
+  epic-11: in-progress
+  11-1-responsive-bottle-layout: done               # SO HIGH priority
+  11-2-hud-redesign: done                          # HIGH priority
+  11-3-gradient-backgrounds-typography: backlog  # HIGH priority
+  11-4-icon-system: backlog                 # HIGH priority
+  11-5-extra-bottle-relayout: done             # MEDIUM priority (depends on 11.1)
+  11-6-main-menu-redesign: backlog          # LOW priority
+  11-7-roadmap-redesign: backlog            # LOW priority

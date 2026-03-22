@@ -29,6 +29,7 @@ namespace JuiceSort.Game.Puzzle
         private int _lastStarRating;
         private bool _isReplay;
         private int _extraBottlesUsed;
+        private int _undoUsageCount;
 
         // Paused level state — keeps one level's state for resume
         private PuzzleState _pausedPuzzle;
@@ -109,6 +110,7 @@ namespace JuiceSort.Game.Puzzle
             _isLevelComplete = false;
             _selectedContainerIndex = -1;
             _extraBottlesUsed = 0;
+            _undoUsageCount = 0;
             _undoStack = new UndoStack(GameConstants.MaxUndo);
             // _isReplay is set true by LoadSpecificLevel before calling LoadLevel
             // Don't reset here — it's consumed in OnLevelComplete then reset
@@ -123,9 +125,20 @@ namespace JuiceSort.Game.Puzzle
             _hud.OnUndoPressed = Undo;
             _hud.OnRestartPressed = RestartLevel;
             _hud.OnExtraBottlePressed = RequestExtraBottle;
+            _hud.OnAdWatchPressed = WatchAdForCoins;
             _hud.OnBackPressed = GoBackToRoadmap;
+            _hud.OnSettingsPressed = OpenSettings;
             _hud.SetLevelInfo(levelNumber, definition.CityName ?? "", definition.CountryName ?? "", definition.Mood);
-            _hud.UpdateDisplay(0, _undoStack.Count, ExtraBottlesRemaining);
+            _hud.UpdateDisplay(0);
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+            {
+                _hud.UpdateCoinDisplay(coinMgr.GetBalance());
+                coinMgr.OnBalanceChanged += _hud.UpdateCoinDisplay;
+                coinMgr.OnBalanceChanged += OnCoinBalanceChanged;
+            }
+            RefreshUndoState();
+            RefreshExtraBottleState();
+            RefreshAdButtonState();
 
             Debug.Log($"[GameplayManager] Level {levelNumber} loaded: {_currentPuzzle.ContainerCount} containers, {definition.ColorCount} colors, {definition.SlotCount} slots");
         }
@@ -147,6 +160,14 @@ namespace JuiceSort.Game.Puzzle
         private void DestroyBoard()
         {
             _isAnimating = false;
+
+            // Unsubscribe coin balance listeners to prevent leaks
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+            {
+                if (_hud != null)
+                    coinMgr.OnBalanceChanged -= _hud.UpdateCoinDisplay;
+                coinMgr.OnBalanceChanged -= OnCoinBalanceChanged;
+            }
 
             if (_bottleBoard != null)
             {
@@ -198,10 +219,15 @@ namespace JuiceSort.Game.Puzzle
 
             _moveCount = 0;
             _isLevelComplete = false;
+            _extraBottlesUsed = 0;
+            _undoUsageCount = 0;
             _undoStack.Clear();
             DeselectCurrent();
             _bottleBoard.RebindPuzzle(_currentPuzzle);
-            _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
+            _hud?.UpdateDisplay(_moveCount);
+            RefreshUndoState();
+            RefreshExtraBottleState();
+            RefreshAdButtonState();
 
             // Hide overlay screens
             if (Services.TryGet<ScreenManager>(out var sm))
@@ -224,28 +250,65 @@ namespace JuiceSort.Game.Puzzle
                 return;
             }
 
+            // Coin payment gate
+            if (!Services.TryGet<ICoinManager>(out var coinMgr))
+                return;
+
+            var config = Economy.CoinConfig.Default();
+            int cost = config.GetExtraBottleCost(_extraBottlesUsed);
+            if (!coinMgr.SpendCoins(cost))
+            {
+                Debug.Log($"[GameplayManager] Extra bottle blocked: insufficient coins (need {cost}, have {coinMgr.GetBalance()})");
+                return;
+            }
+
+            _currentPuzzle = PuzzleEngine.AddExtraContainer(_currentPuzzle, _currentDefinition.SlotCount);
+            _extraBottlesUsed++;
+
+            // Block input during re-layout animation
+            _isAnimating = true;
+            _bottleBoard.SetAllSparklesEnabled(false);
+
+            // Add new container view with animated re-layout
+            var newContainer = _currentPuzzle.GetContainer(_currentPuzzle.ContainerCount - 1);
+            _bottleBoard.AddContainerView(newContainer, _currentPuzzle.ContainerCount - 1,
+                onComplete: () =>
+                {
+                    _isAnimating = false;
+                    _bottleBoard.SetAllSparklesEnabled(true);
+                });
+
+            // Clear undo stack — old snapshots have fewer containers
+            _undoStack.Clear();
+            _hud?.UpdateDisplay(_moveCount);
+            RefreshExtraBottleState();
+            RefreshUndoState();
+
+            Debug.Log($"[GameplayManager] Extra bottle added (coin). Used: {_extraBottlesUsed}/{GameConstants.MaxExtraBottles}, Cost: {cost}");
+        }
+
+        public void WatchAdForCoins()
+        {
+            if (_isLevelComplete || _isAnimating)
+                return;
+
             if (!Services.TryGet<IAdManager>(out var adManager))
                 return;
 
             adManager.ShowRewardedAd(
                 onRewarded: () =>
                 {
-                    _currentPuzzle = PuzzleEngine.AddExtraContainer(_currentPuzzle, _currentDefinition.SlotCount);
-                    _extraBottlesUsed++;
-
-                    // Add new container view dynamically
-                    var newContainer = _currentPuzzle.GetContainer(_currentPuzzle.ContainerCount - 1);
-                    _bottleBoard.AddContainerView(newContainer, _currentPuzzle.ContainerCount - 1);
-
-                    // Clear undo stack — old snapshots have fewer containers
-                    _undoStack.Clear();
-                    _hud?.UpdateDisplay(_moveCount, _undoStack.Count, ExtraBottlesRemaining);
-
-                    Debug.Log($"[GameplayManager] Extra bottle added. Used: {_extraBottlesUsed}/{GameConstants.MaxExtraBottles}");
+                    if (Services.TryGet<ICoinManager>(out var coinMgr))
+                    {
+                        var config = Economy.CoinConfig.Default();
+                        coinMgr.AddCoins(config.AdRewardAmount);
+                        Debug.Log($"[GameplayManager] Ad reward: +{config.AdRewardAmount} coins");
+                    }
+                    RefreshAdButtonState();
                 },
                 onFailed: () =>
                 {
-                    Debug.Log("[GameplayManager] Ad failed — no extra bottle");
+                    Debug.Log("[GameplayManager] Ad failed — no coins awarded");
                 }
             );
         }
@@ -273,6 +336,15 @@ namespace JuiceSort.Game.Puzzle
 
             if (Services.TryGet<ScreenManager>(out var screenMgr))
                 screenMgr.TransitionTo(GameFlowState.Roadmap);
+        }
+
+        private void OpenSettings()
+        {
+            if (_isAnimating)
+                return;
+
+            Debug.Log("[GameplayManager] Settings requested — placeholder until settings overlay is implemented.");
+            // TODO: Open settings overlay (Epic 11 or existing SettingsScreen)
         }
 
         /// <summary>
@@ -324,9 +396,20 @@ namespace JuiceSort.Game.Puzzle
             _hud.OnUndoPressed = Undo;
             _hud.OnRestartPressed = RestartLevel;
             _hud.OnExtraBottlePressed = RequestExtraBottle;
+            _hud.OnAdWatchPressed = WatchAdForCoins;
             _hud.OnBackPressed = GoBackToRoadmap;
+            _hud.OnSettingsPressed = OpenSettings;
             _hud.SetLevelInfo(_currentLevelNumber, _currentDefinition.CityName ?? "", _currentDefinition.CountryName ?? "", _currentDefinition.Mood);
-            _hud.UpdateDisplay(_moveCount, _undoStack.Count, ExtraBottlesRemaining);
+            _hud.UpdateDisplay(_moveCount);
+            if (Services.TryGet<ICoinManager>(out var coinMgrResume))
+            {
+                _hud.UpdateCoinDisplay(coinMgrResume.GetBalance());
+                coinMgrResume.OnBalanceChanged += _hud.UpdateCoinDisplay;
+                coinMgrResume.OnBalanceChanged += OnCoinBalanceChanged;
+            }
+            RefreshUndoState();
+            RefreshExtraBottleState();
+            RefreshAdButtonState();
 
             // Clear paused state
             _pausedPuzzle = null;
@@ -439,7 +522,8 @@ namespace JuiceSort.Game.Puzzle
                 },
                 onComplete: () =>
                 {
-                    _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
+                    _hud?.UpdateDisplay(_moveCount);
+                    RefreshUndoState();
                     Debug.Log($"[GameplayManager] Pour animated. Moves: {_moveCount}");
 
                     // Detect newly completed containers
@@ -492,17 +576,34 @@ namespace JuiceSort.Game.Puzzle
             if (_isLevelComplete || _isAnimating)
                 return;
 
+            // Pop first to verify stack isn't empty (no coins charged if empty)
             var snapshot = _undoStack.Pop();
             if (snapshot == null)
                 return;
+
+            // Attempt coin payment
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+            {
+                var config = Economy.CoinConfig.Default();
+                int cost = config.GetUndoCost(_undoUsageCount);
+                if (!coinMgr.SpendCoins(cost))
+                {
+                    // Insufficient coins — re-push snapshot and abort
+                    _undoStack.Push(snapshot);
+                    Debug.Log($"[GameplayManager] Undo blocked: insufficient coins (need {cost}, have {coinMgr.GetBalance()})");
+                    return;
+                }
+                _undoUsageCount++;
+            }
 
             _currentPuzzle = snapshot;
             _moveCount--;
             DeselectCurrent();
             _bottleBoard.RebindPuzzle(_currentPuzzle);
-            _hud?.UpdateDisplay(_moveCount, _undoStack.Count);
+            _hud?.UpdateDisplay(_moveCount);
+            RefreshUndoState();
 
-            Debug.Log($"[GameplayManager] Undo. Moves: {_moveCount}, Undos remaining: {_undoStack.Count}");
+            Debug.Log($"[GameplayManager] Undo. Moves: {_moveCount}, Undos remaining: {_undoStack.Count}, Undo uses: {_undoUsageCount}");
         }
 
         private void OnLevelComplete()
@@ -538,21 +639,35 @@ namespace JuiceSort.Game.Puzzle
                 }
             }
 
+            // Calculate and award coin reward with streak bonus
+            int coinReward = 0;
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+            {
+                var config = Economy.CoinConfig.Default();
+                int baseReward = Economy.CoinRewardCalculator.CalculateReward(_lastStarRating, _currentDefinition, config);
+
+                coinMgr.IncrementStreak();
+                int streakBonus = Economy.StreakBonusCalculator.GetStreakBonus(coinMgr.StreakCount, config);
+
+                coinReward = baseReward + streakBonus;
+                coinMgr.AddCoins(coinReward);
+            }
+
             bool wasReplay = _isReplay;
             _isReplay = false;
 
-            Debug.Log($"[GameplayManager] Level {_currentLevelNumber} Complete! Moves: {_moveCount}, Optimal: ~{estimatedOptimal}, Stars: {_lastStarRating}{(wasReplay ? " (replay)" : "")}");
-            ShowWinOverlay(estimatedOptimal, wasReplay);
+            Debug.Log($"[GameplayManager] Level {_currentLevelNumber} Complete! Moves: {_moveCount}, Optimal: ~{estimatedOptimal}, Stars: {_lastStarRating}, Coins: +{coinReward}{(wasReplay ? " (replay)" : "")}");
+            ShowWinOverlay(estimatedOptimal, wasReplay, coinReward);
         }
 
-        private void ShowWinOverlay(int estimatedOptimal, bool wasReplay = false)
+        private void ShowWinOverlay(int estimatedOptimal, bool wasReplay, int coinReward = 0)
         {
             if (Services.TryGet<ScreenManager>(out var screenMgr))
             {
                 var completeScreen = screenMgr.GetScreen(GameFlowState.LevelComplete)?.GetComponent<UI.Screens.LevelCompleteScreen>();
                 if (completeScreen != null)
                 {
-                    completeScreen.Show(_currentLevelNumber, _currentDefinition?.CityName ?? "", _lastStarRating, _moveCount, estimatedOptimal, wasReplay);
+                    completeScreen.Show(_currentLevelNumber, _currentDefinition?.CityName ?? "", _lastStarRating, _moveCount, estimatedOptimal, wasReplay, coinReward);
                     screenMgr.ShowOverlay(GameFlowState.LevelComplete);
                 }
             }
@@ -561,9 +676,14 @@ namespace JuiceSort.Game.Puzzle
         private void OnDestroy()
         {
             if (_bottleBoard != null)
-            {
                 _bottleBoard.OnContainerTapped -= OnContainerTapped;
 
+            // Unsubscribe coin listeners in case DestroyBoard wasn't called (e.g., scene unload)
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+            {
+                if (_hud != null)
+                    coinMgr.OnBalanceChanged -= _hud.UpdateCoinDisplay;
+                coinMgr.OnBalanceChanged -= OnCoinBalanceChanged;
             }
         }
 
@@ -574,6 +694,44 @@ namespace JuiceSort.Game.Puzzle
 
             if (Services.TryGet<IAudioManager>(out var audio))
                 audio.PlaySFX(AudioClipType.Select);
+        }
+
+        private void OnCoinBalanceChanged(int newBalance)
+        {
+            RefreshUndoState();
+            RefreshExtraBottleState();
+        }
+
+        private void RefreshUndoState()
+        {
+            if (_hud == null) return;
+            var config = Economy.CoinConfig.Default();
+            int cost = config.GetUndoCost(_undoUsageCount);
+            bool hasUndos = _undoStack != null && _undoStack.Count > 0;
+            bool canAfford = true;
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+                canAfford = coinMgr.GetBalance() >= cost;
+            _hud.UpdateUndoState(cost, canAfford, hasUndos);
+        }
+
+        private void RefreshExtraBottleState()
+        {
+            if (_hud == null) return;
+            var config = Economy.CoinConfig.Default();
+            bool hasRemaining = _extraBottlesUsed < GameConstants.MaxExtraBottles;
+            int cost = config.GetExtraBottleCost(_extraBottlesUsed);
+            bool canAfford = true;
+            if (Services.TryGet<ICoinManager>(out var coinMgr))
+                canAfford = coinMgr.GetBalance() >= cost;
+            _hud.UpdateExtraBottleState(cost, canAfford, hasRemaining);
+        }
+
+        private void RefreshAdButtonState()
+        {
+            if (_hud == null) return;
+            bool isAvailable = Services.TryGet<IAdManager>(out var adManager) && adManager.IsAdAvailable;
+            var config = Economy.CoinConfig.Default();
+            _hud.UpdateAdButtonState(isAvailable, config.AdRewardAmount);
         }
 
         private void DeselectCurrent()

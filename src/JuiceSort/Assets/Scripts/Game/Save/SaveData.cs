@@ -12,13 +12,17 @@ namespace JuiceSort.Game.Save
         public SavedLevelRecord[] levelRecords = Array.Empty<SavedLevelRecord>();
         public bool soundEnabled = true;
         public bool musicEnabled = true;
+        public int coinBalance = 0;
+        public int consecutiveWinStreak = 0;
 
-        public static SaveData FromProgressionData(ProgressionData data)
+        public static SaveData FromProgressionData(ProgressionData data, int coinBalance = 0, int consecutiveWinStreak = 0)
         {
             var saveData = new SaveData();
             saveData.currentLevel = data.CurrentLevel;
             saveData.soundEnabled = data.SoundEnabled;
             saveData.musicEnabled = data.MusicEnabled;
+            saveData.coinBalance = coinBalance;
+            saveData.consecutiveWinStreak = consecutiveWinStreak;
 
             var records = data.GetAllLevelRecords();
             saveData.levelRecords = new SavedLevelRecord[records.Count];

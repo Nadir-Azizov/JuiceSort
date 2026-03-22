@@ -80,11 +80,22 @@ namespace JuiceSort.Game.Progression
             AutoSave();
         }
 
-        private void AutoSave()
+        /// <summary>
+        /// Saves all progression + coin data. Called internally and by CoinManager.
+        /// </summary>
+        public void AutoSave()
         {
             if (Services.TryGet<ISaveManager>(out var saveManager))
             {
-                var saveData = SaveData.FromProgressionData(_data);
+                int coinBalance = 0;
+                int streakCount = 0;
+                if (Services.TryGet<ICoinManager>(out var coinMgr))
+                {
+                    coinBalance = coinMgr.GetBalance();
+                    streakCount = coinMgr.StreakCount;
+                }
+
+                var saveData = SaveData.FromProgressionData(_data, coinBalance, streakCount);
                 string json = JsonUtility.ToJson(saveData);
                 saveManager.Save(json);
             }

@@ -49,24 +49,31 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Tests\EditMode\SolvabilityTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\CoinRewardCalculatorTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\RoadmapTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ScreenManagerTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\WinConditionTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\CoinUndoTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\PuzzleStateTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ContainerDataTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ProgressionDataTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ServicesTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\CityAssignerTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\CoinExtraBottleTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ThemeConfigTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\PuzzleEngineTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\SaveSystemTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\CoinAdRewardTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\StarCalculatorTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\ResponsiveLayoutTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ProgressiveChallengeTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\RestartTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\DifficultyScalerTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\StarGateTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\StreakTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ContainerSelectionTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\LevelGeneratorTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\CoinManagerTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ExtraBottleTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\AudioManagerTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\UndoStackTests.cs" />

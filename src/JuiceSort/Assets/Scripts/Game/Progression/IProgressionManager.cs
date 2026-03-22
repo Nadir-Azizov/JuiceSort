@@ -23,5 +23,10 @@ namespace JuiceSort.Game.Progression
         int GetBatchRequiredStars();
         bool SoundEnabled { get; set; }
         bool MusicEnabled { get; set; }
+
+        /// <summary>
+        /// Saves all progression + coin data to persistent storage.
+        /// </summary>
+        void AutoSave();
     }
 }

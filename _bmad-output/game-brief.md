@@ -134,6 +134,14 @@ Relaxation > Visual Delight > Discovery
 **Primary:** Android mobile (modern devices only)
 **Secondary:** None planned at this stage
 
+### Monetization
+
+- **Rewarded ads:** Watch an ad to earn coins (200-300 coins per ad)
+- **Coin economy:** Dual currency system — stars for progression (roadmap, batch gates) + coins for boosters (undo, extra bottle)
+- **Coin earning:** Level completion rewards (50-100 base), move efficiency bonus (+25-50%), streak bonuses (3-streak: 200, 5-streak: 500 coins)
+- **Coin spending:** Undo (100/200/300 escalating per level), extra bottle (500/900 escalating, max 2 per level)
+- **Future IAP:** Coin purchase tiers ($0.99-$19.99) — post-MVP
+
 ### Budget Considerations
 
 - Self-funded project with no fixed budget defined yet
@@ -199,6 +207,7 @@ Relaxation > Visual Delight > Discovery
 2. **Day/Night mood system** — Morning levels in restaurants (juices), night levels in bars (cocktails) — same core mechanic, completely different atmosphere
 3. **Themed drinks** — Players sort recognizable cocktails and juices, not generic colored liquids
 4. **Sweet travel memories** — The game creates emotional connection through city discovery, making players remember and revisit
+5. **Satisfying liquid physics and premium pour animations** — Shader-based liquid rendering with smooth fills, flowing streams, wobble physics, and glass glow effects that deliver an "oddly satisfying" visual experience rivaling Magic Sort
 
 **Unique Value Proposition:**
 JuiceSort is the first water sort puzzle game that turns every level into a travel postcard — combining satisfying puzzle mechanics with a world tour of cities, drinks, and atmospheres that players actually remember.
@@ -293,6 +302,9 @@ A fully playable JuiceSort game with:
 - Themed drinks (juices for morning, cocktails for night)
 - Basic UI following the "Tropical Fresh" visual direction
 - Functional level progression across cities
+- Shader-based liquid rendering with smooth fills, wobble physics, and glass glow effects
+- Coin economy system (earn coins on completion, spend on undo/extra bottle)
+- Responsive bottle layout that adapts to any screen size and bottle count
 
 **Not in MVP:** World map navigation, explore mode, collection system, leaderboards, player of the day/month, online features, marketing.
 

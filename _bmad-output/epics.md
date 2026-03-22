@@ -12,6 +12,9 @@
 | 6 | Audio | Epic 1 | 2 implemented, 3 merged | Done |
 | 7 | Monetization & Publishing | Epic 1-6 | 2 implemented, 4 merged | Done |
 | 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
+| 9 | Coin Economy System | Epic 1, 3, 7 | 6 stories | Backlog |
+| 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 stories | Backlog |
+| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 7 stories | Backlog |
 
 **Total: 38 implemented stories / 51 originally planned (13 merged during development)**
 
@@ -301,3 +304,109 @@ Every interaction feels satisfying and polished. Completing a bottle triggers a 
 - **8.3** As a player, buttons feel tactile with a satisfying bounce on tap → [8-3-button-bounce.md](implementation-artifacts/8-3-button-bounce.md)
 - **8.4** As a player, I see subtle sparkles on glass containers while idle → [8-4-glass-sparkles.md](implementation-artifacts/8-4-glass-sparkles.md)
 - **8.5** As a player, I see warm floating light particles drifting in the background → [8-5-floating-lights.md](implementation-artifacts/8-5-floating-lights.md)
+
+---
+
+## Epic 9: Coin Economy System
+
+### Goal
+Add a coin economy that monetizes boosters (undo, extra bottle) and rewards efficient play. Two parallel currencies: stars (progression) + coins (boosters).
+
+### Scope
+**Includes:**
+- Coin balance tracking and persistence
+- Level completion coin rewards (base + difficulty scaling + move efficiency bonus)
+- Consecutive win streak tracking with bonus rewards
+- Coin spending for undo (escalating cost per level)
+- Coin spending for extra bottle (escalating cost, max 2 per level)
+- Rewarded ad to earn coins
+- Coin balance display on gameplay HUD
+- CoinConfig ScriptableObject for all values (never hardcode)
+
+**Excludes:**
+- In-app purchase coin packs (post-MVP)
+- Continue after failure mechanic (post-MVP)
+
+### Dependencies
+Epic 1 (puzzle engine), Epic 3 (progression system), Epic 7 (ads)
+
+### Deliverable
+Players earn coins by completing levels efficiently, maintain streaks for bonus coins, and spend coins on undo and extra bottle instead of getting them for free/ads.
+
+### Stories
+- **9.1** As a player, I see my coin balance on the gameplay HUD and it persists across sessions
+- **9.2** As a player, I earn coins when completing a level (base reward scaled by difficulty)
+- **9.3** As a player, I earn bonus coins for consecutive level wins (streak system)
+- **9.4** As a player, I can spend coins to undo a move (cost increases with each use per level)
+- **9.5** As a player, I can spend coins to add an extra bottle (cost increases, max 2 per level)
+- **9.6** As a player, I can watch a rewarded ad to earn coins
+
+---
+
+## Epic 10: Liquid Visual Overhaul
+
+### Goal
+Replace the sprite-based liquid rendering with a shader-based system that delivers Magic Sort-quality visual polish — smooth fills, satisfying pours, liquid wobble, and bottle cap animations.
+
+### Scope
+**Includes:**
+- Shader Graph liquid fill material (replaces sprite slot rendering)
+- Smooth pour animation (fill amount lerp + dynamic tilt angles)
+- Visible liquid stream between bottles during pour (LineRenderer/particle VFX)
+- Select/deselect liquid wobble (shader-driven damped oscillation)
+- Bottle cap/cork close animation on sorted completion
+- Glass glow, refraction, and bloom effects (URP 2D lights + post-processing)
+
+**Excludes:**
+- City background changes (existing system preserved)
+- Sound effects changes (existing system preserved)
+
+### Dependencies
+Epic 1 (bottle container view, pour animator), Epic 5 (container visuals)
+
+### Deliverable
+Bottles render with smooth, animated liquid that wobbles on selection, flows visibly during pours, and celebrates with a cork animation on completion. The visual quality rivals Magic Sort.
+
+### Stories
+- **10.1** As a player, I see smooth, gradient-filled liquid in each bottle (Shader Graph liquid fill material replaces sprite slots)
+- **10.2** As a player, I see the liquid level smoothly rise and fall during a pour (fill amount lerp + dynamic tilt angle based on pour count)
+- **10.3** As a player, I see a flowing liquid stream between bottles during a pour (LineRenderer/particle stream VFX)
+- **10.4** As a player, I see the liquid wobble/slosh when I select or deselect a bottle (shader-driven damped oscillation)
+- **10.5** As a player, I see a cork/cap close on a bottle when it becomes fully sorted (sprite drop + bounce + confetti burst)
+- **10.6** As a player, I see glass glow, refraction, and bloom effects on bottles (URP 2D lights + post-processing)
+
+---
+
+## Epic 11: UI/UX Overhaul
+
+### Goal
+Fix all layout, sizing, and visual quality issues to deliver a polished, premium-feeling UI.
+
+### Scope
+**Includes:**
+- Responsive bottle layout (dynamic positioning based on screen size and bottle count)
+- HUD redesign (organized top/bottom bars, consistent button sizing, coin balance display)
+- Gradient backgrounds and typography improvements
+- Consistent icon system
+- Extra bottle re-layout animation
+- Main menu visual redesign
+- Roadmap redesign (Candy Crush-style curved path)
+
+**Excludes:**
+- Gameplay mechanics changes
+- Audio changes
+
+### Dependencies
+Epic 4 (existing UI), Epic 5 (visual theme), Epic 9 (coin balance display)
+
+### Deliverable
+All bottles fit on screen regardless of count. HUD is organized and readable. Background and typography look premium. Roadmap feels like a real journey.
+
+### Stories
+- **11.1** [SO HIGH] As a player, all bottles fit on my screen regardless of count, with proper margins and multi-row layout when needed (responsive layout system) → [11-1-responsive-bottle-layout.md](implementation-artifacts/11-1-responsive-bottle-layout.md)
+- **11.2** [HIGH] As a player, the gameplay HUD has clear, organized top and bottom bars with consistent button sizing (HUD redesign) → [11-2-hud-redesign.md](implementation-artifacts/11-2-hud-redesign.md)
+- **11.3** [HIGH] As a player, the game background uses warm gradient colors and text has proper contrast and readability (gradient backgrounds + typography)
+- **11.4** [HIGH] As a player, all icons are consistent in style and size across the game (icon system)
+- **11.5** [MEDIUM] As a player, when an extra bottle is added mid-level, all bottles smoothly rearrange to fit (re-layout animation) → [11-5-extra-bottle-relayout.md](implementation-artifacts/11-5-extra-bottle-relayout.md)
+- **11.6** [LOW] As a player, the main menu looks polished with gradient background, styled logo, and animated elements
+- **11.7** [LOW] As a player, the roadmap shows a Candy Crush-style curved path with level nodes, stars, and city labels
