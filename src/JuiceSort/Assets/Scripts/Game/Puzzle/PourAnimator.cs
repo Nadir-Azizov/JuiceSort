@@ -20,8 +20,7 @@ namespace JuiceSort.Game.Puzzle
         private const float InitialTiltDuration = 0.08f;
 
         // --- Movement constants ---
-        private const float HoverClearance = 0.25f; // extra height above target bottle top
-        private const float LiftHeightFactor = 0.35f; // fraction of bottle height above max row Y
+        private const float HoverGap = 0.15f; // small gap between source bottom and target top
 
         // --- Progressive tilt curve (fill ratio → tilt angle) ---
         // fillRatio 1.0 (full)  → 15°
@@ -93,9 +92,14 @@ namespace JuiceSort.Game.Puzzle
             var srcBandsAfter = ComputeBandsAfterSourcePour(sourceDataSnapshot, pourCount);
             var tgtBandsAfter = ComputeBandsAfterTargetPour(targetDataSnapshot, pourCount, pourColor);
 
-            // --- Phase 1: Lift source above all bottles ---
-            // Lift high enough to clear bottles in either row
-            float liftY = Mathf.Max(originalPos.y, targetLocalPos.y) + bottleWorldHeight * LiftHeightFactor + HoverClearance;
+            // --- Phase 1: Lift source so its bottom clears the target's top ---
+            // Bottle positions are at pivot (center). Target top = targetY + halfHeight.
+            // Source bottom at liftY = liftY - halfHeight. We want source bottom >= target top + gap.
+            // So: liftY - halfH = targetTop + gap → liftY = targetY + halfH + gap + halfH = targetY + fullH + gap
+            // Also must clear source's own row for horizontal travel.
+            float halfH = bottleWorldHeight * 0.5f;
+            float targetTop = Mathf.Max(originalPos.y, targetLocalPos.y) + halfH;
+            float liftY = targetTop + halfH + HoverGap;
             Vector3 liftedPos = new Vector3(originalPos.x, liftY, originalPos.z);
             yield return LerpPosition(sourceTf, originalPos, liftedPos, LiftDuration);
 
