@@ -40,13 +40,31 @@ namespace JuiceSort.Game.Puzzle
         private const float SurfaceLandingOffset = 0.05f;
         // Bottom of liquid area relative to bottle pivot (sprite center)
         private const float BottleBottomRatio = -0.42f;
-        // Converts bottle tilt degrees to shader _LiquidTilt multiplicative factor.
-        // _LiquidTilt 0 = flat surface, 2.0 = one side empty / other side double fill.
-        // At 90° tilt: factor ≈ 2.0 (one side empty). Per degree = 2.0/90 ≈ 0.022.
-        private const float LiquidTiltPerDegree = 0.23f;
+        // Gravity-based tilt: decomposes world gravity into bottle's local UV axes.
+        // 3.0 gives a visible ~45° liquid surface angle at full tilt.
+        // Too high (>5) saturates instantly → binary snap instead of smooth angle.
+        // TEST: reduced to 2.0 so tilt angle is visible (not saturated)
+        private const float BaseTiltStrength = 2.0f;
 
         // Band calculation
         private const int MaxBands = 6;
+
+        /// <summary>
+        /// Applies liquid surface tilt across the bottle width (X-axis only).
+        /// For 2D side-view: liquid tilts left/right to pool toward the mouth.
+        /// Y-axis tilt is not used — it pulls liquid toward the base corner
+        /// which fights the correct pour direction in 2D.
+        /// </summary>
+        private static void ApplyGravityTilt(LiquidMaterialController controller, float tiltAngle, float direction, float strength)
+        {
+            float rotRad = tiltAngle * direction * Mathf.Deg2Rad;
+            // -sin(θ) makes liquid pool toward the mouth side:
+            //   CCW tilt (direction=1): negative _LiquidTilt → surface higher at x=0 (left/mouth)
+            //   CW tilt (direction=-1): positive _LiquidTilt → surface higher at x=1 (right/mouth)
+            float tiltX = -Mathf.Sin(rotRad) * strength;
+            controller.SetLiquidTilt(tiltX);
+            controller.SetLiquidTiltY(0f);
+        }
 
         /// <summary>
         /// Runs the full pour animation with movement, progressive tilt, and smooth fills.
@@ -135,12 +153,12 @@ namespace JuiceSort.Game.Puzzle
                     sourceTf.localRotation = Quaternion.Lerp(originalRot, startTiltRot, t);
                     float currentAngle = Mathf.Lerp(0f, startTiltAngle, t);
                     if (srcController != null)
-                        srcController.SetLiquidTilt(currentAngle * -direction * LiquidTiltPerDegree);
+                        ApplyGravityTilt(srcController, currentAngle, direction, BaseTiltStrength);
                     yield return null;
                 }
                 sourceTf.localRotation = startTiltRot;
                 if (srcController != null)
-                    srcController.SetLiquidTilt(startTiltAngle * -direction * LiquidTiltPerDegree);
+                    ApplyGravityTilt(srcController, startTiltAngle, direction, BaseTiltStrength);
             }
 
             // Pre-pour target fill ratio for surface tracking
@@ -205,14 +223,18 @@ namespace JuiceSort.Game.Puzzle
                     float currentTiltAngle = FillRatioToTiltAngle(currentFillRatio);
                     sourceTf.localRotation = Quaternion.Euler(0f, 0f, currentTiltAngle * direction);
 
-                    // Liquid tilt: amplify as liquid drains to keep mouth side full.
-                    // As pour progresses, tilt factor increases — liquid concentrates at mouth,
-                    // far side empties first, maintaining stream connection.
+                    // Compensate for shader's totalFill scaling: as fill drops the shader
+                    // tiltOffset shrinks (totalFill × tilt). Multiply strength by
+                    // prePourRatio/currentFillRatio so visible tilt stays consistent,
+                    // plus a small drain boost so liquid concentrates at the mouth.
+                    float fillCompensation = Mathf.Min(
+                        prePourRatio / Mathf.Max(currentFillRatio, 0.1f),
+                        3f); // cap at 3× so tilt stays visible angle, not binary snap
                     float drainProgress = (prePourRatio > 0.001f)
                         ? 1f - (currentFillRatio / prePourRatio)
                         : 0f;
-                    float tiltAmplifier = 1f + drainProgress * 1.5f;
-                    srcController.SetLiquidTilt(currentTiltAngle * -direction * LiquidTiltPerDegree * tiltAmplifier);
+                    float tiltAmplifier = fillCompensation * (1f + drainProgress * 0.3f);
+                    ApplyGravityTilt(srcController, currentTiltAngle, direction, BaseTiltStrength * tiltAmplifier);
 
                     // Update stream positions: mouth tracks tilt, target tracks fill level
                     if (pourStream != null)
@@ -258,12 +280,15 @@ namespace JuiceSort.Game.Puzzle
                     sourceTf.localRotation = Quaternion.Lerp(finalTiltRot, originalRot, t);
                     float currentAngle = Mathf.Lerp(finalTiltAngle, 0f, t);
                     if (srcController != null)
-                        srcController.SetLiquidTilt(currentAngle * -direction * LiquidTiltPerDegree);
+                        ApplyGravityTilt(srcController, currentAngle, direction, BaseTiltStrength);
                     yield return null;
                 }
                 sourceTf.localRotation = originalRot;
                 if (srcController != null)
+                {
                     srcController.SetLiquidTilt(0f);
+                    srcController.SetLiquidTiltY(0f);
+                }
             }
 
             // Move horizontally back to original X, staying at lift height

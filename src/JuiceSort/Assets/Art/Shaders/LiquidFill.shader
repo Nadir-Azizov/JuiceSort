@@ -11,6 +11,7 @@ Shader "JuiceSort/LiquidFill"
         _GlowColor ("Glow Color", Color) = (1,0.9,0.6,1)
         _GlowIntensity ("Glow Intensity", Float) = 0.15
         _LiquidTilt ("Liquid Tilt", Float) = 0.0
+        _LiquidTiltY ("Liquid Tilt Y", Float) = 0.0
 
         // SpriteMask stencil support (set automatically by Unity based on maskInteraction)
         _StencilRef ("Stencil Ref", Float) = 0
@@ -80,6 +81,7 @@ Shader "JuiceSort/LiquidFill"
                 float4 _GlowColor;
                 float _GlowIntensity;
                 float _LiquidTilt;
+                float _LiquidTiltY;
             CBUFFER_END
 
             // HLSL arrays — set from C# via SetFloatArray / SetVectorArray
@@ -116,11 +118,14 @@ Shader "JuiceSort/LiquidFill"
                     topBandIdx = p;
                 }
 
-                // --- Compute tilted surface at this X position ---
-                // MULTIPLICATIVE tilt: surface scales with totalFill so fill decrease is always visible.
-                // _LiquidTilt 0 = flat, ~2.0 = one side empty/other side double.
+                // --- Compute additive tilt offset at this pixel ---
+                // Scaled by _MaxVisualFill (constant 0.80) instead of dynamic totalFill.
+                // This prevents bottom bands from shifting position when only the top drains,
+                // while keeping the tilt magnitude in a reasonable range.
+                float tiltOffset = _MaxVisualFill * (_LiquidTilt * (i.texcoord.x - 0.5) + _LiquidTiltY * (y - 0.5));
+
                 float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832);
-                float surface = totalFill * (1.0 + _LiquidTilt * (i.texcoord.x - 0.5)) - wobbleOffset;
+                float surface = totalFill + tiltOffset - wobbleOffset;
 
                 // Clamp surface: can't go below 0 (no negative liquid)
                 surface = max(surface, 0.0);
@@ -144,7 +149,8 @@ Shader "JuiceSort/LiquidFill"
                 }
 
                 // --- Below tilted surface → in liquid ---
-                // Determine band color from UNTILTED y position (bands keep their normal layers)
+                // Band boundaries use the same additive tiltOffset so every
+                // layer boundary is a parallel line at the same tilt angle.
                 float cumFill = 0.0;
                 half4 liquidColor = half4(0, 0, 0, 0);
                 bool foundBand = false;
@@ -154,8 +160,8 @@ Shader "JuiceSort/LiquidFill"
                     float bandHeight = _FillLevels[idx] * _MaxVisualFill;
                     if (bandHeight <= 0.0) break;
 
-                    float bandBottom = cumFill;
-                    float bandTop = cumFill + bandHeight;
+                    float bandBottom = cumFill + tiltOffset;
+                    float bandTop = cumFill + bandHeight + tiltOffset;
 
                     if (y >= bandBottom && y < bandTop)
                     {
@@ -175,14 +181,18 @@ Shader "JuiceSort/LiquidFill"
                         break;
                     }
 
-                    cumFill = bandTop;
+                    cumFill += bandHeight;
                 }
 
-                // Pixel is below surface but above all normal bands (tilt overflow on low side)
-                // → show the topmost band's color (liquid extends on the low side)
+                // Pixel is below surface but not in any band (tilt shifted bands away).
+                // Below first band's natural bottom → show bottom band color (gap on high side).
+                // Above last band's natural top → show top band color (overflow on low side).
                 if (!foundBand && _LayerCount > 0)
                 {
-                    liquidColor = half4(_LayerColors[topBandIdx].rgb * _DimMultiplier, _LayerColors[topBandIdx].a);
+                    if (y < tiltOffset)
+                        liquidColor = half4(_LayerColors[0].rgb * _DimMultiplier, _LayerColors[0].a);
+                    else
+                        liquidColor = half4(_LayerColors[topBandIdx].rgb * _DimMultiplier, _LayerColors[topBandIdx].a);
                 }
 
                 // Inner glow near tilted surface

@@ -51,6 +51,9 @@
     <Compile Include="Assets\GameAI\Bottle Fill Shader Graph\Samples\BottleFillDemoController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Art\Shaders\LiquidFill.shader" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.0.71f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
       <Private>False</Private>
