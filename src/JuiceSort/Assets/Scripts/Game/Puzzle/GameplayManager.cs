@@ -491,8 +491,10 @@ namespace JuiceSort.Game.Puzzle
             int available = source.GetTopColorCount();
             int emptySlots = target.SlotCount - target.FilledCount();
             int pourCount = available < emptySlots ? available : emptySlots;
-            int sourceTopIndex = source.GetTopIndex();
-            int targetFirstEmpty = target.GetFirstEmptyIndex();
+
+            // Snapshot container data BEFORE ExecutePour — animation needs pre-pour state
+            var sourceDataSnapshot = source.Clone();
+            var targetDataSnapshot = target.Clone();
 
             // Snapshot which containers are already completed before the pour
             var wasCompleted = new HashSet<int>();
@@ -517,9 +519,13 @@ namespace JuiceSort.Game.Puzzle
             _isAnimating = true;
             _bottleBoard.SetAllSparklesEnabled(false);
 
+            // Bottle world height for movement clearance (sprite height * current scale)
+            float bottleWorldHeight = _bottleBoard.BottleSpriteHeight * sourceView.transform.localScale.x;
+
             StartCoroutine(PourAnimator.Animate(
                 sourceView, targetView, pourCount, pourColor,
-                sourceTopIndex, targetFirstEmpty,
+                sourceDataSnapshot, targetDataSnapshot,
+                bottleWorldHeight,
                 _pourStream,
                 onMidPour: () =>
                 {

@@ -18,6 +18,8 @@ namespace JuiceSort.Game.Puzzle
         private const float RelayoutDuration = 0.3f;
         private const float PopInDuration = 0.2f;
 
+        public float BottleSpriteHeight => _layoutConfig != null ? _layoutConfig.BottleSpriteHeight : 10.17f;
+
         public event Action<int> OnContainerTapped;
 
         public void Initialize(PuzzleState puzzleState)

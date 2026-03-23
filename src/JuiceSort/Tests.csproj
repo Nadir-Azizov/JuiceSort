@@ -53,6 +53,7 @@
     <Compile Include="Assets\Scripts\Tests\EditMode\RoadmapTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ScreenManagerTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\WinConditionTests.cs" />
+    <Compile Include="Assets\Scripts\Tests\EditMode\PourAnimatorBandTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\CoinUndoTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\PuzzleStateTests.cs" />
     <Compile Include="Assets\Scripts\Tests\EditMode\ContainerDataTests.cs" />

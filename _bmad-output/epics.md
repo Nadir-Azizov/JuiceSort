@@ -374,6 +374,9 @@ Bottles render with smooth, animated liquid that wobbles on selection, flows vis
 - **10.4** As a player, I see the liquid wobble/slosh when I select or deselect a bottle (shader-driven damped oscillation) → [10-4-select-wobble.md](implementation-artifacts/10-4-select-wobble.md)
 - **10.5** As a player, I see a cork/cap close on a bottle when it becomes fully sorted (sprite drop + bounce + confetti burst) → [10-5-bottle-cap-animation.md](implementation-artifacts/10-5-bottle-cap-animation.md)
 - **10.6** As a player, I see glass glow, refraction, and bloom effects on bottles (URP 2D lights + post-processing) → [10-6-glass-glow-bloom.md](implementation-artifacts/10-6-glass-glow-bloom.md)
+- **10.7** As a player, I see the source bottle physically move above the target bottle and progressively tilt based on liquid depth during a pour (horizontal movement + multi-row support + depth-based tilt 15°–100°+) → [10-7-pour-movement-overhaul.md](implementation-artifacts/10-7-pour-movement-overhaul.md)
+- **10.8** As a player, I see liquid decrease smoothly in the source bottle during a pour, with correct fill levels and no visual glitches (synchronized source drain + fix extra-slot bug + enforce 75–80% visual cap) → [10-8-pour-visual-fixes.md](implementation-artifacts/10-8-pour-visual-fixes.md)
+- **10.9** As a player, I see the liquid stream originate from the tilted bottle's mouth opening and adapt its length based on the target's water level (mouth-origin stream + adaptive arc + dynamic length) → [10-9-pour-stream-rework.md](implementation-artifacts/10-9-pour-stream-rework.md)
 
 ---
 

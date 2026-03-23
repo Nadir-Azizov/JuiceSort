@@ -6,6 +6,8 @@ namespace JuiceSort.Game.Puzzle
     /// <summary>
     /// Renders a visible liquid stream between bottles during a pour.
     /// Uses a LineRenderer with a quadratic bezier arc.
+    /// Stream origin tracks the tilted bottle's mouth; endpoint tracks the target's
+    /// liquid surface. Arc height and width adapt to stream length.
     /// Reusable single instance — activate on StartStream, deactivate on StopStream.
     /// </summary>
     public class PourStreamVFX : MonoBehaviour
@@ -16,19 +18,28 @@ namespace JuiceSort.Game.Puzzle
         private Coroutine _fadeCoroutine;
 
         private const int PointCount = 10;
-        private const float StartWidth = 0.08f;
-        private const float EndWidth = 0.05f;
-        private const float ArcHeight = 0.3f;
         private const float FadeDuration = 0.1f;
+
+        // Base width (scaled by pour ratio)
+        private const float BaseStartWidth = 0.08f;
+        private const float BaseEndWidth = 0.05f;
+
+        // Dynamic arc range
+        private const float MinArcHeight = 0.1f;  // tight arc for short streams
+        private const float MaxArcHeight = 0.5f;   // wide arc for long streams
+        private const float MaxExpectedLength = 4f; // reference length for arc scaling
+
+        // Gravity bias: control point shifts toward source for natural fall
+        private const float GravityBias = 0.15f;
 
         // Pre-allocated array to avoid per-frame allocation
         private readonly Vector3[] _points = new Vector3[PointCount];
 
         /// <summary>
         /// Shows the stream between source and target positions with the given color.
-        /// Call UpdatePositions() each frame to track moving bottles.
+        /// pourRatio: fraction of slots being poured (0-1) — affects stream width.
         /// </summary>
-        public void StartStream(Vector3 sourcePos, Vector3 targetPos, Color color)
+        public void StartStream(Vector3 sourcePos, Vector3 targetPos, Color color, float pourRatio)
         {
             if (_fadeCoroutine != null)
             {
@@ -44,11 +55,17 @@ namespace JuiceSort.Game.Puzzle
             _lineRenderer.startColor = color;
             _lineRenderer.endColor = color;
 
+            // Scale width by pour ratio
+            float widthScale = Mathf.Lerp(0.7f, 1.3f, pourRatio);
+            _lineRenderer.startWidth = BaseStartWidth * widthScale;
+            _lineRenderer.endWidth = BaseEndWidth * widthScale;
+
             UpdateCurve(sourcePos, targetPos);
         }
 
         /// <summary>
         /// Updates stream curve positions. Call each frame during pour while stream is active.
+        /// Adapts arc height and gravity bias to stream length.
         /// </summary>
         public void UpdatePositions(Vector3 sourcePos, Vector3 targetPos)
         {
@@ -71,9 +88,15 @@ namespace JuiceSort.Game.Puzzle
 
         private void UpdateCurve(Vector3 start, Vector3 end)
         {
-            // Quadratic bezier: control point above midpoint for natural arc
-            Vector3 mid = (start + end) * 0.5f;
-            Vector3 controlPoint = mid + new Vector3(0f, ArcHeight, 0f);
+            // Dynamic arc height based on stream length
+            float streamLength = Vector3.Distance(start, end);
+            float lengthRatio = Mathf.Clamp01(streamLength / MaxExpectedLength);
+            float arcHeight = Mathf.Lerp(MinArcHeight, MaxArcHeight, lengthRatio);
+
+            // Control point: midpoint shifted toward source for gravity effect
+            // Gravity bias pushes control point closer to source (liquid arcs then falls)
+            Vector3 mid = Vector3.Lerp(start, end, 0.5f - GravityBias);
+            Vector3 controlPoint = mid + new Vector3(0f, arcHeight, 0f);
 
             for (int i = 0; i < PointCount; i++)
             {
@@ -124,8 +147,8 @@ namespace JuiceSort.Game.Puzzle
             var lr = go.AddComponent<LineRenderer>();
             lr.useWorldSpace = true;
             lr.positionCount = PointCount;
-            lr.startWidth = StartWidth;
-            lr.endWidth = EndWidth;
+            lr.startWidth = BaseStartWidth;
+            lr.endWidth = BaseEndWidth;
             lr.numCapVertices = 4;
             lr.numCornerVertices = 4;
             lr.sortingOrder = 3; // above bottles and liquid

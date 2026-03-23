@@ -51,8 +51,10 @@
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleBoardView.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BackgroundTapCatcher.cs" />
     <Compile Include="Assets\Scripts\Game\Save\SaveData.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\BottleCapAnimation.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleContainerView.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelMood.cs" />
+    <Compile Include="Assets\Scripts\Game\Effects\BloomSetup.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\IProgressionManager.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\BackgroundManager.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\StarGateScreen.cs" />
@@ -74,6 +76,7 @@
     <Compile Include="Assets\Scripts\Game\Save\SaveManager.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleState.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ThemeConfig.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\PourStreamVFX.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\SlotView.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\SettingsScreen.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\ProgressionManager.cs" />
@@ -96,6 +99,7 @@
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Game\Layout\LayoutConfig.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\DifficultyConfig.cs" />
+    <Compile Include="Assets\Scripts\Game\Puzzle\LiquidMaterialController.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerData.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelDefinition.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\DifficultyScaler.cs" />

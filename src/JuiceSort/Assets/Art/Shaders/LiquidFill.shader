@@ -10,6 +10,7 @@ Shader "JuiceSort/LiquidFill"
         _WobbleZ ("Wobble Z", Float) = 0.0
         _GlowColor ("Glow Color", Color) = (1,0.9,0.6,1)
         _GlowIntensity ("Glow Intensity", Float) = 0.15
+        _LiquidTilt ("Liquid Tilt", Float) = 0.0
 
         // SpriteMask stencil support (set automatically by Unity based on maskInteraction)
         _StencilRef ("Stencil Ref", Float) = 0
@@ -78,6 +79,7 @@ Shader "JuiceSort/LiquidFill"
                 float _WobbleZ;
                 float4 _GlowColor;
                 float _GlowIntensity;
+                float _LiquidTilt;
             CBUFFER_END
 
             // HLSL arrays — set from C# via SetFloatArray / SetVectorArray
@@ -103,6 +105,12 @@ Shader "JuiceSort/LiquidFill"
             {
                 // Y coordinate: 0 = bottom of sprite, 1 = top
                 float y = i.texcoord.y;
+
+                // Apply liquid tilt: when bottle tilts, liquid flows toward the low side
+                // _LiquidTilt > 0 means liquid pools toward x=1 (right), < 0 toward x=0 (left)
+                // This tilts the fill line so liquid surface is angled like real gravity
+                float tiltOffset = _LiquidTilt * (i.texcoord.x - 0.5);
+                y += tiltOffset;
 
                 // Apply wobble offset to the sampling position
                 float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832); // full sine wave across width

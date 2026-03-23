@@ -5,38 +5,61 @@ using UnityEngine;
 namespace JuiceSort.Game.Puzzle
 {
     /// <summary>
-    /// Coroutine-based pour animation. Lifts source bottle, tilts toward target,
-    /// smoothly lerps liquid fill levels between bottles, then returns source to rest.
+    /// Coroutine-based pour animation. Source bottle lifts, moves to hover above
+    /// target, tilts progressively based on liquid depth while lerping fill levels,
+    /// then returns smoothly to rest position.
     /// </summary>
     public static class PourAnimator
     {
-        // Timing
-        private const float LiftDuration = 0.15f;
-        private const float TiltDuration = 0.12f;
-        private const float PourLerpDuration = 0.25f;
-        private const float ReturnDuration = 0.2f;
-        private const float LiftHeight = 0.4f;
+        // --- Timing constants (tunable) ---
+        private const float LiftDuration = 0.12f;
+        private const float MoveDuration = 0.18f;
+        private const float BasePourDuration = 0.25f;
+        private const float PourDurationPerSlot = 0.05f; // extra time per slot poured
+        private const float ReturnDuration = 0.25f;
+        private const float InitialTiltDuration = 0.08f;
 
-        // Dynamic tilt range
-        private const float MinTiltAngle = 15f;
-        private const float MaxTiltAngle = 35f;
+        // --- Movement constants ---
+        private const float HoverClearance = 0.25f; // extra height above target bottle top
+        private const float LiftHeightFactor = 0.35f; // fraction of bottle height above max row Y
+
+        // --- Progressive tilt curve (fill ratio → tilt angle) ---
+        // fillRatio 1.0 (full)  → 15°
+        // fillRatio 0.75        → 30°
+        // fillRatio 0.5         → 55°
+        // fillRatio 0.25        → 80°
+        // fillRatio 0.0 (empty) → 105°
+        private const float TiltAtFull = 15f;
+        private const float TiltAtEmpty = 105f;
+
+        // --- Stream position constants ---
+        // Bottle mouth is at ~42% of sprite height from pivot (top of visual fill zone)
+        private const float MouthOffsetRatio = 0.42f;
+        // MaxVisualFill from shader — target surface = fillRatio * this * spriteHeight
+        private const float MaxVisualFill = 0.80f;
+        // Small offset above target surface so stream lands ON the liquid
+        private const float SurfaceLandingOffset = 0.05f;
+        // Bottom of liquid area relative to bottle pivot (sprite center)
+        private const float BottleBottomRatio = -0.42f;
+        // Max liquid tilt in shader space (how much liquid surface angles when bottle is horizontal)
+        private const float MaxLiquidTilt = 0.6f;
 
         // Band calculation
         private const int MaxBands = 6;
 
         /// <summary>
-        /// Runs the full pour animation sequence with smooth liquid fill lerps.
-        /// Call from a MonoBehaviour via StartCoroutine.
-        /// onMidPour is invoked after visual transfer completes (apply game logic here).
-        /// onComplete is invoked when the animation fully finishes.
+        /// Runs the full pour animation with movement, progressive tilt, and smooth fills.
+        /// bottleWorldHeight: the scaled height of a bottle in world units (for clearance).
+        /// sourceDataSnapshot/targetDataSnapshot: pre-pour data clones (before ExecutePour).
         /// </summary>
         public static IEnumerator Animate(
             BottleContainerView source,
             BottleContainerView target,
             int pourCount,
             DrinkColor pourColor,
-            int sourceTopIndex,
-            int targetFirstEmpty,
+            ContainerData sourceDataSnapshot,
+            ContainerData targetDataSnapshot,
+            float bottleWorldHeight,
             PourStreamVFX pourStream,
             Action onMidPour,
             Action onComplete)
@@ -48,81 +71,126 @@ namespace JuiceSort.Game.Puzzle
 
             Vector3 originalPos = sourceTf.localPosition;
             Quaternion originalRot = sourceTf.localRotation;
+            Vector3 targetLocalPos = targetTf.localPosition;
 
-            // Dynamic tilt: more liquid = steeper tilt
-            float pourRatio = (float)pourCount / Mathf.Max(1, source.Data.SlotCount);
-            float tiltAngle = Mathf.Lerp(MinTiltAngle, MaxTiltAngle, pourRatio);
-
-            // Determine tilt direction: tilt toward target
-            float dx = targetTf.position.x - sourceTf.position.x;
+            // Tilt direction: toward target
+            float dx = targetLocalPos.x - originalPos.x;
             float direction = dx < 0f ? 1f : -1f;
-            float tiltZ = tiltAngle * direction;
 
-            // --- Pre-compute band states before and after pour ---
-            // Source: before pour (current visual state) → after pour (less liquid)
-            var srcBandsBefore = ComputeBands(source.Data);
-            // Target: before pour (current visual state) → after pour (more liquid)
-            var tgtBandsBefore = ComputeBands(target.Data);
+            // Pre-pour fill ratio for tilt start angle
+            int slotCount = sourceDataSnapshot.SlotCount;
+            int prePourFilled = sourceDataSnapshot.FilledCount();
+            int postPourFilled = prePourFilled - pourCount;
+            float prePourRatio = (float)prePourFilled / Mathf.Max(1, slotCount);
+            float postPourRatio = (float)Mathf.Max(0, postPourFilled) / Mathf.Max(1, slotCount);
 
-            // Simulate post-pour state for visual target
-            // Source loses pourCount slots from top, target gains pourCount slots
-            var srcBandsAfter = ComputeBandsAfterSourcePour(source.Data, pourCount);
-            var tgtBandsAfter = ComputeBandsAfterTargetPour(target.Data, pourCount, pourColor);
+            // Pour duration scales with pour count for natural feel
+            float pourDuration = BasePourDuration + pourCount * PourDurationPerSlot;
 
-            // --- Phase 1: Lift source bottle up ---
-            Vector3 liftedPos = originalPos + new Vector3(0f, LiftHeight, 0f);
+            // --- Pre-compute band states ---
+            var srcBandsBefore = ComputeBands(sourceDataSnapshot);
+            var tgtBandsBefore = ComputeBands(targetDataSnapshot);
+            var srcBandsAfter = ComputeBandsAfterSourcePour(sourceDataSnapshot, pourCount);
+            var tgtBandsAfter = ComputeBandsAfterTargetPour(targetDataSnapshot, pourCount, pourColor);
+
+            // --- Phase 1: Lift source above all bottles ---
+            // Lift high enough to clear bottles in either row
+            float liftY = Mathf.Max(originalPos.y, targetLocalPos.y) + bottleWorldHeight * LiftHeightFactor + HoverClearance;
+            Vector3 liftedPos = new Vector3(originalPos.x, liftY, originalPos.z);
             yield return LerpPosition(sourceTf, originalPos, liftedPos, LiftDuration);
 
-            // --- Phase 2: Tilt source toward target ---
-            Quaternion tiltedRot = Quaternion.Euler(0f, 0f, tiltZ);
-            yield return LerpRotation(sourceTf, originalRot, tiltedRot, TiltDuration);
+            // --- Phase 2: Move horizontally (and vertically) to hover above target ---
+            Vector3 hoverPos = new Vector3(targetLocalPos.x, liftY, originalPos.z);
+            yield return LerpPosition(sourceTf, liftedPos, hoverPos, MoveDuration, EaseInOutCubic);
 
-            // --- Phase 3: Smooth liquid transfer via fill lerps ---
+            // --- Phase 3: Progressive tilt + smooth fill lerps + stream ---
 
-            // Start pour stream VFX (if provided)
-            Vector3 streamSourcePos = sourceTf.position + new Vector3(0f, LiftHeight * 0.5f, 0f);
-            Vector3 streamTargetPos = targetTf.position + new Vector3(0f, LiftHeight * 0.3f, 0f);
+            // Compute initial tilt from pre-pour fill ratio
+            float startTiltAngle = FillRatioToTiltAngle(prePourRatio);
+            Quaternion startTiltRot = Quaternion.Euler(0f, 0f, startTiltAngle * direction);
+
+            // Quick initial tilt to start angle (small rotation before pour begins)
+            yield return LerpRotation(sourceTf, originalRot, startTiltRot, InitialTiltDuration);
+
+            // Set initial liquid tilt to match bottle rotation
+            if (srcController != null)
+            {
+                float initTiltRad = startTiltAngle * Mathf.Deg2Rad;
+                srcController.SetLiquidTilt(Mathf.Sin(initTiltRad) * MaxLiquidTilt * -direction);
+            }
+
+            // Bottle sprite height at scale 1.0 (used for mouth/surface calculations)
+            float bottleScale = sourceTf.localScale.x;
+            float spriteHeight = bottleWorldHeight / Mathf.Max(0.01f, bottleScale);
+
+            // Pre-pour target fill ratio for surface tracking
+            int tgtSlotCount = targetDataSnapshot.SlotCount;
+            int tgtPrePourFilled = targetDataSnapshot.FilledCount();
+            int tgtPostPourFilled = tgtPrePourFilled + pourCount;
+            float tgtPreFillRatio = (float)tgtPrePourFilled / Mathf.Max(1, tgtSlotCount);
+            float tgtPostFillRatio = (float)Mathf.Min(tgtPostPourFilled, tgtSlotCount) / Mathf.Max(1, tgtSlotCount);
+
+            // Pour ratio for stream width
+            float pourRatio = (float)pourCount / Mathf.Max(1, slotCount);
+
+            // Calculate initial stream positions
+            Vector3 streamSourcePos = GetBottleMouthWorldPos(sourceTf, spriteHeight);
+            Vector3 streamTargetPos = GetTargetSurfaceWorldPos(targetTf, spriteHeight, tgtPreFillRatio);
+
+            // Start pour stream VFX
             if (pourStream != null)
             {
                 Color streamColor = UI.ThemeConfig.GetDrinkColor(pourColor);
-                pourStream.StartStream(streamSourcePos, streamTargetPos, streamColor);
+                pourStream.StartStream(streamSourcePos, streamTargetPos, streamColor, pourRatio);
             }
 
             if (srcController != null && tgtController != null)
             {
-                // Set target band colors to post-pour state BEFORE lerp starts.
-                SetupTargetColors(tgtController, target.Data, pourCount, pourColor);
+                // Setup band colors from snapshots
+                SetupSourceColors(srcController, sourceDataSnapshot);
+                SetupTargetColors(tgtController, targetDataSnapshot, pourCount, pourColor);
 
-                // Set layer counts to max of before/after so all bands are active during lerp
+                // Set layer counts
                 int srcLayerCount = Mathf.Max(CountActiveBands(srcBandsBefore), CountActiveBands(srcBandsAfter));
                 int tgtLayerCount = Mathf.Max(CountActiveBands(tgtBandsBefore), CountActiveBands(tgtBandsAfter));
                 srcController.SetLayerCount(srcLayerCount);
                 tgtController.SetLayerCount(tgtLayerCount);
 
                 float elapsed = 0f;
-                while (elapsed < PourLerpDuration)
+                while (elapsed < pourDuration)
                 {
                     elapsed += Time.deltaTime;
-                    float t = EaseOutCubic(Mathf.Clamp01(elapsed / PourLerpDuration));
+                    float t = EaseOutCubic(Mathf.Clamp01(elapsed / pourDuration));
 
-                    // Lerp source bands from before to after
+                    // Lerp source bands
                     for (int b = 0; b < MaxBands; b++)
                     {
                         float srcFill = Mathf.Lerp(srcBandsBefore.fills[b], srcBandsAfter.fills[b], t);
                         srcController.SetFillAmount(b, srcFill);
                     }
 
-                    // Lerp target bands from before to after
+                    // Lerp target bands
                     for (int b = 0; b < MaxBands; b++)
                     {
                         float tgtFill = Mathf.Lerp(tgtBandsBefore.fills[b], tgtBandsAfter.fills[b], t);
                         tgtController.SetFillAmount(b, tgtFill);
                     }
 
-                    // Update stream positions (source moves during tilt)
+                    // Progressive tilt: angle increases as source empties
+                    float currentFillRatio = Mathf.Lerp(prePourRatio, postPourRatio, t);
+                    float currentTiltAngle = FillRatioToTiltAngle(currentFillRatio);
+                    sourceTf.localRotation = Quaternion.Euler(0f, 0f, currentTiltAngle * direction);
+
+                    // Liquid tilt: liquid flows toward the low side as bottle tilts
+                    float tiltRad = currentTiltAngle * Mathf.Deg2Rad;
+                    srcController.SetLiquidTilt(Mathf.Sin(tiltRad) * MaxLiquidTilt * -direction);
+
+                    // Update stream positions: mouth tracks tilt, target tracks fill level
                     if (pourStream != null)
                     {
-                        streamSourcePos = sourceTf.position + sourceTf.up * LiftHeight * 0.3f;
+                        streamSourcePos = GetBottleMouthWorldPos(sourceTf, spriteHeight);
+                        float currentTgtFillRatio = Mathf.Lerp(tgtPreFillRatio, tgtPostFillRatio, t);
+                        streamTargetPos = GetTargetSurfaceWorldPos(targetTf, spriteHeight, currentTgtFillRatio);
                         pourStream.UpdatePositions(streamSourcePos, streamTargetPos);
                     }
 
@@ -130,32 +198,91 @@ namespace JuiceSort.Game.Puzzle
                 }
             }
 
-            // Stop pour stream before return phase
+            // Stop pour stream
             if (pourStream != null)
                 pourStream.StopStream();
 
-            // Wobble target bottle after receiving liquid
+            // Wobble target after receiving liquid
             if (tgtController != null)
                 tgtController.TriggerWobble(0.03f);
 
-            // Invoke mid-pour callback (game logic: ExecutePour already done, just a sync point)
+            // Mid-pour callback (sound, etc.)
             onMidPour?.Invoke();
 
             // Small pause at peak
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.04f);
 
-            // --- Phase 4: Return source to original position ---
-            yield return LerpRotation(sourceTf, tiltedRot, originalRot, ReturnDuration * 0.5f);
-            yield return LerpPosition(sourceTf, liftedPos, originalPos, ReturnDuration * 0.5f);
+            // --- Phase 4: Return — un-tilt → move back → descend ---
 
-            // Final refresh to ensure data-driven state is correct
+            // Capture final tilt for un-tilt lerp
+            Quaternion finalTiltRot = sourceTf.localRotation;
+
+            // Un-tilt back to upright and reset liquid tilt
+            yield return LerpRotation(sourceTf, finalTiltRot, originalRot, ReturnDuration * 0.3f);
+            if (srcController != null)
+                srcController.SetLiquidTilt(0f);
+
+            // Move horizontally back to original X, staying at lift height
+            Vector3 returnHoverPos = new Vector3(originalPos.x, liftY, originalPos.z);
+            yield return LerpPosition(sourceTf, hoverPos, returnHoverPos, ReturnDuration * 0.35f, EaseInOutCubic);
+
+            // Descend to original position
+            yield return LerpPosition(sourceTf, returnHoverPos, originalPos, ReturnDuration * 0.35f);
+
+            // Final refresh to snap to data-driven state
             source.Refresh();
             target.Refresh();
 
             onComplete?.Invoke();
         }
 
-        // --- Band computation helpers ---
+        // --- Progressive tilt mapping ---
+
+        /// <summary>
+        /// Maps source fill ratio to tilt angle using smooth interpolation.
+        /// Full bottle (1.0) → 15°, Empty bottle (0.0) → 105°.
+        /// Uses quadratic curve for natural acceleration at lower fill levels.
+        /// </summary>
+        private static float FillRatioToTiltAngle(float fillRatio)
+        {
+            // Invert: empty = 0 fill ratio → max tilt
+            float emptyRatio = 1f - Mathf.Clamp01(fillRatio);
+            // Quadratic curve: accelerates tilt as bottle empties
+            float curved = emptyRatio * emptyRatio;
+            // For mostly-full bottles, use a gentler curve
+            float blended = Mathf.Lerp(emptyRatio, curved, 0.6f);
+            return Mathf.Lerp(TiltAtFull, TiltAtEmpty, blended);
+        }
+
+        // --- Stream position helpers ---
+
+        /// <summary>
+        /// Gets the bottle mouth position in world space, accounting for current tilt.
+        /// The mouth is at the top of the bottle sprite (MouthOffsetRatio from center).
+        /// TransformPoint rotates the local offset with the bottle's current rotation.
+        /// </summary>
+        private static Vector3 GetBottleMouthWorldPos(Transform bottleTf, float spriteHeight)
+        {
+            // Local offset: top of bottle relative to pivot (center)
+            // spriteHeight is at scale 1.0; TransformPoint applies the transform's scale automatically
+            Vector3 localMouth = new Vector3(0f, spriteHeight * MouthOffsetRatio, 0f);
+            return bottleTf.TransformPoint(localMouth);
+        }
+
+        /// <summary>
+        /// Gets the target bottle's current liquid surface position in world space.
+        /// Surface height = bottom of liquid area + fillRatio * maxVisualFill * spriteHeight.
+        /// Target bottle is not tilted, so we can use a simple Y offset.
+        /// </summary>
+        private static Vector3 GetTargetSurfaceWorldPos(Transform targetTf, float spriteHeight, float fillRatio)
+        {
+            // Liquid area starts at BottleBottomRatio from center, fills up by fillRatio * MaxVisualFill * spriteHeight
+            float surfaceLocalY = spriteHeight * BottleBottomRatio + fillRatio * MaxVisualFill * spriteHeight + SurfaceLandingOffset;
+            Vector3 localSurface = new Vector3(0f, surfaceLocalY, 0f);
+            return targetTf.TransformPoint(localSurface);
+        }
+
+        // --- Band computation helpers (unchanged from 10.8) ---
 
         private struct BandState
         {
@@ -163,10 +290,6 @@ namespace JuiceSort.Game.Puzzle
             public BandState(int size) { fills = new float[size]; }
         }
 
-        /// <summary>
-        /// Computes contiguous color bands from container data (same algorithm as LiquidMaterialController).
-        /// Returns fill heights as fractions of total slot count.
-        /// </summary>
         private static BandState ComputeBands(ContainerData data)
         {
             var state = new BandState(MaxBands);
@@ -191,18 +314,14 @@ namespace JuiceSort.Game.Puzzle
             return state;
         }
 
-        /// <summary>
-        /// Computes source band state after losing pourCount slots from the top.
-        /// </summary>
         private static BandState ComputeBandsAfterSourcePour(ContainerData data, int pourCount)
         {
             var state = new BandState(MaxBands);
             int slotCount = data.SlotCount;
 
-            // Count filled slots
             int filledCount = data.FilledCount();
             int remainingFilled = filledCount - pourCount;
-            if (remainingFilled <= 0) return state; // all poured out
+            if (remainingFilled <= 0) return state;
 
             int bandIndex = 0;
             int i = 0;
@@ -216,7 +335,6 @@ namespace JuiceSort.Game.Puzzle
                 while (i + runLength < slotCount && data.GetSlot(i + runLength) == color)
                     runLength++;
 
-                // Clamp run to remaining slots
                 int effectiveRun = Mathf.Min(runLength, remainingFilled - slotsProcessed);
                 state.fills[bandIndex] = (float)effectiveRun / slotCount;
                 bandIndex++;
@@ -227,16 +345,12 @@ namespace JuiceSort.Game.Puzzle
             return state;
         }
 
-        /// <summary>
-        /// Computes target band state after gaining pourCount slots of pourColor on top.
-        /// </summary>
         private static BandState ComputeBandsAfterTargetPour(ContainerData data, int pourCount, DrinkColor pourColor)
         {
             var state = new BandState(MaxBands);
             int slotCount = data.SlotCount;
             int bandIndex = 0;
 
-            // Existing bands first
             int i = 0;
             DrinkColor lastColor = DrinkColor.None;
             while (i < slotCount && bandIndex < MaxBands)
@@ -254,12 +368,10 @@ namespace JuiceSort.Game.Puzzle
                 i += runLength;
             }
 
-            // Add poured liquid on top
             if (pourCount > 0 && bandIndex < MaxBands)
             {
                 float pourFill = (float)pourCount / slotCount;
 
-                // Merge with top band if same color
                 if (bandIndex > 0 && lastColor == pourColor)
                 {
                     state.fills[bandIndex - 1] += pourFill;
@@ -270,20 +382,16 @@ namespace JuiceSort.Game.Puzzle
                 }
             }
 
+            ClampFillSum(ref state);
             return state;
         }
 
-        /// <summary>
-        /// Sets target controller's band colors to reflect post-pour state.
-        /// New bands get the pour color so they're visible when fill lerps up from 0.
-        /// </summary>
         private static void SetupTargetColors(LiquidMaterialController controller, ContainerData data, int pourCount, DrinkColor pourColor)
         {
             int slotCount = data.SlotCount;
             int bandIndex = 0;
             DrinkColor lastColor = DrinkColor.None;
 
-            // Set existing band colors
             int i = 0;
             while (i < slotCount && bandIndex < MaxBands)
             {
@@ -300,10 +408,30 @@ namespace JuiceSort.Game.Puzzle
                 i += runLength;
             }
 
-            // Set color for the new incoming band (if it's a new band, not merged)
             if (pourCount > 0 && lastColor != pourColor && bandIndex < MaxBands)
             {
                 controller.SetBandColor(bandIndex, UI.ThemeConfig.GetDrinkColor(pourColor));
+            }
+        }
+
+        private static void SetupSourceColors(LiquidMaterialController controller, ContainerData data)
+        {
+            int slotCount = data.SlotCount;
+            int bandIndex = 0;
+
+            int i = 0;
+            while (i < slotCount && bandIndex < MaxBands)
+            {
+                var color = data.GetSlot(i);
+                if (color == DrinkColor.None) break;
+
+                int runLength = 1;
+                while (i + runLength < slotCount && data.GetSlot(i + runLength) == color)
+                    runLength++;
+
+                controller.SetBandColor(bandIndex, UI.ThemeConfig.GetDrinkColor(color));
+                bandIndex++;
+                i += runLength;
             }
         }
 
@@ -318,15 +446,34 @@ namespace JuiceSort.Game.Puzzle
             return count;
         }
 
-        // --- Lerp helpers (unchanged) ---
+        private static void ClampFillSum(ref BandState state)
+        {
+            float sum = 0f;
+            for (int i = 0; i < state.fills.Length; i++)
+                sum += state.fills[i];
+
+            if (sum > 1f)
+            {
+                float scale = 1f / sum;
+                for (int i = 0; i < state.fills.Length; i++)
+                    state.fills[i] *= scale;
+            }
+        }
+
+        // --- Lerp helpers ---
 
         private static IEnumerator LerpPosition(Transform tf, Vector3 from, Vector3 to, float duration)
+        {
+            return LerpPosition(tf, from, to, duration, EaseOutCubic);
+        }
+
+        private static IEnumerator LerpPosition(Transform tf, Vector3 from, Vector3 to, float duration, Func<float, float> easing)
         {
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float t = EaseOutCubic(Mathf.Clamp01(elapsed / duration));
+                float t = easing(Mathf.Clamp01(elapsed / duration));
                 tf.localPosition = Vector3.Lerp(from, to, t);
                 yield return null;
             }
@@ -349,6 +496,13 @@ namespace JuiceSort.Game.Puzzle
         private static float EaseOutCubic(float t)
         {
             return 1f - (1f - t) * (1f - t) * (1f - t);
+        }
+
+        private static float EaseInOutCubic(float t)
+        {
+            return t < 0.5f
+                ? 4f * t * t * t
+                : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
         }
     }
 }

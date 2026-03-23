@@ -210,7 +210,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Star rating depends on optimal move count — this must be calculated or estimated per generated puzzle
 - Animations use coroutines (no DOTween/LeanTween) — `PourAnimator` is a static class with `IEnumerator Animate(...)`, called via `StartCoroutine` from GameplayManager
 - `_isAnimating` flag on GameplayManager blocks all input (tap, undo, restart, back, extra bottle) during pour animation
-- Pour animation indices (sourceTopIndex, targetFirstEmpty) must be captured BEFORE `ExecutePour` mutates the data — animation is visual-only, data changes immediately
+- Pour animation needs pre-pour `ContainerData` snapshots (`source.Clone()`, `target.Clone()`) captured BEFORE `ExecutePour` mutates the data — snapshots are passed to `PourAnimator.Animate()` for correct band computation. Data changes immediately; animation is visual-only
 - Selection animation lives in `BottleContainerView` — `ResetVisualState()` snaps to idle instantly when transitioning to pour
 - Re-select on failed pour: when CanPour fails and tapped bottle is non-empty, deselect source and select target — never leave the player with a dead tap
 - Closed bottle: `IsSorted() && !IsEmpty()` = full with one color. Cannot be selected, poured from, or poured into. Distinct from empty sorted bottles which are valid pour targets. `CanPour` must reject closed bottles as both source and target

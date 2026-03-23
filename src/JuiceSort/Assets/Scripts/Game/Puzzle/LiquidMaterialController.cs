@@ -137,6 +137,17 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
+        /// Sets the liquid tilt for gravity simulation during pour.
+        /// Positive = liquid pools toward x=1 (right), Negative = toward x=0 (left).
+        /// Set to 0 when bottle is upright.
+        /// </summary>
+        public void SetLiquidTilt(float tilt)
+        {
+            if (_material == null) return;
+            _material.SetFloat("_LiquidTilt", tilt);
+        }
+
+        /// <summary>
         /// Sets the inner glow color and intensity for the liquid surface.
         /// </summary>
         public void SetGlow(Color glowColor, float intensity)
@@ -218,6 +229,7 @@ namespace JuiceSort.Game.Puzzle
             _material.SetFloat("_DimMultiplier", 1f);
             _material.SetFloat("_WobbleX", 0f);
             _material.SetFloat("_WobbleZ", 0f);
+            _material.SetFloat("_LiquidTilt", 0f);
         }
 
         private void OnDestroy()
