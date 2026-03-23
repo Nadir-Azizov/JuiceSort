@@ -110,7 +110,7 @@ Shader "JuiceSort/LiquidFill"
                 // _LiquidTilt > 0 means liquid pools toward x=1 (right), < 0 toward x=0 (left)
                 // This tilts the fill line so liquid surface is angled like real gravity
                 float tiltOffset = _LiquidTilt * (i.texcoord.x - 0.5);
-                y += tiltOffset;
+                y -= tiltOffset;
 
                 // Apply wobble offset to the sampling position
                 float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832); // full sine wave across width

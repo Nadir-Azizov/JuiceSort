@@ -28,7 +28,7 @@ namespace JuiceSort.Game.Puzzle
         // fillRatio 0.5         → 55°
         // fillRatio 0.25        → 80°
         // fillRatio 0.0 (empty) → 105°
-        private const float TiltAtFull = 15f;
+        private const float TiltAtFull = 50f;
         private const float TiltAtEmpty = 105f;
 
         // --- Stream position constants ---
@@ -40,8 +40,9 @@ namespace JuiceSort.Game.Puzzle
         private const float SurfaceLandingOffset = 0.05f;
         // Bottom of liquid area relative to bottle pivot (sprite center)
         private const float BottleBottomRatio = -0.42f;
-        // Max liquid tilt in shader space (how much liquid surface angles when bottle is horizontal)
-        private const float MaxLiquidTilt = 0.6f;
+        // Converts bottle tilt degrees to shader _LiquidTilt value.
+        // Single variable: liquid always syncs with bottle rotation.
+        private const float LiquidTiltPerDegree = 0.75f;
 
         // Band calculation
         private const int MaxBands = 6;
@@ -86,6 +87,13 @@ namespace JuiceSort.Game.Puzzle
             // Pour duration scales with pour count for natural feel
             float pourDuration = BasePourDuration + pourCount * PourDurationPerSlot;
 
+            // Compute bottle dimensions early (needed for hover offset and stream)
+            float bottleScale = sourceTf.localScale.x;
+            float spriteHeight = bottleWorldHeight / Mathf.Max(0.01f, bottleScale);
+
+            // Compute initial tilt angle (needed for hover X offset)
+            float startTiltAngle = FillRatioToTiltAngle(prePourRatio);
+
             // --- Pre-compute band states ---
             var srcBandsBefore = ComputeBands(sourceDataSnapshot);
             var tgtBandsBefore = ComputeBands(targetDataSnapshot);
@@ -93,24 +101,27 @@ namespace JuiceSort.Game.Puzzle
             var tgtBandsAfter = ComputeBandsAfterTargetPour(targetDataSnapshot, pourCount, pourColor);
 
             // --- Phase 1: Lift source so its bottom clears the target's top ---
-            // Bottle positions are at pivot (center). Target top = targetY + halfHeight.
-            // Source bottom at liftY = liftY - halfHeight. We want source bottom >= target top + gap.
-            // So: liftY - halfH = targetTop + gap → liftY = targetY + halfH + gap + halfH = targetY + fullH + gap
-            // Also must clear source's own row for horizontal travel.
             float halfH = bottleWorldHeight * 0.5f;
             float targetTop = Mathf.Max(originalPos.y, targetLocalPos.y) + halfH;
             float liftY = targetTop + halfH + HoverGap;
             Vector3 liftedPos = new Vector3(originalPos.x, liftY, originalPos.z);
             yield return LerpPosition(sourceTf, originalPos, liftedPos, LiftDuration);
 
-            // --- Phase 2: Move horizontally (and vertically) to hover above target ---
-            Vector3 hoverPos = new Vector3(targetLocalPos.x, liftY, originalPos.z);
+            // --- Phase 2: Move so MOUTH (not center) aligns with target X after tilt ---
+            // When tilted by startTiltAngle, the mouth swings from center by:
+            //   mouthSwingX = sin(tiltZ_radians) * mouthLocalY * bottleScale
+            // We offset the bottle center so mouth lands at target.x
+            float tiltZRad = startTiltAngle * direction * Mathf.Deg2Rad;
+            float mouthLocalY = spriteHeight * MouthOffsetRatio;
+            float mouthSwingX = Mathf.Sin(tiltZRad) * mouthLocalY * bottleScale;
+            // Offset center so that center + mouth rotation offset = target.x
+            // mouth_world_x = center.x - sin(tiltZ) * mouthY * scale
+            // center.x = target.x + sin(tiltZ) * mouthY * scale
+            float hoverX = targetLocalPos.x + mouthSwingX * 1.1f; // multiplier to exaggerate the offset for better visual alignment
+            Vector3 hoverPos = new Vector3(hoverX, liftY, originalPos.z);
             yield return LerpPosition(sourceTf, liftedPos, hoverPos, MoveDuration, EaseInOutCubic);
 
             // --- Phase 3: Progressive tilt + smooth fill lerps + stream ---
-
-            // Compute initial tilt from pre-pour fill ratio
-            float startTiltAngle = FillRatioToTiltAngle(prePourRatio);
             Quaternion startTiltRot = Quaternion.Euler(0f, 0f, startTiltAngle * direction);
 
             // Quick initial tilt to start angle (small rotation before pour begins)
@@ -119,13 +130,8 @@ namespace JuiceSort.Game.Puzzle
             // Set initial liquid tilt to match bottle rotation
             if (srcController != null)
             {
-                float initTiltRad = startTiltAngle * Mathf.Deg2Rad;
-                srcController.SetLiquidTilt(Mathf.Sin(initTiltRad) * MaxLiquidTilt * -direction);
+                srcController.SetLiquidTilt(startTiltAngle * -direction * LiquidTiltPerDegree);
             }
-
-            // Bottle sprite height at scale 1.0 (used for mouth/surface calculations)
-            float bottleScale = sourceTf.localScale.x;
-            float spriteHeight = bottleWorldHeight / Mathf.Max(0.01f, bottleScale);
 
             // Pre-pour target fill ratio for surface tracking
             int tgtSlotCount = targetDataSnapshot.SlotCount;
@@ -185,9 +191,8 @@ namespace JuiceSort.Game.Puzzle
                     float currentTiltAngle = FillRatioToTiltAngle(currentFillRatio);
                     sourceTf.localRotation = Quaternion.Euler(0f, 0f, currentTiltAngle * direction);
 
-                    // Liquid tilt: liquid flows toward the low side as bottle tilts
-                    float tiltRad = currentTiltAngle * Mathf.Deg2Rad;
-                    srcController.SetLiquidTilt(Mathf.Sin(tiltRad) * MaxLiquidTilt * -direction);
+                    // Liquid tilt: driven by same angle as bottle rotation
+                    srcController.SetLiquidTilt(currentTiltAngle * -direction * LiquidTiltPerDegree);
 
                     // Update stream positions: mouth tracks tilt, target tracks fill level
                     if (pourStream != null)
