@@ -690,6 +690,13 @@ namespace JuiceSort.Game.Puzzle
             if (_bottleBoard != null)
                 _bottleBoard.OnContainerTapped -= OnContainerTapped;
 
+            // Clean up pour stream VFX to prevent orphaned GameObjects
+            if (_pourStream != null)
+            {
+                Destroy(_pourStream.gameObject);
+                _pourStream = null;
+            }
+
             // Unsubscribe coin listeners in case DestroyBoard wasn't called (e.g., scene unload)
             if (Services.TryGet<ICoinManager>(out var coinMgr))
             {

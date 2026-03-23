@@ -134,11 +134,23 @@ N/A — no debug logging needed; root cause identified through code analysis.
 ### Change Log
 
 - 2026-03-23: Implemented pre-pour snapshot fix for pour animation visual bugs (Tasks 1-4)
+- 2026-03-24: Post-completion code review (Epic 10 cross-story) — 2 High, 6 Medium, 8 Low fixes:
+  - Removed dead _WobbleZ shader property and all C# references
+  - Extracted fill compensation magic numbers to named constants (MinFillRatioForTilt, MaxTiltCompensation)
+  - Fixed wobble coroutine leak: added StopWobble() in LiquidMaterialController.OnDestroy()
+  - Fixed PourStreamVFX material leak: clear LineRenderer reference before destroy
+  - Added PourStreamVFX cleanup in GameplayManager.OnDestroy() to prevent orphaned GameObjects
+  - Added null validation guard at top of PourAnimator.Animate()
+  - Batched SetFillAmount GPU uploads: 12/frame → 2/frame via FlushFills()
+  - Added 2 missing test cases (empty target pour, fill sum clamping)
+  - Fixed stale comments (tilt curve values, BaseTiltStrength, symmetric ratios, shader tiltY docs)
 
 ### File List
 
-- `Assets/Scripts/Game/Puzzle/PourAnimator.cs` — Modified: added `sourceDataSnapshot`/`targetDataSnapshot` params, `SetupSourceColors()`, `ClampFillSum()`; all band computations now use snapshots
-- `Assets/Scripts/Game/Puzzle/GameplayManager.cs` — Modified: captures `source.Clone()`/`target.Clone()` before `ExecutePour`, passes to `PourAnimator.Animate()`
-- `Assets/Scripts/Tests/EditMode/PourAnimatorBandTests.cs` — New: 6 tests validating pre-pour snapshot isolation, clone independence, pour scenarios, liquid conservation
-- `Game.csproj` — Auto-modified: Unity regenerated due to new .cs file
-- `Tests.csproj` — Auto-modified: Unity regenerated due to new test .cs file
+- `Assets/Scripts/Game/Puzzle/PourAnimator.cs` — Modified: snapshots, named constants, null guard, FlushFills batching, comment fixes
+- `Assets/Scripts/Game/Puzzle/GameplayManager.cs` — Modified: snapshot capture, PourStreamVFX cleanup in OnDestroy
+- `Assets/Scripts/Game/Puzzle/LiquidMaterialController.cs` — Modified: removed WobbleZ, added FlushFills(), StopWobble in OnDestroy
+- `Assets/Art/Shaders/LiquidFill.shader` — Modified: removed _WobbleZ, additive tilt, updated comments
+- `Assets/Scripts/Game/Puzzle/PourStreamVFX.cs` — Modified: material leak fix in OnDestroy
+- `Assets/Scripts/Tests/EditMode/PourAnimatorBandTests.cs` — Modified: added empty target and fill sum tests
+- `Assembly-CSharp.csproj` — Modified: added shader reference

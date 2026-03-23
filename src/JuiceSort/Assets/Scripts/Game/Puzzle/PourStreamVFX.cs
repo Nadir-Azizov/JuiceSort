@@ -132,6 +132,14 @@ namespace JuiceSort.Game.Puzzle
 
         private void OnDestroy()
         {
+            if (_fadeCoroutine != null)
+            {
+                StopCoroutine(_fadeCoroutine);
+                _fadeCoroutine = null;
+            }
+            // Destroy cached material and clear LineRenderer's reference
+            if (_lineRenderer != null)
+                _lineRenderer.material = null;
             if (_material != null)
             {
                 Destroy(_material);

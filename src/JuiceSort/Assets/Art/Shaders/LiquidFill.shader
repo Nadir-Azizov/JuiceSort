@@ -7,7 +7,6 @@ Shader "JuiceSort/LiquidFill"
         _MaxVisualFill ("Max Visual Fill", Float) = 0.80
         _DimMultiplier ("Dim Multiplier", Float) = 1.0
         _WobbleX ("Wobble X", Float) = 0.0
-        _WobbleZ ("Wobble Z", Float) = 0.0
         _GlowColor ("Glow Color", Color) = (1,0.9,0.6,1)
         _GlowIntensity ("Glow Intensity", Float) = 0.15
         _LiquidTilt ("Liquid Tilt", Float) = 0.0
@@ -77,7 +76,6 @@ Shader "JuiceSort/LiquidFill"
                 float _MaxVisualFill;
                 float _DimMultiplier;
                 float _WobbleX;
-                float _WobbleZ;
                 float4 _GlowColor;
                 float _GlowIntensity;
                 float _LiquidTilt;
@@ -119,9 +117,10 @@ Shader "JuiceSort/LiquidFill"
                 }
 
                 // --- Compute additive tilt offset at this pixel ---
-                // Scaled by _MaxVisualFill (constant 0.80) instead of dynamic totalFill.
-                // This prevents bottom bands from shifting position when only the top drains,
-                // while keeping the tilt magnitude in a reasonable range.
+                // Scaled by _MaxVisualFill (constant) instead of dynamic totalFill
+                // so bottom bands don't shift when only the top drains.
+                // _LiquidTilt: X-axis tilt (active during pour).
+                // _LiquidTiltY: Y-axis tilt (set to 0 by C# — reserved for future use).
                 float tiltOffset = _MaxVisualFill * (_LiquidTilt * (i.texcoord.x - 0.5) + _LiquidTiltY * (y - 0.5));
 
                 float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832);

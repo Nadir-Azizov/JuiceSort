@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-23  # reopened epic-10 with 3 new pour animation stories
+last_updated: 2026-03-24  # Epic 10 post-completion code review fixes applied
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system

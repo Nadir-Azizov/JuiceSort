@@ -99,12 +99,22 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
-        /// Sets a specific band's fill amount (for animated fills in Story 10.2).
+        /// Sets a specific band's fill amount in the local array.
+        /// Call FlushFills() after updating all bands to upload once to the GPU.
         /// </summary>
         public void SetFillAmount(int bandIndex, float fill)
         {
             if (_material == null || bandIndex < 0 || bandIndex >= MaxBands) return;
             _fillArray[bandIndex] = fill;
+        }
+
+        /// <summary>
+        /// Uploads all pending fill changes to the GPU in a single call.
+        /// Call after a batch of SetFillAmount updates to avoid per-band GPU uploads.
+        /// </summary>
+        public void FlushFills()
+        {
+            if (_material == null) return;
             _material.SetFloatArray("_FillLevels", _fillArray);
         }
 
@@ -199,7 +209,6 @@ namespace JuiceSort.Game.Puzzle
             if (_material != null)
             {
                 _material.SetFloat("_WobbleX", 0f);
-                _material.SetFloat("_WobbleZ", 0f);
             }
         }
 
@@ -247,6 +256,7 @@ namespace JuiceSort.Game.Puzzle
 
         private void OnDestroy()
         {
+            StopWobble();
             if (_material != null)
             {
                 Destroy(_material);

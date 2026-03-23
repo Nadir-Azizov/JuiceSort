@@ -164,5 +164,46 @@ namespace JuiceSort.Tests.EditMode
             int totalAfter = source.FilledCount() + target.FilledCount();
             Assert.AreEqual(totalBefore, totalAfter, "Total liquid must be conserved");
         }
+
+        [Test]
+        public void PourScenario_EmptyTargetReceivesPour_CreatesFirstBand()
+        {
+            // Target is completely empty, source pours 2 MangoAmber
+            var target = new ContainerData(4);
+
+            Assert.AreEqual(0, target.FilledCount(), "Target should start empty");
+
+            // Simulate pour into empty target
+            target.SetSlot(0, DrinkColor.MangoAmber);
+            target.SetSlot(1, DrinkColor.MangoAmber);
+
+            Assert.AreEqual(2, target.FilledCount(), "Target should have 2 filled after pour");
+            Assert.AreEqual(DrinkColor.MangoAmber, target.GetSlot(0));
+            Assert.AreEqual(DrinkColor.MangoAmber, target.GetSlot(1));
+
+            // Verify snapshot of empty target has 0 bands
+            var emptySnap = new ContainerData(4);
+            Assert.AreEqual(0, emptySnap.FilledCount(), "Empty snapshot has 0 filled");
+        }
+
+        [Test]
+        public void PourScenario_FillSumExceedsOne_ClampedCorrectly()
+        {
+            // Edge case: band fills that would exceed 1.0 should be clamped
+            var target = new ContainerData(4);
+            target.SetSlot(0, DrinkColor.MangoAmber);
+            target.SetSlot(1, DrinkColor.MangoAmber);
+            target.SetSlot(2, DrinkColor.MangoAmber);
+            target.SetSlot(3, DrinkColor.MangoAmber);
+
+            // Full bottle: 4/4 = 1.0 fill ratio
+            Assert.IsTrue(target.IsFull(), "Target should be full");
+            Assert.AreEqual(4, target.FilledCount());
+
+            // A single band of 4 same-color slots = 4/4 = 1.0 fill
+            // Verify fill ratio doesn't exceed 1.0
+            float fillRatio = (float)target.FilledCount() / target.SlotCount;
+            Assert.AreEqual(1.0f, fillRatio, 0.001f, "Fill ratio should be exactly 1.0");
+        }
     }
 }

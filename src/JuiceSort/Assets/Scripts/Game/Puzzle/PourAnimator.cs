@@ -23,28 +23,27 @@ namespace JuiceSort.Game.Puzzle
         private const float HoverGap = 0.15f; // small gap between source bottom and target top
 
         // --- Progressive tilt curve (fill ratio → tilt angle) ---
-        // fillRatio 1.0 (full)  → 15°
-        // fillRatio 0.75        → 30°
-        // fillRatio 0.5         → 55°
-        // fillRatio 0.25        → 80°
+        // fillRatio 1.0 (full)  → 50°
+        // fillRatio 0.5         → ~72°
         // fillRatio 0.0 (empty) → 105°
         private const float TiltAtFull = 50f;
         private const float TiltAtEmpty = 105f;
 
         // --- Stream position constants ---
-        // Bottle mouth is at ~42% of sprite height from pivot (top of visual fill zone)
+        // Bottle mouth at +42% of sprite height from pivot; bottom at -42% (symmetric)
         private const float MouthOffsetRatio = 0.42f;
+        private const float BottleBottomRatio = -0.42f;
         // MaxVisualFill from shader — target surface = fillRatio * this * spriteHeight
         private const float MaxVisualFill = 0.80f;
         // Small offset above target surface so stream lands ON the liquid
         private const float SurfaceLandingOffset = 0.05f;
-        // Bottom of liquid area relative to bottle pivot (sprite center)
-        private const float BottleBottomRatio = -0.42f;
-        // Gravity-based tilt: decomposes world gravity into bottle's local UV axes.
-        // 3.0 gives a visible ~45° liquid surface angle at full tilt.
-        // Too high (>5) saturates instantly → binary snap instead of smooth angle.
-        // TEST: reduced to 2.0 so tilt angle is visible (not saturated)
+        // Gravity-based tilt strength for liquid surface angle during pour.
+        // 2.0 gives a visible tilt. Too high (>5) saturates → binary snap.
         private const float BaseTiltStrength = 2.0f;
+        // Minimum fill ratio for tilt compensation denominator (prevents divide-by-near-zero)
+        private const float MinFillRatioForTilt = 0.1f;
+        // Maximum tilt compensation multiplier (prevents binary snap at low fills)
+        private const float MaxTiltCompensation = 3f;
 
         // Band calculation
         private const int MaxBands = 6;
@@ -83,6 +82,13 @@ namespace JuiceSort.Game.Puzzle
             Action onMidPour,
             Action onComplete)
         {
+            if (source == null || target == null)
+            {
+                Debug.LogError("[PourAnimator] source or target is null — skipping animation");
+                onComplete?.Invoke();
+                yield break;
+            }
+
             var sourceTf = source.transform;
             var targetTf = target.transform;
             var srcController = source.LiquidController;
@@ -210,6 +216,7 @@ namespace JuiceSort.Game.Puzzle
                         float srcFill = Mathf.Lerp(srcBandsBefore.fills[b], srcBandsAfter.fills[b], fillT);
                         srcController.SetFillAmount(b, srcFill);
                     }
+                    srcController.FlushFills(); // single GPU upload per bottle per frame
 
                     // Lerp target bands (linear to match source)
                     for (int b = 0; b < MaxBands; b++)
@@ -217,6 +224,7 @@ namespace JuiceSort.Game.Puzzle
                         float tgtFill = Mathf.Lerp(tgtBandsBefore.fills[b], tgtBandsAfter.fills[b], fillT);
                         tgtController.SetFillAmount(b, tgtFill);
                     }
+                    tgtController.FlushFills();
 
                     // Progressive tilt: angle increases as source empties
                     float currentFillRatio = Mathf.Lerp(prePourRatio, postPourRatio, tiltT);
@@ -228,8 +236,8 @@ namespace JuiceSort.Game.Puzzle
                     // prePourRatio/currentFillRatio so visible tilt stays consistent,
                     // plus a small drain boost so liquid concentrates at the mouth.
                     float fillCompensation = Mathf.Min(
-                        prePourRatio / Mathf.Max(currentFillRatio, 0.1f),
-                        3f); // cap at 3× so tilt stays visible angle, not binary snap
+                        prePourRatio / Mathf.Max(currentFillRatio, MinFillRatioForTilt),
+                        MaxTiltCompensation);
                     float drainProgress = (prePourRatio > 0.001f)
                         ? 1f - (currentFillRatio / prePourRatio)
                         : 0f;
@@ -309,7 +317,7 @@ namespace JuiceSort.Game.Puzzle
 
         /// <summary>
         /// Maps source fill ratio to tilt angle using smooth interpolation.
-        /// Full bottle (1.0) → 15°, Empty bottle (0.0) → 105°.
+        /// Full bottle (1.0) → TiltAtFull (50°), Empty bottle (0.0) → TiltAtEmpty (105°).
         /// Uses quadratic curve for natural acceleration at lower fill levels.
         /// </summary>
         private static float FillRatioToTiltAngle(float fillRatio)
