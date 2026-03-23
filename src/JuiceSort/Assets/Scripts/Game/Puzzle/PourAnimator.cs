@@ -16,8 +16,8 @@ namespace JuiceSort.Game.Puzzle
         private const float MoveDuration = 0.18f;
         private const float BasePourDuration = 0.25f;
         private const float PourDurationPerSlot = 0.05f; // extra time per slot poured
-        private const float ReturnDuration = 0.25f;
-        private const float InitialTiltDuration = 0.08f;
+        private const float ReturnDuration = 0.35f;
+        private const float InitialTiltDuration = 0.2f;
 
         // --- Movement constants ---
         private const float HoverGap = 0.15f; // small gap between source bottom and target top
@@ -40,9 +40,10 @@ namespace JuiceSort.Game.Puzzle
         private const float SurfaceLandingOffset = 0.05f;
         // Bottom of liquid area relative to bottle pivot (sprite center)
         private const float BottleBottomRatio = -0.42f;
-        // Converts bottle tilt degrees to shader _LiquidTilt value.
-        // Single variable: liquid always syncs with bottle rotation.
-        private const float LiquidTiltPerDegree = 0.75f;
+        // Converts bottle tilt degrees to shader _LiquidTilt multiplicative factor.
+        // _LiquidTilt 0 = flat surface, 2.0 = one side empty / other side double fill.
+        // At 90° tilt: factor ≈ 2.0 (one side empty). Per degree = 2.0/90 ≈ 0.022.
+        private const float LiquidTiltPerDegree = 0.23f;
 
         // Band calculation
         private const int MaxBands = 6;
@@ -124,13 +125,22 @@ namespace JuiceSort.Game.Puzzle
             // --- Phase 3: Progressive tilt + smooth fill lerps + stream ---
             Quaternion startTiltRot = Quaternion.Euler(0f, 0f, startTiltAngle * direction);
 
-            // Quick initial tilt to start angle (small rotation before pour begins)
-            yield return LerpRotation(sourceTf, originalRot, startTiltRot, InitialTiltDuration);
-
-            // Set initial liquid tilt to match bottle rotation
-            if (srcController != null)
+            // Quick initial tilt to start angle — update liquid tilt smoothly each frame
             {
-                srcController.SetLiquidTilt(startTiltAngle * -direction * LiquidTiltPerDegree);
+                float elapsed = 0f;
+                while (elapsed < InitialTiltDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = EaseOutCubic(Mathf.Clamp01(elapsed / InitialTiltDuration));
+                    sourceTf.localRotation = Quaternion.Lerp(originalRot, startTiltRot, t);
+                    float currentAngle = Mathf.Lerp(0f, startTiltAngle, t);
+                    if (srcController != null)
+                        srcController.SetLiquidTilt(currentAngle * -direction * LiquidTiltPerDegree);
+                    yield return null;
+                }
+                sourceTf.localRotation = startTiltRot;
+                if (srcController != null)
+                    srcController.SetLiquidTilt(startTiltAngle * -direction * LiquidTiltPerDegree);
             }
 
             // Pre-pour target fill ratio for surface tracking
@@ -170,35 +180,45 @@ namespace JuiceSort.Game.Puzzle
                 while (elapsed < pourDuration)
                 {
                     elapsed += Time.deltaTime;
-                    float t = EaseOutCubic(Mathf.Clamp01(elapsed / pourDuration));
+                    float rawT = Mathf.Clamp01(elapsed / pourDuration);
+                    // Linear t for fill lerps — steady visible decrease throughout pour
+                    float fillT = rawT;
+                    // Eased t for tilt progression — smooth acceleration
+                    float tiltT = EaseOutCubic(rawT);
 
-                    // Lerp source bands
+                    // Lerp source bands (linear for visible steady decrease)
                     for (int b = 0; b < MaxBands; b++)
                     {
-                        float srcFill = Mathf.Lerp(srcBandsBefore.fills[b], srcBandsAfter.fills[b], t);
+                        float srcFill = Mathf.Lerp(srcBandsBefore.fills[b], srcBandsAfter.fills[b], fillT);
                         srcController.SetFillAmount(b, srcFill);
                     }
 
-                    // Lerp target bands
+                    // Lerp target bands (linear to match source)
                     for (int b = 0; b < MaxBands; b++)
                     {
-                        float tgtFill = Mathf.Lerp(tgtBandsBefore.fills[b], tgtBandsAfter.fills[b], t);
+                        float tgtFill = Mathf.Lerp(tgtBandsBefore.fills[b], tgtBandsAfter.fills[b], fillT);
                         tgtController.SetFillAmount(b, tgtFill);
                     }
 
                     // Progressive tilt: angle increases as source empties
-                    float currentFillRatio = Mathf.Lerp(prePourRatio, postPourRatio, t);
+                    float currentFillRatio = Mathf.Lerp(prePourRatio, postPourRatio, tiltT);
                     float currentTiltAngle = FillRatioToTiltAngle(currentFillRatio);
                     sourceTf.localRotation = Quaternion.Euler(0f, 0f, currentTiltAngle * direction);
 
-                    // Liquid tilt: driven by same angle as bottle rotation
-                    srcController.SetLiquidTilt(currentTiltAngle * -direction * LiquidTiltPerDegree);
+                    // Liquid tilt: amplify as liquid drains to keep mouth side full.
+                    // As pour progresses, tilt factor increases — liquid concentrates at mouth,
+                    // far side empties first, maintaining stream connection.
+                    float drainProgress = (prePourRatio > 0.001f)
+                        ? 1f - (currentFillRatio / prePourRatio)
+                        : 0f;
+                    float tiltAmplifier = 1f + drainProgress * 1.5f;
+                    srcController.SetLiquidTilt(currentTiltAngle * -direction * LiquidTiltPerDegree * tiltAmplifier);
 
                     // Update stream positions: mouth tracks tilt, target tracks fill level
                     if (pourStream != null)
                     {
                         streamSourcePos = GetBottleMouthWorldPos(sourceTf, spriteHeight);
-                        float currentTgtFillRatio = Mathf.Lerp(tgtPreFillRatio, tgtPostFillRatio, t);
+                        float currentTgtFillRatio = Mathf.Lerp(tgtPreFillRatio, tgtPostFillRatio, fillT);
                         streamTargetPos = GetTargetSurfaceWorldPos(targetTf, spriteHeight, currentTgtFillRatio);
                         pourStream.UpdatePositions(streamSourcePos, streamTargetPos);
                     }
@@ -226,10 +246,25 @@ namespace JuiceSort.Game.Puzzle
             // Capture final tilt for un-tilt lerp
             Quaternion finalTiltRot = sourceTf.localRotation;
 
-            // Un-tilt back to upright and reset liquid tilt
-            yield return LerpRotation(sourceTf, finalTiltRot, originalRot, ReturnDuration * 0.3f);
-            if (srcController != null)
-                srcController.SetLiquidTilt(0f);
+            // Un-tilt back to upright — smooth liquid tilt back to zero each frame
+            float finalTiltAngle = FillRatioToTiltAngle(postPourRatio);
+            {
+                float returnTiltDur = ReturnDuration * 0.3f;
+                float elapsed = 0f;
+                while (elapsed < returnTiltDur)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = EaseOutCubic(Mathf.Clamp01(elapsed / returnTiltDur));
+                    sourceTf.localRotation = Quaternion.Lerp(finalTiltRot, originalRot, t);
+                    float currentAngle = Mathf.Lerp(finalTiltAngle, 0f, t);
+                    if (srcController != null)
+                        srcController.SetLiquidTilt(currentAngle * -direction * LiquidTiltPerDegree);
+                    yield return null;
+                }
+                sourceTf.localRotation = originalRot;
+                if (srcController != null)
+                    srcController.SetLiquidTilt(0f);
+            }
 
             // Move horizontally back to original X, staying at lift height
             Vector3 returnHoverPos = new Vector3(originalPos.x, liftY, originalPos.z);

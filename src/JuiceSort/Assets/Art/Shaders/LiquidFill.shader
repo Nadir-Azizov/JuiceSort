@@ -103,65 +103,37 @@ Shader "JuiceSort/LiquidFill"
 
             half4 frag(v2f i) : SV_Target
             {
-                // Y coordinate: 0 = bottom of sprite, 1 = top
                 float y = i.texcoord.y;
 
-                // Apply liquid tilt: when bottle tilts, liquid flows toward the low side
-                // _LiquidTilt > 0 means liquid pools toward x=1 (right), < 0 toward x=0 (left)
-                // This tilts the fill line so liquid surface is angled like real gravity
-                float tiltOffset = _LiquidTilt * (i.texcoord.x - 0.5);
-                y -= tiltOffset;
-
-                // Apply wobble offset to the sampling position
-                float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832); // full sine wave across width
-                y -= wobbleOffset;
-
-                // Walk through bands from bottom up
-                float cumFill = 0.0;
-                half4 liquidColor = half4(0, 0, 0, 0);
-                bool inLiquid = false;
-
-                for (int idx = 0; idx < _LayerCount; idx++)
+                // --- Compute total fill height (untilted) ---
+                float totalFill = 0.0;
+                int topBandIdx = 0;
+                for (int p = 0; p < _LayerCount; p++)
                 {
-                    float bandHeight = _FillLevels[idx] * _MaxVisualFill;
-                    if (bandHeight <= 0.0)
-                        break;
-
-                    float bandBottom = cumFill;
-                    float bandTop = cumFill + bandHeight;
-
-                    if (y >= bandBottom && y < bandTop)
-                    {
-                        half4 bandColor = half4(_LayerColors[idx].rgb * _DimMultiplier, _LayerColors[idx].a);
-                        liquidColor = bandColor;
-                        inLiquid = true;
-
-                        // Smooth gradient blending at band boundaries (top edge)
-                        float blendZone = 0.015; // ~1.5% of sprite height
-                        float distFromTop = bandTop - y;
-                        if (distFromTop < blendZone && idx + 1 < _LayerCount && _FillLevels[idx + 1] > 0.0)
-                        {
-                            // Blend with next band color
-                            half4 nextColor = half4(_LayerColors[idx + 1].rgb * _DimMultiplier, _LayerColors[idx + 1].a);
-                            float blendT = 1.0 - (distFromTop / blendZone);
-                            liquidColor = lerp(bandColor, nextColor, blendT);
-                        }
-
-                        break;
-                    }
-
-                    cumFill = bandTop;
+                    float bh = _FillLevels[p] * _MaxVisualFill;
+                    if (bh <= 0.0) break;
+                    totalFill += bh;
+                    topBandIdx = p;
                 }
 
-                // Empty region above liquid: fully transparent
-                if (!inLiquid)
+                // --- Compute tilted surface at this X position ---
+                // MULTIPLICATIVE tilt: surface scales with totalFill so fill decrease is always visible.
+                // _LiquidTilt 0 = flat, ~2.0 = one side empty/other side double.
+                float wobbleOffset = _WobbleX * sin(i.texcoord.x * 6.2832);
+                float surface = totalFill * (1.0 + _LiquidTilt * (i.texcoord.x - 0.5)) - wobbleOffset;
+
+                // Clamp surface: can't go below 0 (no negative liquid)
+                surface = max(surface, 0.0);
+
+                // --- Above tilted surface → empty ---
+                if (y >= surface)
                 {
-                    // Inner glow: subtle additive color near the liquid surface (in empty region)
-                    if (cumFill > 0.0 && _GlowIntensity > 0.0)
+                    // Inner glow above surface
+                    if (surface > 0.0 && _GlowIntensity > 0.0)
                     {
-                        float distAboveLiquid = y - cumFill;
-                        float glowFalloff = saturate(1.0 - distAboveLiquid / 0.05); // 5% falloff zone
-                        glowFalloff *= glowFalloff; // quadratic falloff for soft edge
+                        float distAbove = y - surface;
+                        float glowFalloff = saturate(1.0 - distAbove / 0.05);
+                        glowFalloff *= glowFalloff;
                         if (glowFalloff > 0.001)
                         {
                             half4 glow = half4(_GlowColor.rgb * _GlowIntensity * glowFalloff, glowFalloff * 0.3);
@@ -171,10 +143,52 @@ Shader "JuiceSort/LiquidFill"
                     return half4(0, 0, 0, 0);
                 }
 
-                // Inner glow: boost liquid color near the surface for a subtle luminous effect
-                if (_GlowIntensity > 0.0 && cumFill > 0.0)
+                // --- Below tilted surface → in liquid ---
+                // Determine band color from UNTILTED y position (bands keep their normal layers)
+                float cumFill = 0.0;
+                half4 liquidColor = half4(0, 0, 0, 0);
+                bool foundBand = false;
+
+                for (int idx = 0; idx < _LayerCount; idx++)
                 {
-                    float distFromSurface = cumFill - y;
+                    float bandHeight = _FillLevels[idx] * _MaxVisualFill;
+                    if (bandHeight <= 0.0) break;
+
+                    float bandBottom = cumFill;
+                    float bandTop = cumFill + bandHeight;
+
+                    if (y >= bandBottom && y < bandTop)
+                    {
+                        half4 bandColor = half4(_LayerColors[idx].rgb * _DimMultiplier, _LayerColors[idx].a);
+                        liquidColor = bandColor;
+                        foundBand = true;
+
+                        // Smooth gradient blending at band boundaries
+                        float blendZone = 0.015;
+                        float distFromTop = bandTop - y;
+                        if (distFromTop < blendZone && idx + 1 < _LayerCount && _FillLevels[idx + 1] > 0.0)
+                        {
+                            half4 nextColor = half4(_LayerColors[idx + 1].rgb * _DimMultiplier, _LayerColors[idx + 1].a);
+                            float blendT = 1.0 - (distFromTop / blendZone);
+                            liquidColor = lerp(bandColor, nextColor, blendT);
+                        }
+                        break;
+                    }
+
+                    cumFill = bandTop;
+                }
+
+                // Pixel is below surface but above all normal bands (tilt overflow on low side)
+                // → show the topmost band's color (liquid extends on the low side)
+                if (!foundBand && _LayerCount > 0)
+                {
+                    liquidColor = half4(_LayerColors[topBandIdx].rgb * _DimMultiplier, _LayerColors[topBandIdx].a);
+                }
+
+                // Inner glow near tilted surface
+                if (_GlowIntensity > 0.0 && surface > 0.0)
+                {
+                    float distFromSurface = surface - y;
                     if (distFromSurface < 0.03)
                     {
                         float glowT = saturate(1.0 - distFromSurface / 0.03);
@@ -182,9 +196,7 @@ Shader "JuiceSort/LiquidFill"
                     }
                 }
 
-                // Apply sprite vertex color tinting
                 liquidColor *= i.color;
-
                 return liquidColor;
             }
             ENDHLSL
