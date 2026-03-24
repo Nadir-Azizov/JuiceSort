@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Game.LevelGen;
 using JuiceSort.Game.Progression;
 
@@ -111,14 +112,14 @@ namespace JuiceSort.Game.UI.Components
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
 
-            var text = textGo.AddComponent<Text>();
+            var text = textGo.AddComponent<TextMeshProUGUI>();
             string moodIcon = node.Mood == LevelMood.Morning ? "\u2600" : "\u263E";
             string starText = node.IsCompleted ? StarCalculator.GetStarText(node.Stars) : "";
             text.text = $"Level {node.LevelNumber} - {node.CityName} {moodIcon} {starText}";
-            text.fontSize = 26;
-            text.alignment = TextAnchor.MiddleLeft;
+            text.fontSize = ThemeConfig.FontSizeSecondary;
+            text.alignment = TextAlignmentOptions.MidlineLeft;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = ThemeConfig.GetFont();
 
             // Play button
             if (node.IsCompleted || node.IsCurrentLevel)
@@ -148,12 +149,12 @@ namespace JuiceSort.Game.UI.Components
                 btnTextRect.offsetMin = Vector2.zero;
                 btnTextRect.offsetMax = Vector2.zero;
 
-                var btnText = btnTextGo.AddComponent<Text>();
+                var btnText = btnTextGo.AddComponent<TextMeshProUGUI>();
                 btnText.text = node.IsCurrentLevel ? "Start" : "Replay";
-                btnText.fontSize = 22;
-                btnText.alignment = TextAnchor.MiddleCenter;
+                btnText.fontSize = ThemeConfig.FontSizeSecondary;
+                btnText.alignment = TextAlignmentOptions.Center;
                 btnText.color = Color.white;
-                btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                btnText.font = ThemeConfig.GetFont();
             }
 
             _entries.Add(entryGo);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Core;
 using JuiceSort.Game.LevelGen;
 using JuiceSort.Game.Progression;
@@ -17,7 +18,7 @@ namespace JuiceSort.Game.UI.Screens
     public class RoadmapScreen : MonoBehaviour
     {
         private LevelListView _levelList;
-        private Text _headerText;
+        private TextMeshProUGUI _headerText;
 
         private void OnEnable()
         {
@@ -110,7 +111,7 @@ namespace JuiceSort.Game.UI.Screens
 
             go.AddComponent<GraphicRaycaster>();
 
-            // Background
+            // Gradient Background
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(go.transform, false);
             var bgRect = bgGo.AddComponent<RectTransform>();
@@ -119,7 +120,8 @@ namespace JuiceSort.Game.UI.Screens
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
             var bgImage = bgGo.AddComponent<Image>();
-            bgImage.color = ThemeConfig.GetBackgroundGradientBottom(LevelGen.LevelMood.Morning);
+            bgImage.sprite = ThemeConfig.CreateGradientSprite(ThemeConfig.CurrentMood);
+            bgImage.type = Image.Type.Simple;
 
             // Header
             var headerGo = new GameObject("Header");
@@ -131,12 +133,13 @@ namespace JuiceSort.Game.UI.Screens
             headerRect.offsetMax = Vector2.zero;
 
             var screen = go.AddComponent<RoadmapScreen>();
-            screen._headerText = headerGo.AddComponent<Text>();
+            screen._headerText = headerGo.AddComponent<TextMeshProUGUI>();
             screen._headerText.text = "Roadmap";
-            screen._headerText.fontSize = 42;
-            screen._headerText.alignment = TextAnchor.MiddleLeft;
-            screen._headerText.color = Color.white;
-            screen._headerText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            screen._headerText.fontSize = ThemeConfig.FontSizeHeader;
+            screen._headerText.alignment = TextAlignmentOptions.MidlineLeft;
+            screen._headerText.color = ThemeConfig.GetColor(ThemeColorType.TextPrimary);
+            screen._headerText.font = ThemeConfig.GetFontBold();
+            screen._headerText.fontStyle = TMPro.FontStyles.Bold;
 
             // Level list area
             var listArea = new GameObject("ListArea");
@@ -160,7 +163,7 @@ namespace JuiceSort.Game.UI.Screens
             backRect.offsetMax = Vector2.zero;
 
             var backImage = backGo.AddComponent<Image>();
-            backImage.color = ThemeConfig.GetColor(LevelGen.LevelMood.Morning, ThemeColorType.ButtonSecondary);
+            backImage.color = ThemeConfig.GetColor(LevelMood.Morning, ThemeColorType.ButtonSecondary);
 
             var backBtn = backGo.AddComponent<Button>();
             backGo.AddComponent<ButtonBounce>();
@@ -177,12 +180,12 @@ namespace JuiceSort.Game.UI.Screens
             backTextRect.anchorMax = Vector2.one;
             backTextRect.offsetMin = Vector2.zero;
             backTextRect.offsetMax = Vector2.zero;
-            var backText = backTextGo.AddComponent<Text>();
+            var backText = backTextGo.AddComponent<TextMeshProUGUI>();
             backText.text = "Back";
-            backText.fontSize = 30;
-            backText.alignment = TextAnchor.MiddleCenter;
+            backText.fontSize = ThemeConfig.FontSizeBody;
+            backText.alignment = TextAlignmentOptions.Center;
             backText.color = Color.white;
-            backText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            backText.font = ThemeConfig.GetFont();
 
             return go;
         }

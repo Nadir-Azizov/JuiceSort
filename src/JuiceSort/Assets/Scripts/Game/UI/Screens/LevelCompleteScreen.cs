@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Game.Progression;
 using JuiceSort.Game.UI;
 using JuiceSort.Game.UI.Components;
@@ -12,9 +13,9 @@ namespace JuiceSort.Game.UI.Screens
     /// </summary>
     public class LevelCompleteScreen : MonoBehaviour
     {
-        private Text _starText;
-        private Text _infoText;
-        private Text _coinRewardText;
+        private TextMeshProUGUI _starText;
+        private TextMeshProUGUI _infoText;
+        private TextMeshProUGUI _coinRewardText;
         private GameObject _nextLevelBtn;
         private GameObject _replayBtn;
         private GameObject _roadmapBtn;
@@ -59,7 +60,7 @@ namespace JuiceSort.Game.UI.Screens
 
             go.AddComponent<GraphicRaycaster>();
 
-            // Dark overlay background
+            // Dark overlay gradient background
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(go.transform, false);
             var bgRect = bgGo.AddComponent<RectTransform>();
@@ -73,17 +74,17 @@ namespace JuiceSort.Game.UI.Screens
             var screen = go.AddComponent<LevelCompleteScreen>();
 
             // Stars
-            var starGo = CreateText(go.transform, "Stars", new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), 80);
-            screen._starText = starGo.GetComponent<Text>();
+            var starGo = CreateText(go.transform, "Stars", new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.72f), ThemeConfig.FontSizeTitle);
+            screen._starText = starGo.GetComponent<TextMeshProUGUI>();
             screen._starText.color = ThemeConfig.GetColor(ThemeColorType.StarGold);
 
             // Info text
-            var infoGo = CreateText(go.transform, "Info", new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.55f), 34);
-            screen._infoText = infoGo.GetComponent<Text>();
+            var infoGo = CreateText(go.transform, "Info", new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.55f), ThemeConfig.FontSizeHeader);
+            screen._infoText = infoGo.GetComponent<TextMeshProUGUI>();
 
             // Coin reward text
-            var coinGo = CreateText(go.transform, "CoinReward", new Vector2(0.2f, 0.38f), new Vector2(0.8f, 0.44f), 30);
-            screen._coinRewardText = coinGo.GetComponent<Text>();
+            var coinGo = CreateText(go.transform, "CoinReward", new Vector2(0.2f, 0.38f), new Vector2(0.8f, 0.44f), ThemeConfig.FontSizeBody);
+            screen._coinRewardText = coinGo.GetComponent<TextMeshProUGUI>();
             screen._coinRewardText.color = ThemeConfig.GetColor(ThemeColorType.StarGold);
 
             // Next Level button
@@ -114,7 +115,7 @@ namespace JuiceSort.Game.UI.Screens
             return go;
         }
 
-        private static GameObject CreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, int fontSize)
+        private static GameObject CreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize)
         {
             var textGo = new GameObject(name);
             textGo.transform.SetParent(parent, false);
@@ -123,11 +124,11 @@ namespace JuiceSort.Game.UI.Screens
             rect.anchorMax = anchorMax;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            var text = textGo.AddComponent<Text>();
+            var text = textGo.AddComponent<TextMeshProUGUI>();
             text.fontSize = fontSize;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = ThemeConfig.GetColor(ThemeColorType.TextPrimary);
+            text.font = ThemeConfig.GetFont();
             return textGo;
         }
 
@@ -153,12 +154,12 @@ namespace JuiceSort.Game.UI.Screens
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
-            var text = textGo.AddComponent<Text>();
+            var text = textGo.AddComponent<TextMeshProUGUI>();
             text.text = label;
-            text.fontSize = 36;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = ThemeConfig.FontSizeBody;
+            text.alignment = TextAlignmentOptions.Center;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = ThemeConfig.GetFont();
 
             return btnGo;
         }

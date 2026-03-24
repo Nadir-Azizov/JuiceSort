@@ -180,7 +180,7 @@ The following decisions must be made explicitly (covered in upcoming steps):
 **Puzzle State:** Each pour creates a snapshot of the current puzzle state (container contents). A fixed stack of 3 snapshots is maintained — matching the maximum undo count for MVP. When the stack is full, the oldest snapshot drops off. Undo simply pops the previous snapshot.
 
 **Game Flow:** Enum-based state machine for screen/game states:
-`Boot → MainMenu → Roadmap → Playing → LevelComplete → Roadmap`
+`Boot → Hub (MainMenu) → Roadmap → Playing → LevelComplete → Roadmap`
 
 ### Scene Structure
 
@@ -189,9 +189,10 @@ The following decisions must be made explicitly (covered in upcoming steps):
 **Boot Scene:** Lightweight scene that initializes all managers (GameManager, AudioManager, SaveManager, LevelGenerator) via `DontDestroyOnLoad`. Always loaded first.
 
 **Additive Scenes:**
-- `MainMenu.unity` — Title screen, play button
 - `Roadmap.unity` — Level select, progress visualization
 - `Gameplay.unity` — Puzzle containers, HUD, pour mechanics
+
+> **Note:** MainMenu.unity scene is no longer used. HubScreen is a programmatic Canvas overlay created by `HubScreen.Create()`, registered under `GameFlowState.MainMenu`.
 
 Transitions load the new scene additively, then unload the previous one.
 
@@ -296,7 +297,6 @@ Assets/
 │   └── UI/
 ├── Scenes/
 │   ├── Boot.unity
-│   ├── MainMenu.unity
 │   ├── Gameplay.unity
 │   └── Roadmap.unity
 ├── Scripts/
@@ -443,7 +443,6 @@ Assets/
 │   └── UI/                        # Screen prefabs, HUD elements
 ├── Scenes/
 │   ├── Boot.unity
-│   ├── MainMenu.unity
 │   ├── Gameplay.unity
 │   └── Roadmap.unity
 ├── Scripts/
@@ -492,7 +491,7 @@ Assets/
 │   │   │   └── ExtraBottleFlow.cs
 │   │   ├── UI/
 │   │   │   ├── Screens/
-│   │   │   │   ├── MainMenuScreen.cs
+│   │   │   │   ├── HubScreen.cs
 │   │   │   │   ├── RoadmapScreen.cs
 │   │   │   │   ├── GameplayHUD.cs
 │   │   │   │   ├── LevelCompleteScreen.cs
@@ -565,7 +564,7 @@ Assets/
 
 | Asset Type | Convention | Example |
 |---|---|---|
-| Scenes | PascalCase | `Boot.unity`, `MainMenu.unity` |
+| Scenes | PascalCase | `Boot.unity`, `Gameplay.unity` |
 | Prefabs | PascalCase | `Container.prefab`, `RoadmapNode.prefab` |
 | Sprites | kebab-case | `bg-paris-morning.png`, `drink-mango.png` |
 | SO assets | PascalCase | `DifficultyConfig.asset`, `LevelCompleted.asset` |
@@ -661,7 +660,7 @@ private void SpawnContainers(LevelDefinition level)
 public enum GameFlowState
 {
     Boot,
-    MainMenu,
+    MainMenu,    // Hub screen (HubScreen.cs) registers under this value
     Roadmap,
     Playing,
     LevelComplete

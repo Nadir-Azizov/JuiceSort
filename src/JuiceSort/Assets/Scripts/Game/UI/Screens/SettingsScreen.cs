@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Core;
 using JuiceSort.Game.Audio;
 using JuiceSort.Game.Progression;
@@ -12,8 +13,8 @@ namespace JuiceSort.Game.UI.Screens
     /// </summary>
     public class SettingsScreen : MonoBehaviour
     {
-        private Text _soundText;
-        private Text _musicText;
+        private TextMeshProUGUI _soundText;
+        private TextMeshProUGUI _musicText;
         private bool _soundEnabled = true;
         private bool _musicEnabled = true;
 
@@ -85,7 +86,7 @@ namespace JuiceSort.Game.UI.Screens
 
             go.AddComponent<GraphicRaycaster>();
 
-            // Background
+            // Gradient Background
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(go.transform, false);
             var bgRect = bgGo.AddComponent<RectTransform>();
@@ -94,12 +95,13 @@ namespace JuiceSort.Game.UI.Screens
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
             var bgImage = bgGo.AddComponent<Image>();
-            bgImage.color = ThemeConfig.GetColor(LevelGen.LevelMood.Morning, ThemeColorType.Background);
+            bgImage.sprite = ThemeConfig.CreateGradientSprite(ThemeConfig.CurrentMood);
+            bgImage.type = Image.Type.Simple;
 
             var screen = go.AddComponent<SettingsScreen>();
 
             // Title
-            CreateLabel(go.transform, "Title", "Settings", 60,
+            CreateLabel(go.transform, "Title", "Settings", ThemeConfig.FontSizeHeader,
                 new Vector2(0.1f, 0.75f), new Vector2(0.9f, 0.9f));
 
             // Sound toggle
@@ -137,17 +139,17 @@ namespace JuiceSort.Game.UI.Screens
             backTextRect.anchorMax = Vector2.one;
             backTextRect.offsetMin = Vector2.zero;
             backTextRect.offsetMax = Vector2.zero;
-            var backText = backTextGo.AddComponent<Text>();
+            var backText = backTextGo.AddComponent<TextMeshProUGUI>();
             backText.text = "Back";
-            backText.fontSize = 40;
-            backText.alignment = TextAnchor.MiddleCenter;
+            backText.fontSize = ThemeConfig.FontSizeBody;
+            backText.alignment = TextAlignmentOptions.Center;
             backText.color = Color.white;
-            backText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            backText.font = ThemeConfig.GetFont();
 
             return go;
         }
 
-        private static void CreateLabel(Transform parent, string name, string text, int fontSize, Vector2 anchorMin, Vector2 anchorMax)
+        private static void CreateLabel(Transform parent, string name, string text, float fontSize, Vector2 anchorMin, Vector2 anchorMax)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -156,15 +158,16 @@ namespace JuiceSort.Game.UI.Screens
             rect.anchorMax = anchorMax;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            var t = go.AddComponent<Text>();
+            var t = go.AddComponent<TextMeshProUGUI>();
             t.text = text;
             t.fontSize = fontSize;
-            t.alignment = TextAnchor.MiddleCenter;
-            t.color = Color.white;
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.alignment = TextAlignmentOptions.Center;
+            t.color = ThemeConfig.GetColor(ThemeColorType.TextPrimary);
+            t.font = ThemeConfig.GetFontBold();
+            t.fontStyle = TMPro.FontStyles.Bold;
         }
 
-        private static Text CreateToggleButton(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, UnityEngine.Events.UnityAction onClick)
+        private static TextMeshProUGUI CreateToggleButton(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, UnityEngine.Events.UnityAction onClick)
         {
             var btnGo = new GameObject(name);
             btnGo.transform.SetParent(parent, false);
@@ -186,12 +189,12 @@ namespace JuiceSort.Game.UI.Screens
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
-            var text = textGo.AddComponent<Text>();
+            var text = textGo.AddComponent<TextMeshProUGUI>();
             text.text = name;
-            text.fontSize = 40;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = ThemeConfig.FontSizeBody;
+            text.alignment = TextAlignmentOptions.Center;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = ThemeConfig.GetFont();
             return text;
         }
     }

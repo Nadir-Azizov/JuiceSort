@@ -1,0 +1,38 @@
+<svg width="256" height="256" viewBox="0 0 120 110" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="gold-a" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#D4A017"/>
+    <stop offset="45%" stop-color="#B8860B"/>
+    <stop offset="100%" stop-color="#8B6914"/>
+  </linearGradient>
+  <linearGradient id="gold-b" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#8B6914"/>
+    <stop offset="50%" stop-color="#C49520"/>
+    <stop offset="100%" stop-color="#D4A017"/>
+  </linearGradient>
+</defs>
+<circle cx="28" cy="28" r="15" fill="#0E0830"/>
+<path d="M5 72 Q5 48 28 44 Q51 48 51 72 Z" fill="#0E0830"/>
+<circle cx="92" cy="28" r="15" fill="#0E0830"/>
+<path d="M69 72 Q69 48 92 44 Q115 48 115 72 Z" fill="#0E0830"/>
+<circle cx="60" cy="20" r="19" fill="#7A5C12"/>
+<circle cx="60" cy="20" r="15" fill="url(#gold-b)"/>
+<path d="M28 82 Q28 50 60 46 Q92 50 92 82 Z" fill="#7A5C12"/>
+<path d="M33 80 Q33 54 60 50 Q87 54 87 80 Z" fill="url(#gold-a)"/>
+<polygon points="46,10 50,0 55,7 60,-4 65,7 70,0 74,10" fill="#150D40"/>
+<polygon points="48,10 51,2 55,8 60,-1 65,8 69,2 72,10" fill="#2D1B69"/>
+<circle cx="55" cy="6" r="2" fill="#C49520"/>
+<circle cx="60" cy="2" r="2.5" fill="#D4A017"/>
+<circle cx="65" cy="6" r="2" fill="#C49520"/>
+<circle cx="53" cy="21" r="2.5" fill="#150D40"/>
+<circle cx="67" cy="21" r="2.5" fill="#150D40"/>
+<circle cx="54" cy="20" r="1" fill="#D4A017"/>
+<circle cx="68" cy="20" r="1" fill="#D4A017"/>
+<path d="M54 27 Q60 34 66 27" fill="none" stroke="#5C4510" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="47" cy="26" rx="4" ry="2.5" fill="#C49520" opacity="0.25"/>
+<ellipse cx="73" cy="26" rx="4" ry="2.5" fill="#C49520" opacity="0.25"/>
+<circle cx="60" cy="68" r="8" fill="#150D40"/>
+<text style="font-family:sans-serif;font-size:11px;font-weight:700;fill:#C49520" x="60" y="72" text-anchor="middle">T</text>
+<polygon points="108,8 110,3 112,8 117,10 112,12 110,17 108,12 103,10" fill="#D4A017" opacity="0.85"/>
+<polygon points="5,10 6.5,6 8,10 12,11.5 8,13 6.5,17 5,13 1,11.5" fill="#C49520" opacity="0.6"/>
+</svg>

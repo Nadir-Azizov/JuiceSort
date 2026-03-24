@@ -1,0 +1,29 @@
+<svg width="256" height="256" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="gold-a" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#D4A017"/>
+    <stop offset="45%" stop-color="#B8860B"/>
+    <stop offset="100%" stop-color="#8B6914"/>
+  </linearGradient>
+  <linearGradient id="gold-b" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="#8B6914"/>
+    <stop offset="50%" stop-color="#C49520"/>
+    <stop offset="100%" stop-color="#D4A017"/>
+  </linearGradient>
+</defs>
+<path d="M28 32 Q26 82 44 87 L76 87 Q94 82 92 32 Z" fill="#7A5C12"/>
+<path d="M32 36 Q30 78 47 83 L73 83 Q90 78 88 36 Z" fill="url(#gold-a)"/>
+<path d="M36 40 Q35 72 50 77 L70 77 Q85 72 84 40 Z" fill="url(#gold-b)"/>
+<path d="M28 42 Q6 42 9 62 Q12 78 28 72" fill="none" stroke="#7A5C12" stroke-width="6" stroke-linecap="round"/>
+<path d="M29 44 Q10 44 12 62 Q14 75 29 70" fill="none" stroke="#B8860B" stroke-width="3" stroke-linecap="round"/>
+<path d="M92 42 Q114 42 111 62 Q108 78 92 72" fill="none" stroke="#7A5C12" stroke-width="6" stroke-linecap="round"/>
+<path d="M91 44 Q110 44 108 62 Q106 75 91 70" fill="none" stroke="#B8860B" stroke-width="3" stroke-linecap="round"/>
+<rect x="44" y="87" width="32" height="8" rx="2" fill="#150D40"/>
+<rect x="34" y="95" width="52" height="10" rx="5" fill="#2D1B69"/>
+<polygon points="60,44 64,56 77,56 67,63 70,74 60,67 50,74 53,63 43,56 56,56" fill="#150D40"/>
+<polygon points="60,47 63,57 73,57 65,62 68,71 60,65 52,71 55,62 47,57 57,57" fill="#1E1560"/>
+<ellipse cx="44" cy="44" rx="7" ry="3" fill="#D4A017" opacity="0.2" transform="rotate(-15,44,44)"/>
+<polygon points="105,28 107,23 109,28 114,30 109,32 107,37 105,32 100,30" fill="#D4A017" opacity="0.9"/>
+<polygon points="15,28 16.5,24 18,28 22,29.5 18,31 16.5,35 15,31 11,29.5" fill="#C49520" opacity="0.7"/>
+<polygon points="60,20 61,17 62,20 65,21 62,22 61,25 60,22 57,21" fill="#D4A017" opacity="0.9"/>
+</svg>

@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-24  # Epic 10 post-completion code review fixes applied
+last_updated: 2026-03-24  # Epic 11 redesigned: new stories 11.4 hub, 11.6 HUD overhaul, 11.7 loading, 11.8 roadmap
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -134,12 +134,13 @@ development_status:
   10-8-pour-visual-fixes: done
   10-9-pour-stream-rework: done
 
-  # Epic 11: UI/UX Overhaul (7 stories)
+  # Epic 11: UI/UX Overhaul (8 stories — 3 done, 5 remaining)
   epic-11: in-progress
   11-1-responsive-bottle-layout: done               # SO HIGH priority
-  11-2-hud-redesign: done                          # HIGH priority
-  11-3-gradient-backgrounds-typography: backlog  # HIGH priority
-  11-4-icon-system: backlog                 # HIGH priority
-  11-5-extra-bottle-relayout: done             # MEDIUM priority (depends on 11.1)
-  11-6-main-menu-redesign: backlog          # LOW priority
-  11-7-roadmap-redesign: backlog            # LOW priority
+  11-2-hud-redesign: done                           # HIGH priority
+  11-3-typography-gradients: done                       # HIGH priority — TMPro + custom font + gradient backgrounds
+  11-4-main-hub-screen: done                          # HIGH priority — replaces MainMenu, Level N button + bottom nav
+  11-5-extra-bottle-relayout: done                  # MEDIUM priority (depends on 11.1)
+  11-6-gameplay-hud-overhaul: ready-for-dev         # HIGH priority — expandable settings gear, bottom action panel
+  11-7-loading-screen: ready-for-dev                # MEDIUM priority — cupboard scene, filling bottle, fruit loader
+  11-8-roadmap-redesign: ready-for-dev              # MEDIUM priority — vertical journey path with level nodes

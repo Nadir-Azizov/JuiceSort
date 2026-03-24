@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using JuiceSort.Game.LevelGen;
 using JuiceSort.Game.Puzzle;
 
@@ -15,6 +16,39 @@ namespace JuiceSort.Game.UI
         /// Screens and components read this for mood-aware styling.
         /// </summary>
         public static LevelMood CurrentMood { get; set; } = LevelMood.Morning;
+
+        // --- Font Size Hierarchy (at 1080×1920 reference) ---
+        public const float FontSizeTitle = 72f;
+        public const float FontSizeHeader = 38f;
+        public const float FontSizeBody = 30f;
+        public const float FontSizeSecondary = 22f;
+        public const float FontSizeSmall = 18f;
+
+        // --- Font Access ---
+        private static TMP_FontAsset _fontRegular;
+
+        public static TMP_FontAsset GetFont()
+        {
+            if (_fontRegular == null)
+            {
+                _fontRegular = Resources.Load<TMP_FontAsset>("Fonts/Nunito-Regular SDF");
+                if (_fontRegular == null)
+                {
+                    Debug.LogWarning("[ThemeConfig] Font 'Fonts/Nunito-Regular SDF' not found. Using TMP default font. Generate SDF asset in Unity Editor.");
+                    _fontRegular = TMP_Settings.defaultFontAsset;
+                }
+            }
+            return _fontRegular;
+        }
+
+        /// <summary>
+        /// Returns the same font asset as GetFont(). Use TMPro's fontStyle = FontStyles.Bold
+        /// on the TextMeshProUGUI component for bold rendering (Nunito is a variable weight font).
+        /// </summary>
+        public static TMP_FontAsset GetFontBold()
+        {
+            return GetFont();
+        }
 
         // --- Drink Colors (Tropical Fresh palette) ---
 
@@ -125,6 +159,60 @@ namespace JuiceSort.Game.UI
             return mood == LevelMood.Morning
                 ? new Color(0.98f, 0.88f, 0.72f)  // soft peach
                 : new Color(0.2f, 0.12f, 0.28f);   // warm purple
+        }
+
+        // --- Gradient Texture Helpers ---
+
+        private static Sprite _cachedMorningGradient;
+        private static Sprite _cachedNightGradient;
+
+        public static Texture2D CreateGradientTexture(Color top, Color bottom, int height = 256)
+        {
+            var tex = new Texture2D(1, height, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            for (int y = 0; y < height; y++)
+            {
+                float t = (float)y / (height - 1);
+                tex.SetPixel(0, y, Color.Lerp(bottom, top, t));
+            }
+            tex.Apply();
+            return tex;
+        }
+
+        /// <summary>
+        /// Creates an uncached gradient sprite. Callers are responsible for destroying
+        /// the returned sprite's texture (sprite.texture) when it is no longer needed
+        /// to avoid texture memory leaks.
+        /// </summary>
+        public static Sprite CreateGradientSprite(Color top, Color bottom, int height = 128)
+        {
+            var tex = CreateGradientTexture(top, bottom, height);
+            return Sprite.Create(tex, new Rect(0, 0, 1, height), new Vector2(0.5f, 0.5f));
+        }
+
+        /// <summary>
+        /// Returns a cached gradient sprite for the given mood.
+        /// Shared across all UI screens to avoid duplicate texture allocations.
+        /// </summary>
+        public static Sprite CreateGradientSprite(LevelMood mood)
+        {
+            if (mood == LevelMood.Morning)
+            {
+                if (_cachedMorningGradient == null)
+                    _cachedMorningGradient = CreateGradientSprite(
+                        GetBackgroundGradientTop(LevelMood.Morning),
+                        GetBackgroundGradientBottom(LevelMood.Morning));
+                return _cachedMorningGradient;
+            }
+            else
+            {
+                if (_cachedNightGradient == null)
+                    _cachedNightGradient = CreateGradientSprite(
+                        GetBackgroundGradientTop(LevelMood.Night),
+                        GetBackgroundGradientBottom(LevelMood.Night));
+                return _cachedNightGradient;
+            }
         }
     }
 }

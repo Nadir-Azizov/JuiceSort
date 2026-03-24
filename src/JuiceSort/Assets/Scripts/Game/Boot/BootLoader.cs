@@ -103,9 +103,9 @@ namespace JuiceSort.Game.Boot
             Services.Register<GameplayManager>(gm);
 
             // Create and register screens
-            var mainMenu = MainMenuScreen.Create();
-            DontDestroyOnLoad(mainMenu);
-            screenMgr.RegisterScreen(GameFlowState.MainMenu, mainMenu);
+            var hub = HubScreen.Create();
+            DontDestroyOnLoad(hub);
+            screenMgr.RegisterScreen(GameFlowState.MainMenu, hub);
 
             var roadmap = RoadmapScreen.Create();
             DontDestroyOnLoad(roadmap);
@@ -153,7 +153,13 @@ namespace JuiceSort.Game.Boot
             // Refresh screens when transitioning to them
             screenMgr.OnStateChanged += (state) =>
             {
-                if (state == GameFlowState.Roadmap)
+                if (state == GameFlowState.MainMenu)
+                {
+                    var hubScreen = hub.GetComponent<HubScreen>();
+                    if (hubScreen != null)
+                        hubScreen.Refresh();
+                }
+                else if (state == GameFlowState.Roadmap)
                 {
                     var roadmapScreen = roadmap.GetComponent<RoadmapScreen>();
                     if (roadmapScreen != null)

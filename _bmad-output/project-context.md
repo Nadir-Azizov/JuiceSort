@@ -140,7 +140,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - UndoStack — push, pop, overflow behavior
 
 **What to Test in PlayMode:**
-- Game flow transitions (Boot → MainMenu → Gameplay → LevelComplete)
+- Game flow transitions (Boot → Hub/MainMenu → Gameplay → LevelComplete)
 - Scene loading/unloading
 - Save/load round-trip
 

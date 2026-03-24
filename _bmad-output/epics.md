@@ -14,7 +14,7 @@
 | 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
 | 9 | Coin Economy System | Epic 1, 3, 7 | 6 implemented | Done |
 | 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 implemented | Done |
-| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 3 implemented, 4 remaining | In Progress |
+| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 3 done, 5 remaining (redesigned) | In Progress |
 
 **Total: 47 implemented stories / 57 originally planned (13 merged during development)**
 
@@ -383,33 +383,41 @@ Bottles render with smooth, animated liquid that wobbles on selection, flows vis
 ## Epic 11: UI/UX Overhaul
 
 ### Goal
-Fix all layout, sizing, and visual quality issues to deliver a polished, premium-feeling UI.
+Transform the game from a prototype feel to a premium casual puzzle game — inspired by Magic Sort and similar top water-sort games. Remove the unnecessary Play/Settings main menu, give the player a direct hub-to-gameplay flow, add visual polish with gradients, custom fonts, a loading screen, and a redesigned roadmap.
 
 ### Scope
 **Includes:**
 - Responsive bottle layout (dynamic positioning based on screen size and bottle count)
 - HUD redesign (organized top/bottom bars, consistent button sizing, coin balance display)
-- Gradient backgrounds and typography improvements
-- Consistent icon system
+- TextMeshPro migration + custom font + gradient backgrounds across all screens
+- Main hub screen replacing MainMenu (Level N button, bottom nav bar, coin display, settings)
+- Gameplay HUD overhaul (coins top-left, level label top-center, expandable settings gear, bottom action panel)
+- Loading screen (cupboard scene, filling bottle animation, fruit loading bar)
 - Extra bottle re-layout animation
-- Main menu visual redesign
-- Roadmap redesign (Candy Crush-style curved path)
+- Roadmap redesign (vertical journey path with level nodes)
 
 **Excludes:**
 - Gameplay mechanics changes
 - Audio changes
+- Shop/rewards/events/profile screens (bottom nav placeholders only)
 
 ### Dependencies
 Epic 4 (existing UI), Epic 5 (visual theme), Epic 9 (coin balance display)
 
 ### Deliverable
-All bottles fit on screen regardless of count. HUD is organized and readable. Background and typography look premium. Roadmap feels like a real journey.
+Player opens app → loading screen → hub with Level N button → one tap to play. Premium gradient backgrounds, custom typography, organized gameplay HUD with expandable settings. Roadmap accessible from hub. All screens feel polished, shiny, and "tasty."
+
+### Design References
+- Mockups: `_bmad-output/mockups/loading-screen-mockup.html`, `_bmad-output/mockups/hub-screen-mockup.html`
+- Visual direction: Magic Sort (com.blu.wsp) and similar top water-sort puzzle games
+- Flow: Loading → Hub (Level N + bottom nav) → Gameplay | Hub → Roadmap (X to close)
 
 ### Stories
 - **11.1** [SO HIGH] As a player, all bottles fit on my screen regardless of count, with proper margins and multi-row layout when needed (responsive layout system) → [11-1-responsive-bottle-layout.md](implementation-artifacts/11-1-responsive-bottle-layout.md)
 - **11.2** [HIGH] As a player, the gameplay HUD has clear, organized top and bottom bars with consistent button sizing (HUD redesign) → [11-2-hud-redesign.md](implementation-artifacts/11-2-hud-redesign.md)
-- **11.3** [HIGH] As a player, the game background uses warm gradient colors and text has proper contrast and readability (gradient backgrounds + typography)
-- **11.4** [HIGH] As a player, all icons are consistent in style and size across the game (icon system)
+- **11.3** [HIGH] As a player, all text uses a clean custom font (TextMeshPro) and all screens have warm gradient backgrounds for a premium feel (typography + gradients)
+- **11.4** [HIGH] As a player, when I open the app I land on a hub screen with a prominent Level N play button, coin display, settings gear, and bottom navigation bar — no unnecessary Play/Settings menu (main hub screen)
 - **11.5** [MEDIUM] As a player, when an extra bottle is added mid-level, all bottles smoothly rearrange to fit (re-layout animation) → [11-5-extra-bottle-relayout.md](implementation-artifacts/11-5-extra-bottle-relayout.md)
-- **11.6** [LOW] As a player, the main menu looks polished with gradient background, styled logo, and animated elements
-- **11.7** [LOW] As a player, the roadmap shows a Candy Crush-style curved path with level nodes, stars, and city labels
+- **11.6** [HIGH] As a player, the gameplay HUD shows coins top-left, "Level N" label top-center, and an expandable settings gear top-right (with music/SFX/vibration/restart/exit toggles), plus a bottom action panel with undo and add-bottle buttons (gameplay HUD overhaul)
+- **11.7** [MEDIUM] As a player, I see a sweet loading screen with a cupboard of colorful bottles, an animated filling bottle, and a fruit-themed loading bar while the game loads (loading screen)
+- **11.8** [MEDIUM] As a player, I can access a vertical journey roadmap from the hub showing level nodes on a path, with completed/current/locked states and city chapter cards (roadmap redesign)

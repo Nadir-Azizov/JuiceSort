@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Game.UI;
 
 namespace JuiceSort.Game.UI.Components
@@ -12,20 +13,23 @@ namespace JuiceSort.Game.UI.Components
     /// </summary>
     public class GameplayHUD : MonoBehaviour
     {
-        private Text _moveText;
-        private Text _undoText;
-        private Text _levelInfoText;
-        private Text _coinText;
-        private Text _extraBottleText;
-        private Text _adText;
+        private TextMeshProUGUI _moveText;
+        private TextMeshProUGUI _undoText;
+        private TextMeshProUGUI _levelInfoText;
+        private TextMeshProUGUI _coinText;
+        private TextMeshProUGUI _extraBottleText;
+        private TextMeshProUGUI _adText;
         private Button _undoButton;
         private Button _restartButton;
         private Button _extraBottleButton;
         private Button _adButton;
         private Button _settingsButton;
+        private Button _backButton;
 
         private RectTransform _topBar;
         private RectTransform _bottomBar;
+        private RectTransform _safeAreaRect;
+        private Rect _lastSafeArea;
 
         public System.Action OnUndoPressed;
         public System.Action OnRestartPressed;
@@ -107,6 +111,8 @@ namespace JuiceSort.Game.UI.Components
             safeGo.transform.SetParent(go.transform, false);
             var safeRect = safeGo.AddComponent<RectTransform>();
             ApplySafeArea(safeRect);
+            hud._safeAreaRect = safeRect;
+            hud._lastSafeArea = Screen.safeArea;
 
             // --- TOP BAR ---
             hud._topBar = CreateBar(safeGo.transform, "TopBar", true);
@@ -183,9 +189,10 @@ namespace JuiceSort.Game.UI.Components
             var backBtn = CreateSquareButton(topBar, "BackButton",
                 ThemeConfig.GetColor(ThemeColorType.ButtonSecondary));
             AnchorLeft(backBtn.GetComponent<RectTransform>(), BarMargin);
-            backBtn.GetComponentInChildren<Text>().text = "\u2190";
-            backBtn.GetComponentInChildren<Text>().fontSize = 32;
+            backBtn.GetComponentInChildren<TextMeshProUGUI>().text = "\u2190";
+            backBtn.GetComponentInChildren<TextMeshProUGUI>().fontSize = 32;
             backBtn.onClick.AddListener(() => hud.OnBackPressed?.Invoke());
+            hud._backButton = backBtn;
 
             // Level info + move counter (center)
             var infoGo = new GameObject("LevelInfo");
@@ -196,12 +203,12 @@ namespace JuiceSort.Game.UI.Components
             infoRect.offsetMin = Vector2.zero;
             infoRect.offsetMax = Vector2.zero;
 
-            hud._levelInfoText = infoGo.AddComponent<Text>();
+            hud._levelInfoText = infoGo.AddComponent<TextMeshProUGUI>();
             hud._levelInfoText.text = "Level 1";
-            hud._levelInfoText.fontSize = 24;
-            hud._levelInfoText.alignment = TextAnchor.MiddleLeft;
+            hud._levelInfoText.fontSize = ThemeConfig.FontSizeSecondary;
+            hud._levelInfoText.alignment = TextAlignmentOptions.MidlineLeft;
             hud._levelInfoText.color = Color.white;
-            hud._levelInfoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hud._levelInfoText.font = ThemeConfig.GetFont();
 
             // Move counter (right of level info, no overlap)
             var moveGo = new GameObject("MoveCounter");
@@ -212,12 +219,12 @@ namespace JuiceSort.Game.UI.Components
             moveRect.offsetMin = Vector2.zero;
             moveRect.offsetMax = Vector2.zero;
 
-            hud._moveText = moveGo.AddComponent<Text>();
+            hud._moveText = moveGo.AddComponent<TextMeshProUGUI>();
             hud._moveText.text = "Moves: 0";
-            hud._moveText.fontSize = 20;
-            hud._moveText.alignment = TextAnchor.MiddleCenter;
+            hud._moveText.fontSize = ThemeConfig.FontSizeSmall;
+            hud._moveText.alignment = TextAlignmentOptions.Center;
             hud._moveText.color = ThemeConfig.GetColor(ThemeColorType.TextSecondary);
-            hud._moveText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hud._moveText.font = ThemeConfig.GetFont();
 
             // Coin display (right of moves)
             var coinGo = new GameObject("CoinDisplay");
@@ -228,19 +235,19 @@ namespace JuiceSort.Game.UI.Components
             coinRect.offsetMin = Vector2.zero;
             coinRect.offsetMax = Vector2.zero;
 
-            hud._coinText = coinGo.AddComponent<Text>();
+            hud._coinText = coinGo.AddComponent<TextMeshProUGUI>();
             hud._coinText.text = "0";
-            hud._coinText.fontSize = 22;
-            hud._coinText.alignment = TextAnchor.MiddleRight;
+            hud._coinText.fontSize = ThemeConfig.FontSizeSecondary;
+            hud._coinText.alignment = TextAlignmentOptions.MidlineRight;
             hud._coinText.color = ThemeConfig.GetColor(ThemeColorType.StarGold);
-            hud._coinText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hud._coinText.font = ThemeConfig.GetFont();
 
             // Settings button (far right)
             hud._settingsButton = CreateSquareButton(topBar, "SettingsButton",
                 ThemeConfig.GetColor(ThemeColorType.ButtonSecondary));
             AnchorRight(hud._settingsButton.GetComponent<RectTransform>(), BarMargin);
-            hud._settingsButton.GetComponentInChildren<Text>().text = "\u2699";
-            hud._settingsButton.GetComponentInChildren<Text>().fontSize = 32;
+            hud._settingsButton.GetComponentInChildren<TextMeshProUGUI>().text = "\u2699";
+            hud._settingsButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 32;
             hud._settingsButton.onClick.AddListener(() => hud.OnSettingsPressed?.Invoke());
         }
 
@@ -250,9 +257,9 @@ namespace JuiceSort.Game.UI.Components
             hud._undoButton = CreateSquareButton(bottomBar, "UndoButton",
                 ThemeConfig.GetColor(ThemeColorType.ButtonSecondary));
             AnchorLeft(hud._undoButton.GetComponent<RectTransform>(), BarMargin);
-            hud._undoText = hud._undoButton.GetComponentInChildren<Text>();
+            hud._undoText = hud._undoButton.GetComponentInChildren<TextMeshProUGUI>();
             hud._undoText.text = "\u21B6 0";
-            hud._undoText.fontSize = 24;
+            hud._undoText.fontSize = ThemeConfig.FontSizeSecondary;
             hud._undoButton.onClick.AddListener(() => hud.OnUndoPressed?.Invoke());
 
             // Watch Ad button (between undo and restart)
@@ -263,26 +270,26 @@ namespace JuiceSort.Game.UI.Components
             adRect.anchorMax = new Vector2(0.3f, 0.5f);
             adRect.pivot = new Vector2(0.5f, 0.5f);
             adRect.anchoredPosition = Vector2.zero;
-            hud._adText = hud._adButton.GetComponentInChildren<Text>();
+            hud._adText = hud._adButton.GetComponentInChildren<TextMeshProUGUI>();
             hud._adText.text = "\u25B6";
-            hud._adText.fontSize = 20;
+            hud._adText.fontSize = ThemeConfig.FontSizeSmall;
             hud._adButton.onClick.AddListener(() => hud.OnAdWatchPressed?.Invoke());
 
             // Restart button (center)
             hud._restartButton = CreateSquareButton(bottomBar, "RestartButton",
                 ThemeConfig.GetColor(ThemeColorType.ButtonSecondary));
             AnchorCenter(hud._restartButton.GetComponent<RectTransform>());
-            hud._restartButton.GetComponentInChildren<Text>().text = "\u21BB";
-            hud._restartButton.GetComponentInChildren<Text>().fontSize = 32;
+            hud._restartButton.GetComponentInChildren<TextMeshProUGUI>().text = "\u21BB";
+            hud._restartButton.GetComponentInChildren<TextMeshProUGUI>().fontSize = 32;
             hud._restartButton.onClick.AddListener(() => hud.OnRestartPressed?.Invoke());
 
             // Extra bottle button (right)
             hud._extraBottleButton = CreateSquareButton(bottomBar, "ExtraBottleButton",
                 ThemeConfig.GetColor(ThemeColorType.ButtonPrimary));
             AnchorRight(hud._extraBottleButton.GetComponent<RectTransform>(), BarMargin);
-            hud._extraBottleText = hud._extraBottleButton.GetComponentInChildren<Text>();
+            hud._extraBottleText = hud._extraBottleButton.GetComponentInChildren<TextMeshProUGUI>();
             hud._extraBottleText.text = "+2";
-            hud._extraBottleText.fontSize = 28;
+            hud._extraBottleText.fontSize = ThemeConfig.FontSizeBody;
             hud._extraBottleButton.onClick.AddListener(() => hud.OnExtraBottlePressed?.Invoke());
         }
 
@@ -309,12 +316,12 @@ namespace JuiceSort.Game.UI.Components
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
 
-            var text = textGo.AddComponent<Text>();
+            var text = textGo.AddComponent<TextMeshProUGUI>();
             text.text = name;
-            text.fontSize = 26;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = ThemeConfig.FontSizeBody;
+            text.alignment = TextAlignmentOptions.Center;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = ThemeConfig.GetFont();
 
             return button;
         }
@@ -343,6 +350,25 @@ namespace JuiceSort.Game.UI.Components
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = Vector2.zero;
+        }
+
+        void LateUpdate()
+        {
+            if (Screen.safeArea != _lastSafeArea)
+            {
+                _lastSafeArea = Screen.safeArea;
+                ApplySafeArea(_safeAreaRect);
+            }
+        }
+
+        void OnDestroy()
+        {
+            OnUndoPressed = null;
+            OnRestartPressed = null;
+            OnExtraBottlePressed = null;
+            OnSettingsPressed = null;
+            OnBackPressed = null;
+            OnAdWatchPressed = null;
         }
     }
 }

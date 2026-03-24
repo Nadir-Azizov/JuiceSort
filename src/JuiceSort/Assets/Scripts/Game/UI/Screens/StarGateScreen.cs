@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using JuiceSort.Core;
 using JuiceSort.Game.LevelGen;
 using JuiceSort.Game.Progression;
@@ -16,7 +17,7 @@ namespace JuiceSort.Game.UI.Screens
     /// </summary>
     public class StarGateScreen : MonoBehaviour
     {
-        private Text _headerText;
+        private TextMeshProUGUI _headerText;
         private LevelListView _levelList;
 
         public event Action<int> OnLevelTapped;
@@ -61,7 +62,7 @@ namespace JuiceSort.Game.UI.Screens
 
             go.AddComponent<GraphicRaycaster>();
 
-            // Background
+            // Gradient Background
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(go.transform, false);
             var bgRect = bgGo.AddComponent<RectTransform>();
@@ -70,7 +71,8 @@ namespace JuiceSort.Game.UI.Screens
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
             var bgImage = bgGo.AddComponent<Image>();
-            bgImage.color = ThemeConfig.GetColor(ThemeColorType.Overlay);
+            bgImage.sprite = ThemeConfig.CreateGradientSprite(ThemeConfig.CurrentMood);
+            bgImage.type = Image.Type.Simple;
 
             var screen = go.AddComponent<StarGateScreen>();
 
@@ -82,11 +84,12 @@ namespace JuiceSort.Game.UI.Screens
             headerRect.anchorMax = new Vector2(0.95f, 0.97f);
             headerRect.offsetMin = Vector2.zero;
             headerRect.offsetMax = Vector2.zero;
-            screen._headerText = headerGo.AddComponent<Text>();
-            screen._headerText.fontSize = 36;
-            screen._headerText.alignment = TextAnchor.MiddleCenter;
-            screen._headerText.color = Color.white;
-            screen._headerText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            screen._headerText = headerGo.AddComponent<TextMeshProUGUI>();
+            screen._headerText.fontSize = ThemeConfig.FontSizeHeader;
+            screen._headerText.alignment = TextAlignmentOptions.Center;
+            screen._headerText.color = ThemeConfig.GetColor(ThemeColorType.TextPrimary);
+            screen._headerText.font = ThemeConfig.GetFontBold();
+            screen._headerText.fontStyle = TMPro.FontStyles.Bold;
 
             // Level list area
             var listArea = new GameObject("ListArea");

@@ -13,6 +13,8 @@ namespace JuiceSort.Game.Puzzle
     {
         private BottleContainerView[] _containerViews;
         private LayoutConfig _layoutConfig;
+        private Camera _mainCamera;
+        private Action _pendingAnimComplete;
 
         // Animation constants
         private const float RelayoutDuration = 0.3f;
@@ -27,8 +29,9 @@ namespace JuiceSort.Game.Puzzle
             int count = puzzleState.ContainerCount;
             _containerViews = new BottleContainerView[count];
             _layoutConfig = LayoutConfig.Default();
+            _mainCamera = Camera.main;
 
-            var cam = Camera.main;
+            var cam = _mainCamera;
             float camOrthoSize = cam != null ? cam.orthographicSize : 5f;
             float camAspect = cam != null ? cam.aspect : 9f / 16f;
 
@@ -51,6 +54,15 @@ namespace JuiceSort.Game.Puzzle
             }
 
             Debug.Log($"[BottleBoardView] Created {count} bottles. Scale={layout.Scale:F3}, rows={layout.RowCount}, boardY={layout.BoardY:F2}");
+        }
+
+        private void OnDisable()
+        {
+            if (_pendingAnimComplete != null)
+            {
+                _pendingAnimComplete.Invoke();
+                _pendingAnimComplete = null;
+            }
         }
 
         private void OnDestroy()
@@ -96,7 +108,7 @@ namespace JuiceSort.Game.Puzzle
             if (_layoutConfig == null)
                 _layoutConfig = LayoutConfig.Default();
 
-            var cam = Camera.main;
+            var cam = _mainCamera;
             float camOrthoSize = cam != null ? cam.orthographicSize : 5f;
             float camAspect = cam != null ? cam.aspect : 9f / 16f;
 
@@ -114,7 +126,7 @@ namespace JuiceSort.Game.Puzzle
             var layout = RecalculateLayout(newCount);
 
             // Update board position
-            var cam = Camera.main;
+            var cam = _mainCamera;
             transform.position = new Vector3(
                 cam != null ? cam.transform.position.x : 0f,
                 layout.BoardY,
@@ -144,6 +156,8 @@ namespace JuiceSort.Game.Puzzle
         /// </summary>
         private IEnumerator AnimateRelayout(BottleLayout layout, BottleContainerView newBottle, Action onComplete)
         {
+            _pendingAnimComplete = onComplete;
+
             int existingCount = _containerViews.Length - 1; // Last one is the new bottle
 
             // Capture current state of existing bottles
@@ -151,6 +165,7 @@ namespace JuiceSort.Game.Puzzle
             var fromScales = new Vector3[existingCount];
             for (int i = 0; i < existingCount; i++)
             {
+                if (_containerViews[i] == null) continue;
                 fromPositions[i] = _containerViews[i].transform.localPosition;
                 fromScales[i] = _containerViews[i].transform.localScale;
             }
@@ -166,6 +181,7 @@ namespace JuiceSort.Game.Puzzle
 
                 for (int i = 0; i < existingCount; i++)
                 {
+                    if (_containerViews[i] == null) continue;
                     var targetPos = new Vector3(layout.Positions[i].x, layout.Positions[i].y, 0f);
                     _containerViews[i].transform.localPosition = Vector3.Lerp(fromPositions[i], targetPos, t);
                     _containerViews[i].transform.localScale = Vector3.Lerp(fromScales[i], targetScale, t);
@@ -177,26 +193,35 @@ namespace JuiceSort.Game.Puzzle
             // Snap to final positions and update rest state
             for (int i = 0; i < existingCount; i++)
             {
+                if (_containerViews[i] == null) continue;
                 _containerViews[i].transform.localPosition = new Vector3(layout.Positions[i].x, layout.Positions[i].y, 0f);
                 _containerViews[i].transform.localScale = targetScale;
                 _containerViews[i].UpdateRestState();
             }
 
             // Phase 2: Pop-in new bottle (0.2s, EaseOutBack)
-            elapsed = 0f;
-            while (elapsed < PopInDuration)
+            if (newBottle != null)
             {
-                elapsed += Time.deltaTime;
-                float t = EaseOutBack(Mathf.Clamp01(elapsed / PopInDuration));
-                float s = layout.Scale * t;
-                newBottle.transform.localScale = new Vector3(s, s, 1f);
-                yield return null;
+                elapsed = 0f;
+                while (elapsed < PopInDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = EaseOutBack(Mathf.Clamp01(elapsed / PopInDuration));
+                    float s = layout.Scale * t;
+                    if (newBottle == null) break;
+                    newBottle.transform.localScale = new Vector3(s, s, 1f);
+                    yield return null;
+                }
+
+                // Snap to final scale and update rest state
+                if (newBottle != null)
+                {
+                    newBottle.transform.localScale = targetScale;
+                    newBottle.UpdateRestState();
+                }
             }
 
-            // Snap to final scale and update rest state
-            newBottle.transform.localScale = targetScale;
-            newBottle.UpdateRestState();
-
+            _pendingAnimComplete = null;
             onComplete?.Invoke();
         }
 
