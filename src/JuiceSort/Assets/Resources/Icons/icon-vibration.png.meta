@@ -1,13 +1,25 @@
 fileFormatVersion: 2
-guid: d1c7958880954244f9375d5fd6b2b6d2
+guid: 1e949297438c9354faefea16887a37f9
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1124716357137111309
-    second: icon_home2_0
+      213: -6963401162856680601
+    second: icon-vibration_0
   - first:
-      213: -4235406585329177923
-    second: icon_home2_1
+      213: 3299220271208631395
+    second: icon-vibration_1
+  - first:
+      213: -381301376283258514
+    second: icon-vibration_2
+  - first:
+      213: 2006460715576790620
+    second: icon-vibration_3
+  - first:
+      213: 1018616763115608741
+    second: icon-vibration_4
+  - first:
+      213: 2749344690139565865
+    second: icon-vibration_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,7 +61,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -116,13 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: icon_home2_0
+      name: icon-vibration_0
       rect:
         serializedVersion: 2
-        x: 18
-        y: 30
-        width: 220
-        height: 204
+        x: 15
+        y: 71
+        width: 18
+        height: 106
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -131,20 +143,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d099a3c519bcb9f00800000000000000
-      internalID: 1124716357137111309
+      spriteID: 763b26b39870d5f90800000000000000
+      internalID: -6963401162856680601
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: icon_home2_1
+      name: icon-vibration_1
       rect:
         serializedVersion: 2
-        x: 211
-        y: 207
-        width: 31
-        height: 31
+        x: 39
+        y: 74
+        width: 18
+        height: 103
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -153,8 +165,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dbaaa1a9620d835c0800000000000000
-      internalID: -4235406585329177923
+      spriteID: 36c882d4b5f29cd20800000000000000
+      internalID: 3299220271208631395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: icon-vibration_2
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 71
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e61d4422b6855baf0800000000000000
+      internalID: -381301376283258514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: icon-vibration_3
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 47
+        width: 106
+        height: 162
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5e0bbfd36168db10800000000000000
+      internalID: 2006460715576790620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: icon-vibration_4
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 71
+        width: 18
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5aa93c79c8ad22e00800000000000000
+      internalID: 1018616763115608741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: icon-vibration_5
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 71
+        width: 18
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92f00e4dd62a72620800000000000000
+      internalID: 2749344690139565865
       vertices: []
       indices: 
       edges: []
@@ -163,7 +263,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -173,8 +273,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      icon_home2_0: 1124716357137111309
-      icon_home2_1: -4235406585329177923
+      icon-vibration_0: -6963401162856680601
+      icon-vibration_1: 3299220271208631395
+      icon-vibration_2: -381301376283258514
+      icon-vibration_3: 2006460715576790620
+      icon-vibration_4: 1018616763115608741
+      icon-vibration_5: 2749344690139565865
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

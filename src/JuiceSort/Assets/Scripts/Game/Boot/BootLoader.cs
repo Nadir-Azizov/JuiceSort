@@ -147,8 +147,8 @@ namespace JuiceSort.Game.Boot
             DontDestroyOnLoad(settings);
             screenMgr.RegisterScreen(GameFlowState.Settings, settings);
 
-            // Ambient floating light particles (persistent across all screens)
-            FloatingLights.Create();
+            // Ambient floating light particles disabled — caused streaking line artifacts
+            // FloatingLights.Create();
 
             // Refresh screens when transitioning to them
             screenMgr.OnStateChanged += (state) =>

@@ -1,13 +1,13 @@
 fileFormatVersion: 2
-guid: 3acea68388192f74a873b202ca2467ec
+guid: e2b9c5d9db1122e45a803b5ddbc7836a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7074301987195798890
-    second: icon_shop2_0
+      213: -5993966328970527534
+    second: icon-exit_0
   - first:
-      213: -1042942421446307327
-    second: icon_shop2_1
+      213: 6143896450423885486
+    second: icon-exit_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,7 +49,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -116,13 +116,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: icon_shop2_0
+      name: icon-exit_0
       rect:
         serializedVersion: 2
-        x: 36
-        y: 205
-        width: 24
-        height: 25
+        x: 0
+        y: 0
+        width: 153
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -131,20 +131,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a6545a41d28fc2260800000000000000
-      internalID: 7074301987195798890
+      spriteID: 2dc3f06916721dca0800000000000000
+      internalID: -5993966328970527534
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: icon_shop2_1
+      name: icon-exit_1
       rect:
         serializedVersion: 2
-        x: 38
-        y: 38
-        width: 180
-        height: 211
+        x: 71
+        y: 55
+        width: 185
+        height: 146
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -153,8 +153,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 102d188b469b681f0800000000000000
-      internalID: -1042942421446307327
+      spriteID: eae8c481541834550800000000000000
+      internalID: 6143896450423885486
       vertices: []
       indices: 
       edges: []
@@ -163,7 +163,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -173,8 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      icon_shop2_0: 7074301987195798890
-      icon_shop2_1: -1042942421446307327
+      icon-exit_0: -5993966328970527534
+      icon-exit_1: 6143896450423885486
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

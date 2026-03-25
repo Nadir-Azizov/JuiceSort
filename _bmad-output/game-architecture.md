@@ -490,13 +490,18 @@ Assets/
 │   │   │   ├── AdManager.cs
 │   │   │   └── ExtraBottleFlow.cs
 │   │   ├── UI/
+│   │   │   ├── ThemeConfig.cs
+│   │   │   ├── ScreenManager.cs
 │   │   │   ├── Screens/
 │   │   │   │   ├── HubScreen.cs
 │   │   │   │   ├── RoadmapScreen.cs
-│   │   │   │   ├── GameplayHUD.cs
 │   │   │   │   ├── LevelCompleteScreen.cs
-│   │   │   │   └── SettingsScreen.cs
+│   │   │   │   ├── SettingsScreen.cs
+│   │   │   │   └── StarGateScreen.cs
 │   │   │   └── Components/
+│   │   │       ├── GameplayHUD.cs
+│   │   │       ├── ButtonBounce.cs
+│   │   │       ├── UIShapeUtils.cs
 │   │   │       ├── StarDisplay.cs
 │   │   │       └── RoadmapNode.cs
 │   │   ├── Economy/
@@ -539,8 +544,10 @@ Assets/
 | Save System | `Game/Save/` | JSON persistence |
 | Audio | `Game/Audio/` | Music, SFX, mood-based track switching |
 | Ad Integration | `Game/Ads/` | AdMob, extra bottle flow |
-| UI Screens | `Game/UI/Screens/` | Each screen as a separate component |
-| UI Components | `Game/UI/Components/` | Reusable UI widgets |
+| UI Screens | `Game/UI/Screens/` | Each screen as a separate `Create()` factory |
+| UI Components | `Game/UI/Components/` | GameplayHUD, ButtonBounce, UIShapeUtils, reusable widgets |
+| UI Style System | `Game/UI/ThemeConfig.cs` | Mood-aware colors, fonts, gradient sprites |
+| Screen Navigation | `Game/UI/ScreenManager.cs` | Centralized screen transitions |
 | Touch Input | `Game/Input/` | Tap detection and routing |
 | Debug Tools | `Game/Debug/` | Development-only utilities |
 | Coin Economy | `Game/Economy/` | CoinManager, CoinConfig, streak tracking, coin persistence |
@@ -576,6 +583,209 @@ Assets/
 - **Game → references Core only** — never reference Unity Editor APIs
 - **Tests → references both** Core and Game
 - **Cross-system communication** goes through Service Locator or SO Events — no direct GetComponent between systems
+
+---
+
+## UI Architecture
+
+All UI in JuiceSort is **100% programmatic** — no prefabs, no scene-placed UI. Every screen and component is built in code via static factory methods. This section documents the patterns that every AI agent must follow when creating or modifying UI.
+
+### Screen Creation Pattern
+
+Every screen uses a static `Create()` factory that returns a fully configured `GameObject`:
+
+```csharp
+public static GameObject Create()
+{
+    var go = new GameObject("ScreenName");
+
+    // Canvas
+    var cv = go.AddComponent<Canvas>();
+    cv.renderMode = RenderMode.ScreenSpaceOverlay;
+    cv.sortingOrder = 10;  // varies per screen
+
+    // CanvasScaler — ALWAYS these values
+    var sc = go.AddComponent<CanvasScaler>();
+    sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+    sc.referenceResolution = new Vector2(1080f, 1920f);
+    sc.matchWidthOrHeight = 0.5f;
+
+    go.AddComponent<GraphicRaycaster>();
+
+    // ... build hierarchy, return go
+}
+```
+
+**GameplayHUD is an exception** — it takes a `Transform canvasParent` parameter and attaches to an existing canvas rather than creating its own. Components that live inside another screen follow this pattern.
+
+**Sorting order allocation:**
+
+| Screen | sortingOrder |
+|---|---|
+| HubScreen | `10` |
+| RoadmapScreen | `10` |
+| GameplayHUD | parent canvas |
+| LevelCompleteScreen | `20` |
+| StarGateScreen | `25` |
+| SettingsScreen | `10` |
+
+### CanvasScaler Constants (mandatory for all UI)
+
+| Property | Value | Never Change |
+|---|---|---|
+| Scale mode | `ScaleWithScreenSize` | Yes |
+| Reference resolution | `1080 × 1920` | Yes |
+| Match width or height | `0.5` | Yes |
+| Orientation | Portrait | Yes |
+
+### SafeArea Handling
+
+Two patterns exist. Use **Pattern A** for any screen with elements near screen edges (top bar, bottom bar, notch-sensitive content):
+
+**Pattern A — Explicit SafeArea container** (HubScreen, GameplayHUD):
+```csharp
+private static void ApplySafeArea(RectTransform rect)
+{
+    var safeArea = Screen.safeArea;
+    var screenW = Screen.width;
+    var screenH = Screen.height;
+    if (screenW <= 0 || screenH <= 0) return;
+
+    rect.anchorMin = new Vector2(safeArea.x / screenW, safeArea.y / screenH);
+    rect.anchorMax = new Vector2(safeArea.xMax / screenW, safeArea.yMax / screenH);
+    rect.offsetMin = Vector2.zero;
+    rect.offsetMax = Vector2.zero;
+}
+```
+- Create a `SafeArea` child GameObject, apply `ApplySafeArea()`, place all content inside it
+- GameplayHUD recalculates in `LateUpdate()` when `Screen.safeArea` changes
+
+**Pattern B — Implicit** (screens with no edge-hugging content): rely on centered layout and margins. Acceptable for modal overlays and centered content.
+
+### ThemeConfig — Central Style System
+
+`ThemeConfig` is the **single source of truth** for all visual constants. Never hardcode colors, fonts, or sizes outside of ThemeConfig.
+
+**What ThemeConfig provides:**
+
+| Category | API | Example |
+|---|---|---|
+| **Mood-aware colors** | `GetColor(ThemeColorType)` | `GetColor(ThemeColorType.TextPrimary)` — returns Night or Morning variant based on `CurrentMood` |
+| **Font** | `GetFont()` / `GetFontBold()` | Returns `Nunito-Regular SDF`. Use `fontStyle = FontStyles.Bold` for bold |
+| **Font sizes** | Constants | `FontSizeTitle=72`, `FontSizeHeader=38`, `FontSizeBody=30`, `FontSizeSecondary=22`, `FontSizeSmall=18` |
+| **Gradient sprites** | `CreateGradientSprite(mood)` | Cached mood-aware background gradients |
+| **Gradient helpers** | `CreateGradientSprite(top, bottom)` | Uncached custom gradients — caller manages texture lifecycle |
+| **Drink colors** | `GetDrinkColor(DrinkColor)` | Tropical Fresh palette |
+
+**Mood system:** `ThemeConfig.CurrentMood` is set by GameplayManager when loading a level. All UI reads from this to adapt Night vs Morning styling. Color types: `TextPrimary`, `TextSecondary`, `ButtonPrimary`, `ButtonSecondary`, `StarGold`, `Background`, `ContainerIdle`, `ContainerSelected`, `EmptySlot`, `Overlay`.
+
+### UIShapeUtils — Procedural Sprite Generation
+
+`UIShapeUtils` (`Game/UI/Components/UIShapeUtils.cs`) generates all UI shape sprites at runtime — **no external PNG assets** for basic shapes. All sprites are **cached by key** to avoid duplicate texture allocations.
+
+**Available shapes:**
+
+| Method | Usage | Caching |
+|---|---|---|
+| `WhiteRoundedRect(radius, size)` | Pills, panels, buttons — tint via `Image.color` | Cached |
+| `WhiteCircle(diameter)` | Coin icons, avatars — tint via `Image.color` | Cached |
+| `WhitePill(width, height)` | Fully-rounded-end containers | Cached |
+| `RoundedRect(w, h, r, colorTop, colorBottom)` | Gradient pills, custom shapes | Cached |
+| `Circle(diameter, color)` | Colored circles | Cached |
+| `Glow(size, color, falloff)` | Soft radial glow/shadow effects | Cached |
+
+**Usage pattern — white sprites + Image.color tinting (preferred):**
+```csharp
+var img = go.AddComponent<Image>();
+img.sprite = UIShapeUtils.WhiteRoundedRect(radius: 20, size: 64);
+img.type = Image.Type.Sliced;  // REQUIRED for 9-slice scaling
+img.color = new Color(0f, 0f, 0f, 0.4f);  // tint to desired color
+```
+
+**9-slice borders** are automatically calculated (`radius + 2`). Always set `Image.type = Image.Type.Sliced` when using rounded rect sprites so corners scale properly.
+
+### ButtonBounce — Standard Press Feedback
+
+Every interactive `Button` must have a `ButtonBounce` component attached:
+
+```csharp
+var button = go.AddComponent<Button>();
+go.AddComponent<ButtonBounce>();
+```
+
+**ButtonBounce** (`Game/UI/Components/ButtonBounce.cs`) handles pointer events and plays a spring animation:
+- **Press:** scale to `0.92` (60ms, EaseOutCubic)
+- **Release:** spring overshoot to `1.05` (90ms) → settle to `1.0` (60ms)
+- **Cancel:** return to `1.0` (100ms)
+
+Never build custom press animations — always use `ButtonBounce`.
+
+### Animation Patterns
+
+All UI animations use **coroutines** — no DOTween, no Animator. Three patterns:
+
+| Pattern | Use Case | Example |
+|---|---|---|
+| **Coroutine + EaseOutBack** | Panel expand/collapse, staggered reveals | Settings panel buttons in GameplayHUD |
+| **Coroutine + Sine wave** | Looping glow, pulse, alpha fade | Coin icon pulse, HubScreen hint text |
+| **Coroutine + Cubic easing** | Screen transitions, crossfade + slide | ScreenManager transitions |
+
+**Easing functions (inline):**
+```csharp
+// EaseOutBack (overshoot)
+float c1 = 1.70158f, c3 = c1 + 1f;
+float eased = 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+
+// EaseInOutCubic
+float eased = t < 0.5f ? 4f * t * t * t : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
+
+// Sine pulse (looping)
+float alpha = Mathf.Lerp(minAlpha, maxAlpha, (Mathf.Sin(Time.time * speed) + 1f) * 0.5f);
+```
+
+### Screen Transitions
+
+`ScreenManager` (registered as service) handles all screen-to-screen transitions:
+
+```csharp
+if (Services.TryGet<ScreenManager>(out var sm))
+    sm.TransitionTo(GameFlowState.Hub);
+```
+
+Never directly destroy/create screens — always go through `ScreenManager.TransitionTo()`.
+
+### Disabled Button States
+
+Use `CanvasGroup` for visual disabled feedback:
+
+```csharp
+var cg = go.AddComponent<CanvasGroup>();
+// On state change:
+button.interactable = isEnabled;
+cg.alpha = isEnabled ? 1f : 0.4f;
+```
+
+### Memory Management
+
+- **Uncached sprites** (via `ThemeConfig.CreateGradientSprite(top, bottom)`) — caller must `Destroy(sprite.texture)` in `OnDestroy()`
+- **Cached sprites** (via `UIShapeUtils`, `ThemeConfig.CreateGradientSprite(mood)`) — managed by cache, do not destroy
+- **Runtime materials** — always `Destroy(_material)` in `OnDestroy()`
+- **Null all C# event delegates** in `OnDestroy()` to prevent leak-through references
+
+### UI Consistency Rules
+
+| Rule | Convention | Why |
+|---|---|---|
+| Screen creation | Static `Create()` factory, zero prefabs | Consistent pattern, no asset dependencies |
+| Canvas setup | 1080×1920, match 0.5, ScreenSpaceOverlay | Uniform scaling across all screens |
+| Colors | Always via `ThemeConfig.GetColor()` | Mood-aware, single source of truth |
+| Fonts | Always via `ThemeConfig.GetFont()`, bold via `fontStyle` | Single font asset, no duplicates |
+| Shapes | Always via `UIShapeUtils` | Cached, no external PNGs for basic shapes |
+| Button feedback | Always add `ButtonBounce` component | Consistent press feel |
+| Animations | Coroutines only, no DOTween/Animator | Lightweight, no external dependency |
+| Service access | `Services.TryGet<T>()` with null check | Safe, consistent |
+| Screen navigation | `ScreenManager.TransitionTo()` | Centralized transition management |
+| Cleanup | Null delegates + destroy uncached textures in `OnDestroy()` | Prevent memory leaks |
 
 ---
 

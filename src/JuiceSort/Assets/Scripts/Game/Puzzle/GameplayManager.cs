@@ -130,9 +130,7 @@ namespace JuiceSort.Game.Puzzle
             _hud.OnUndoPressed = Undo;
             _hud.OnRestartPressed = RestartLevel;
             _hud.OnExtraBottlePressed = RequestExtraBottle;
-            _hud.OnAdWatchPressed = WatchAdForCoins;
-            _hud.OnBackPressed = GoBackToRoadmap;
-            _hud.OnSettingsPressed = OpenSettings;
+            _hud.OnExitPressed = GoBackToHub;
             _hud.SetLevelInfo(levelNumber, definition.CityName ?? "", definition.CountryName ?? "", definition.Mood);
             _hud.UpdateDisplay(0);
             if (Services.TryGet<ICoinManager>(out var coinMgr))
@@ -143,7 +141,6 @@ namespace JuiceSort.Game.Puzzle
             }
             RefreshUndoState();
             RefreshExtraBottleState();
-            RefreshAdButtonState();
 
             Debug.Log($"[GameplayManager] Level {levelNumber} loaded: {_currentPuzzle.ContainerCount} containers, {definition.ColorCount} colors, {definition.SlotCount} slots");
         }
@@ -232,7 +229,6 @@ namespace JuiceSort.Game.Puzzle
             _hud?.UpdateDisplay(_moveCount);
             RefreshUndoState();
             RefreshExtraBottleState();
-            RefreshAdButtonState();
 
             // Hide overlay screens
             if (Services.TryGet<ScreenManager>(out var sm))
@@ -309,8 +305,7 @@ namespace JuiceSort.Game.Puzzle
                         coinMgr.AddCoins(config.AdRewardAmount);
                         Debug.Log($"[GameplayManager] Ad reward: +{config.AdRewardAmount} coins");
                     }
-                    RefreshAdButtonState();
-                },
+                        },
                 onFailed: () =>
                 {
                     Debug.Log("[GameplayManager] Ad failed — no coins awarded");
@@ -319,13 +314,16 @@ namespace JuiceSort.Game.Puzzle
         }
 
         /// <summary>
-        /// Pauses current level and returns to roadmap. Saves state for resume.
+        /// Pauses current level and returns to hub. Saves state for resume.
         /// Only one paused level is kept — starting a different level clears it.
         /// </summary>
-        public void GoBackToRoadmap()
+        public void GoBackToHub()
         {
             if (_isAnimating)
                 return;
+
+            // Collapse settings panel if open
+            _hud?.CollapseSettingsIfOpen();
 
             if (_currentPuzzle != null && !_isLevelComplete)
             {
@@ -340,16 +338,7 @@ namespace JuiceSort.Game.Puzzle
             DestroyBoard();
 
             if (Services.TryGet<ScreenManager>(out var screenMgr))
-                screenMgr.TransitionTo(GameFlowState.Roadmap);
-        }
-
-        private void OpenSettings()
-        {
-            if (_isAnimating)
-                return;
-
-            Debug.Log("[GameplayManager] Settings requested — placeholder until settings overlay is implemented.");
-            // TODO: Open settings overlay (Epic 11 or existing SettingsScreen)
+                screenMgr.TransitionTo(GameFlowState.MainMenu);
         }
 
         /// <summary>
@@ -401,9 +390,7 @@ namespace JuiceSort.Game.Puzzle
             _hud.OnUndoPressed = Undo;
             _hud.OnRestartPressed = RestartLevel;
             _hud.OnExtraBottlePressed = RequestExtraBottle;
-            _hud.OnAdWatchPressed = WatchAdForCoins;
-            _hud.OnBackPressed = GoBackToRoadmap;
-            _hud.OnSettingsPressed = OpenSettings;
+            _hud.OnExitPressed = GoBackToHub;
             _hud.SetLevelInfo(_currentLevelNumber, _currentDefinition.CityName ?? "", _currentDefinition.CountryName ?? "", _currentDefinition.Mood);
             _hud.UpdateDisplay(_moveCount);
             if (Services.TryGet<ICoinManager>(out var coinMgrResume))
@@ -414,7 +401,6 @@ namespace JuiceSort.Game.Puzzle
             }
             RefreshUndoState();
             RefreshExtraBottleState();
-            RefreshAdButtonState();
 
             // Clear paused state
             _pausedPuzzle = null;
@@ -439,6 +425,10 @@ namespace JuiceSort.Game.Puzzle
         public void OnContainerTapped(int index)
         {
             if (_isLevelComplete || _isAnimating)
+                return;
+
+            // Block gameplay taps while settings panel is open
+            if (_hud != null && _hud.IsSettingsOpen)
                 return;
 
             var containerData = _currentPuzzle.GetContainer(index);
@@ -745,13 +735,6 @@ namespace JuiceSort.Game.Puzzle
             _hud.UpdateExtraBottleState(cost, canAfford, hasRemaining);
         }
 
-        private void RefreshAdButtonState()
-        {
-            if (_hud == null) return;
-            bool isAvailable = Services.TryGet<IAdManager>(out var adManager) && adManager.IsAdAvailable;
-            var config = Economy.CoinConfig.Default();
-            _hud.UpdateAdButtonState(isAvailable, config.AdRewardAmount);
-        }
 
         private void DeselectCurrent()
         {

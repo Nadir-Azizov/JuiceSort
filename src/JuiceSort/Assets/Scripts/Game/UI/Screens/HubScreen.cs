@@ -65,7 +65,7 @@ namespace JuiceSort.Game.UI.Screens
                 }
             }
             if (Services.TryGet<ICoinManager>(out var c) && _coinText != null)
-                _coinText.text = $"<b>{c.GetBalance()}</b>";
+                _coinText.text = $"<b>{c.GetBalance().ToString("N0")}</b>";
         }
 
         void Play()
@@ -121,47 +121,141 @@ namespace JuiceSort.Game.UI.Screens
             top.anchorMin = V(0,1); top.anchorMax = V(1,1);
             top.pivot = V(0.5f,1); top.sizeDelta = V(0,140);
 
-            // COIN PILL — white pill sprite tinted dark
+            // COIN PILL — matches GameplayHUD night mode
             var pill = R(top.gameObject, "Pill");
             pill.anchorMin = V(0,0.5f); pill.anchorMax = V(0,0.5f);
-            pill.pivot = V(0,0.5f); pill.anchoredPosition = V(28,0); pill.sizeDelta = V(280,80);
-            var pillI = pill.gameObject.AddComponent<Image>();
-            pillI.sprite = UIShapeUtils.WhitePill(280,80);
-            pillI.type = Image.Type.Sliced;
-            pillI.color = new Color(0.08f, 0.04f, 0.15f, 1f); // TINTED dark
-            // Border
-            WBorder(pill.gameObject, 0.25f);
+            pill.pivot = V(0,0.5f); pill.anchoredPosition = V(28,0); pill.sizeDelta = V(250,72);
+            // Fill
+            var pillFill = R(pill.gameObject, "Fill");
+            pillFill.anchorMin = V(0,0); pillFill.anchorMax = V(1,1);
+            var pillFillI = pillFill.gameObject.AddComponent<Image>();
+            pillFillI.sprite = UIShapeUtils.WhiteRoundedRect(60, 128);
+            pillFillI.type = Image.Type.Sliced;
+            pillFillI.color = new Color(0f, 0f, 0f, 0.4f);
+            pillFillI.raycastTarget = false;
+            // Border ring
+            var pillBrd = R(pill.gameObject, "BorderRing");
+            pillBrd.anchorMin = V(0,0); pillBrd.anchorMax = V(1,1);
+            var brdRect = pillBrd.GetComponent<RectTransform>();
+            brdRect.offsetMin = V(-4.5f, -4.5f); brdRect.offsetMax = V(4.5f, 4.5f);
+            var pillBrdI = pillBrd.gameObject.AddComponent<Image>();
+            pillBrdI.sprite = UIShapeUtils.WhiteRoundedRect(60, 128);
+            pillBrdI.type = Image.Type.Sliced;
+            pillBrdI.color = new Color(1f, 0.75f, 0.2f, 0.55f);
+            pillBrdI.raycastTarget = false;
+            pillBrd.transform.SetAsFirstSibling();
+            // Outer glow
+            var pillGlow = R(pill.gameObject, "Glow");
+            var pillGlowRect = pillGlow.GetComponent<RectTransform>();
+            pillGlowRect.anchorMin = V(0,0); pillGlowRect.anchorMax = V(1,1);
+            pillGlowRect.offsetMin = V(-30,-30); pillGlowRect.offsetMax = V(30,30);
+            var pillGlowI = pillGlow.gameObject.AddComponent<Image>();
+            pillGlowI.sprite = UIShapeUtils.Glow(128, Color.white, 0.5f);
+            pillGlowI.color = new Color(1f, 0.784f, 0.196f, 0.1f);
+            pillGlowI.raycastTarget = false;
+            pillGlow.transform.SetAsFirstSibling();
 
-            // Coin icon — white circle TINTED vivid gold
+            // Coin icon — radial gradient with border ring
             var coinC = R(pill.gameObject, "Coin");
             coinC.anchorMin = V(0,0.5f); coinC.anchorMax = V(0,0.5f);
-            coinC.pivot = V(0,0.5f); coinC.anchoredPosition = V(8,0); coinC.sizeDelta = V(64,64);
-            var coinI = coinC.gameObject.AddComponent<Image>();
-            coinI.sprite = UIShapeUtils.WhiteCircle(64);
-            coinI.color = new Color(1f, 0.75f, 0f, 1f); // VIVID GOLD
-            Txt(coinC.gameObject, "<b>$</b>", 26, new Color(0.4f,0.25f,0f));
+            coinC.pivot = V(0,0.5f); coinC.anchoredPosition = V(10,0); coinC.sizeDelta = V(57,57);
+            // Border ring behind
+            var coinBrd = R(coinC.gameObject, "BorderRing");
+            coinBrd.anchorMin = V(0,0); coinBrd.anchorMax = V(1,1);
+            var coinBrdRect = coinBrd.GetComponent<RectTransform>();
+            coinBrdRect.offsetMin = V(-6,-6); coinBrdRect.offsetMax = V(6,6);
+            var coinBrdI = coinBrd.gameObject.AddComponent<Image>();
+            coinBrdI.sprite = UIShapeUtils.WhiteCircle(64);
+            coinBrdI.color = new Color(0.80f, 0.53f, 0f); // #CC8800
+            coinBrdI.raycastTarget = false;
+            // Gradient fill
+            var coinFillGo = R(coinC.gameObject, "Fill");
+            coinFillGo.anchorMin = V(0,0); coinFillGo.anchorMax = V(1,1);
+            var coinFillI = coinFillGo.gameObject.AddComponent<Image>();
+            coinFillI.sprite = UIShapeUtils.CoinGradient(128);
+            coinFillI.color = Color.white;
+            coinFillI.raycastTarget = false;
+            // "$" symbol
+            var coinSym = Txt(coinC.gameObject, "<b>$</b>", 24, new Color(0.545f, 0.412f, 0.078f));
 
             // Coin amount
-            hub._coinText = Txt(pill.gameObject, "<b>1,250</b>", 46, new Color(1f,0.85f,0.1f));
+            hub._coinText = Txt(pill.gameObject, "<b>0</b>", 51, new Color(1f, 0.878f, 0.4f));
             hub._coinText.alignment = TextAlignmentOptions.MidlineLeft;
+            hub._coinText.enableAutoSizing = true;
+            hub._coinText.fontSizeMin = 24f;
+            hub._coinText.fontSizeMax = 51f;
             hub._coinText.extraPadding = true;
             var coinMat = new Material(hub._coinText.fontSharedMaterial);
-            coinMat.SetFloat(ShaderUtilities.ID_FaceDilate, 0.3f);
-            coinMat.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f);
-            coinMat.SetColor(ShaderUtilities.ID_OutlineColor, new Color(1f, 0.85f, 0.1f));
+            coinMat.SetFloat(ShaderUtilities.ID_FaceDilate, 0.5f);
             hub._coinText.fontMaterial = coinMat;
             hub._coinText.rectTransform.anchorMin = V(0,0); hub._coinText.rectTransform.anchorMax = V(1,1);
-            hub._coinText.rectTransform.offsetMin = V(82,0); hub._coinText.rectTransform.offsetMax = V(-16,0);
+            hub._coinText.rectTransform.offsetMin = V(76,0); hub._coinText.rectTransform.offsetMax = V(-12,0);
 
-            // SETTINGS — PNG icon button
-            var setGo = SpriteBtn(top.gameObject, "Set", "Icons/icon_settings", 90);
-            var setR = setGo.GetComponent<RectTransform>();
+            // SETTINGS — matches GameplayHUD gear button (night mode)
+            var setGo = new GameObject("Set");
+            setGo.transform.SetParent(top.gameObject.transform, false);
+            var setR = setGo.AddComponent<RectTransform>();
             setR.anchorMin = V(1,0.5f); setR.anchorMax = V(1,0.5f);
             setR.pivot = V(1,0.5f); setR.anchoredPosition = V(-28,0);
-            setGo.GetComponent<Button>().onClick.AddListener(() => hub.GoSettings());
+            setR.sizeDelta = V(108, 108);
+            // Invisible raycast
+            var setImg = setGo.AddComponent<Image>();
+            setImg.color = Color.clear;
+            // 3D shadow layer
+            var setShadow = R(setGo, "Shadow");
+            var setShadowRect = setShadow.GetComponent<RectTransform>();
+            setShadowRect.anchorMin = V(0,0); setShadowRect.anchorMax = V(1,1);
+            setShadowRect.offsetMin = V(0,-8); setShadowRect.offsetMax = V(0,0);
+            var setShadowI = setShadow.gameObject.AddComponent<Image>();
+            setShadowI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
+            setShadowI.type = Image.Type.Sliced;
+            setShadowI.color = new Color(0.18f, 0.12f, 0.35f, 0.65f);
+            setShadowI.raycastTarget = false;
+            setShadow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            // Border ring
+            var setBrd = R(setGo, "BorderRing");
+            var setBrdRect = setBrd.GetComponent<RectTransform>();
+            setBrdRect.anchorMin = V(0,0); setBrdRect.anchorMax = V(1,1);
+            setBrdRect.offsetMin = V(-4.5f,-4.5f); setBrdRect.offsetMax = V(4.5f,4.5f);
+            var setBrdI = setBrd.gameObject.AddComponent<Image>();
+            setBrdI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
+            setBrdI.type = Image.Type.Sliced;
+            setBrdI.color = new Color(1f, 1f, 1f, 0.1f);
+            setBrdI.raycastTarget = false;
+            setBrd.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            // Fill
+            var setFill = R(setGo, "Fill");
+            setFill.anchorMin = V(0,0); setFill.anchorMax = V(1,1);
+            var setFillI = setFill.gameObject.AddComponent<Image>();
+            setFillI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
+            setFillI.type = Image.Type.Sliced;
+            setFillI.color = new Color(0.294f, 0.216f, 0.529f, 0.65f);
+            setFillI.raycastTarget = false;
+            setFill.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            // Glow
+            var setGlow = R(setGo, "Glow");
+            var setGlowRect = setGlow.GetComponent<RectTransform>();
+            setGlowRect.anchorMin = V(0,0); setGlowRect.anchorMax = V(1,1);
+            setGlowRect.offsetMin = V(-24,-24); setGlowRect.offsetMax = V(24,24);
+            var setGlowI = setGlow.gameObject.AddComponent<Image>();
+            setGlowI.sprite = UIShapeUtils.Glow(128, Color.white, 0.5f);
+            setGlowI.color = new Color(0.549f, 0.392f, 0.863f, 0.15f);
+            setGlowI.raycastTarget = false;
+            setGlow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            setGlow.transform.SetAsFirstSibling();
+            // Gear icon
+            var setIcon = R(setGo, "GearIcon");
+            setIcon.anchorMin = V(0.15f,0.15f); setIcon.anchorMax = V(0.85f,0.85f);
+            var setIconI = setIcon.gameObject.AddComponent<Image>();
+            setIconI.sprite = UIShapeUtils.WhiteGear(128);
+            setIconI.color = new Color(1f, 1f, 1f, 0.85f);
+            setIconI.raycastTarget = false;
+            // Button + bounce
+            setGo.AddComponent<Button>().onClick.AddListener(() => hub.GoSettings());
+            setGo.AddComponent<ButtonBounce>();
 
             // ROADMAP — PNG icon button
-            var mapGo = SpriteBtn(safe.gameObject, "Map", "Icons/icon_worldmap", 90);
+            var mapGo = SpriteBtn(safe.gameObject, "Map", "Icons/icon_worldmap", 108);
             var mapR = mapGo.GetComponent<RectTransform>();
             mapR.anchorMin = V(1,1); mapR.anchorMax = V(1,1);
             mapR.pivot = V(1,1); mapR.anchoredPosition = V(-28,-160);

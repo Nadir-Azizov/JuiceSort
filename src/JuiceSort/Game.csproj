@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleBoardView.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BackgroundTapCatcher.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Screens\HubScreen.cs" />
     <Compile Include="Assets\Scripts\Game\Save\SaveData.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleCapAnimation.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleContainerView.cs" />
@@ -93,7 +94,7 @@
     <Compile Include="Assets\Scripts\Game\Progression\ProgressionData.cs" />
     <Compile Include="Assets\Scripts\Game\Boot\GlobalExceptionHandler.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\CompletionShimmer.cs" />
-    <Compile Include="Assets\Scripts\Game\UI\Screens\MainMenuScreen.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\UIShapeUtils.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\LevelListView.cs" />
     <Compile Include="Assets\Scripts\Game\UI\GameFlowState.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelGenerator.cs" />
@@ -1148,6 +1149,10 @@
     </Reference>
     <Reference Include="System.Xml.Serialization">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.0.71f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Serialization.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>Library\ScriptAssemblies\Unity.TextMeshPro.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEditor.UI">

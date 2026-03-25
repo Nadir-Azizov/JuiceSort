@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JuiceSort Gameplay HUD Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh; background: #111; font-family: 'Fredoka', sans-serif;
+    padding: 30px; gap: 40px; flex-wrap: wrap;
+  }
+  h2 { color: #aaa; text-align: center; margin-bottom: 12px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ========== PHONE FRAME ========== */
+  .phone-frame {
+    width: 360px; height: 780px; border-radius: 40px;
+    overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 3px solid #333;
+    flex-shrink: 0;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+
+  /* ========== NIGHT THEME ========== */
+  .night .screen {
+    background: linear-gradient(180deg,
+      #0a0c19 0%, #0e1225 15%, #141838 35%,
+      #1a1e4a 50%, #22245a 65%, #2d1e48 80%, #3a1a3a 100%);
+  }
+  .night .coin-display { border-color: rgba(255,180,40,0.35); }
+  .night .settings-btn { background: linear-gradient(135deg, rgba(90,70,150,0.7), rgba(60,40,120,0.6)); }
+  .night .level-pill { background: rgba(0,0,0,0.45); border-color: rgba(255,255,255,0.08); }
+  .night .action-pill { background: rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.08); }
+
+  /* ========== MORNING THEME ========== */
+  .morning .screen {
+    background: linear-gradient(180deg,
+      #c89535 0%, #d4a840 15%, #dbb84f 35%,
+      #e2c860 50%, #e8d57a 65%, #f0e090 80%, #f5e8a8 100%);
+  }
+  .morning .coin-display { border-color: rgba(180,130,30,0.4); }
+  .morning .settings-btn { background: linear-gradient(135deg, rgba(120,100,60,0.7), rgba(90,75,40,0.6)); }
+  .morning .level-pill { background: rgba(60,40,10,0.35); border-color: rgba(255,255,255,0.1); }
+  .morning .action-pill { background: rgba(60,40,10,0.4); border-color: rgba(255,255,255,0.1); }
+  .morning .move-text { color: rgba(120,95,55,0.8) !important; }
+
+  /* ========== BOKEH / AMBIENT ========== */
+  .bokeh { position: absolute; border-radius: 50%; animation: floatB ease-in-out infinite; z-index: 0; }
+  .b1 { width: 160px; height: 160px; top: 15%; left: -8%;
+    background: radial-gradient(circle, rgba(100,80,200,0.08) 0%, transparent 70%); animation-duration: 8s; }
+  .b2 { width: 120px; height: 120px; top: 40%; right: -5%;
+    background: radial-gradient(circle, rgba(200,100,180,0.06) 0%, transparent 70%); animation-duration: 6s; animation-delay: 2s; }
+  .b3 { width: 90px; height: 90px; top: 65%; left: 20%;
+    background: radial-gradient(circle, rgba(80,150,255,0.05) 0%, transparent 70%); animation-duration: 9s; animation-delay: 4s; }
+  @keyframes floatB {
+    0%,100% { transform: translateY(0) scale(1); opacity: 0.5; }
+    50% { transform: translateY(-12px) scale(1.08); opacity: 0.8; }
+  }
+
+  /* ========== TOP BAR ========== */
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 52px 18px 8px 18px; z-index: 10; position: relative;
+  }
+
+  /* Coin display */
+  .coin-display {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(0,0,0,0.4); padding: 6px 14px 6px 8px;
+    border-radius: 20px; border: 1.5px solid rgba(255,200,50,0.4);
+    box-shadow: 0 0 10px rgba(255,200,50,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .coin-icon {
+    width: 28px; height: 28px;
+    background: radial-gradient(circle at 38% 32%, #ffe866, #f5a623);
+    border-radius: 50%; border: 2px solid #cc8800;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    color: #8B6914;
+    box-shadow: 0 0 8px rgba(255,200,50,0.35);
+    animation: coinPulse 2.5s ease-in-out infinite;
+  }
+  .coin-icon-small {
+    width: 16px; height: 16px;
+    background: radial-gradient(circle at 38% 32%, #ffe866, #f5a623);
+    border-radius: 50%; border: 1.5px solid #cc8800;
+    font-size: 7px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #8B6914; flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(255,200,50,0.3);
+  }
+  @keyframes coinPulse {
+    0%,100% { box-shadow: 0 0 6px rgba(255,200,50,0.25); }
+    50% { box-shadow: 0 0 14px rgba(255,200,50,0.55); }
+  }
+  .coin-amount {
+    color: #ffe066; font-weight: 700; font-size: 17px;
+    text-shadow: 0 0 6px rgba(255,220,50,0.2);
+  }
+
+  /* Level pill — offset right to account for coin display width on left */
+  .level-pill {
+    position: absolute; left: 58%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.4); padding: 6px 22px;
+    border-radius: 18px; border: 1px solid rgba(255,255,255,0.06);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .level-text {
+    color: rgba(255,245,230,0.95); font-weight: 700; font-size: 18px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .move-text {
+    color: rgba(180,170,200,0.7); font-weight: 500; font-size: 12px;
+    margin-top: 1px;
+  }
+
+  /* Settings gear */
+  .settings-btn {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: rgba(255,255,255,0.85);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 8px rgba(140,100,220,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+    cursor: pointer; transition: all 0.2s;
+    position: relative; z-index: 12;
+  }
+  .settings-btn:hover { transform: scale(1.05); box-shadow: 0 0 14px rgba(140,100,220,0.3); }
+
+  /* ========== SETTINGS PANEL — NO BACKGROUND, 3D BUTTONS ========== */
+  .settings-panel {
+    position: absolute; top: 106px; right: 18px; z-index: 11;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 0;
+  }
+  .settings-panel.hidden { display: none; }
+
+  /* 3D button base */
+  .settings-panel .s-btn {
+    width: 50px; height: 50px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff; cursor: pointer;
+    transition: transform 0.15s;
+    position: relative;
+    /* 3D depth effect */
+    border: none;
+    box-shadow:
+      0 4px 0 rgba(0,0,0,0.35),        /* bottom shadow = 3D depth */
+      0 6px 12px rgba(0,0,0,0.3),       /* drop shadow */
+      inset 0 2px 0 rgba(255,255,255,0.2), /* top highlight */
+      inset 0 -1px 0 rgba(0,0,0,0.15);    /* bottom inner edge */
+  }
+  .settings-panel .s-btn:hover { transform: scale(1.06); }
+  .settings-panel .s-btn:active {
+    transform: translateY(3px) scale(0.97);
+    box-shadow:
+      0 1px 0 rgba(0,0,0,0.35),
+      0 2px 6px rgba(0,0,0,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+  .settings-panel .s-btn .material-icons-round {
+    font-size: 24px;
+  }
+
+  /* Toggle ON — bright vivid green, lively and saturated */
+  .s-btn.on {
+    background: linear-gradient(180deg, #44ff66 0%, #22dd44 35%, #10cc30 65%, #08b825 100%);
+    box-shadow:
+      0 4px 0 #069920,
+      0 6px 16px rgba(20,220,60,0.45),
+      0 0 20px rgba(40,255,80,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    color: #fff;
+  }
+  .s-btn.on:active {
+    box-shadow:
+      0 1px 0 #069920,
+      0 2px 8px rgba(20,220,60,0.25),
+      inset 0 2px 0 rgba(255,255,255,0.2),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+
+  /* Toggle OFF — desaturated gray with strikethrough line on icon */
+  .s-btn.off {
+    background: linear-gradient(180deg, #7a7a7a 0%, #5e5e5e 50%, #484848 100%);
+    box-shadow:
+      0 4px 0 #333,
+      0 6px 10px rgba(0,0,0,0.3),
+      inset 0 2px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+    color: rgba(255,255,255,0.4);
+  }
+  .s-btn.off:active {
+    box-shadow:
+      0 1px 0 #333,
+      0 2px 6px rgba(0,0,0,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+
+  /* Restart — green 3D (same vivid green as toggles) */
+  .s-btn.action {
+    background: linear-gradient(180deg, #44ff66 0%, #22dd44 35%, #10cc30 65%, #08b825 100%);
+    box-shadow:
+      0 4px 0 #069920,
+      0 6px 16px rgba(20,220,60,0.45),
+      0 0 20px rgba(40,255,80,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .s-btn.action:active {
+    box-shadow:
+      0 1px 0 #069920,
+      0 2px 8px rgba(20,220,60,0.25),
+      inset 0 2px 0 rgba(255,255,255,0.2),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+
+  /* Exit — vivid saturated red 3D */
+  .s-btn.exit {
+    background: linear-gradient(180deg, #ff4444 0%, #ee2020 35%, #dd1010 65%, #cc0505 100%);
+    box-shadow:
+      0 4px 0 #990505,
+      0 6px 16px rgba(255,30,30,0.45),
+      0 0 20px rgba(255,50,50,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .s-btn.exit:active {
+    box-shadow:
+      0 1px 0 #990505,
+      0 2px 8px rgba(255,30,30,0.25),
+      inset 0 2px 0 rgba(255,255,255,0.15),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+
+  /* ========== GAMEPLAY AREA (placeholder bottles) ========== */
+  .gameplay-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    z-index: 1; position: relative; padding: 20px;
+  }
+  .bottles-row { display: flex; gap: 10px; }
+  .bottle {
+    width: 36px; height: 94px; border-radius: 6px 6px 14px 14px;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    position: relative; overflow: hidden;
+    background: rgba(255,255,255,0.03);
+  }
+  .bottle::before {
+    content: ''; position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 8px; border-radius: 4px 4px 0 0;
+    border: 1.5px solid rgba(255,255,255,0.12); border-bottom: none;
+  }
+  .liq { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 0 0 12px 12px; }
+  .liq::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: rgba(255,255,255,0.15); border-radius: 50%; }
+  .bottle:nth-child(1) .liq { height: 75%; background: linear-gradient(180deg, #ffcc44, #f5a50c); }
+  .bottle:nth-child(2) .liq { height: 60%; background: linear-gradient(180deg, #aa2266, #8c1459); }
+  .bottle:nth-child(3) .liq { height: 80%; background: linear-gradient(180deg, #33ddbb, #19b8a6); }
+  .bottle:nth-child(4) .liq { height: 45%; background: linear-gradient(180deg, #ff88a0, #eb6b85); }
+  .bottle:nth-child(5) .liq { height: 0%; }
+  .bottle:nth-child(6) .liq { height: 55%; background: linear-gradient(180deg, #99cc22, #78a812); }
+
+  /* ========== BOTTOM ACTION PANEL ========== */
+  .bottom-bar {
+    padding: 0 18px 28px 18px; z-index: 10;
+    display: flex; justify-content: center;
+  }
+  .action-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.45); padding: 8px 10px;
+    border-radius: 22px; border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .action-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 10px 18px; border-radius: 16px;
+    font-size: 15px; font-weight: 600; color: #fff;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .action-btn:hover { transform: scale(1.03); }
+  .action-btn.undo {
+    background: linear-gradient(135deg, rgba(90,75,130,0.8), rgba(70,55,110,0.7));
+    box-shadow: 0 0 8px rgba(140,100,220,0.15);
+  }
+  .action-btn .action-icon { font-size: 18px; line-height: 1; }
+  .action-btn .cost-group {
+    display: flex; align-items: center; gap: 3px;
+  }
+  .action-btn .cost { color: rgba(255,220,100,0.9); font-size: 13px; font-weight: 600; }
+  .action-btn.extra {
+    background: linear-gradient(135deg, rgba(40,120,60,0.8), rgba(30,100,50,0.7));
+    box-shadow: 0 0 8px rgba(80,200,100,0.15);
+  }
+  .action-btn .bottle-icon {
+    display: inline-block; width: 12px; height: 26px;
+    border: 1.5px solid rgba(255,255,255,0.7);
+    border-radius: 2px 2px 5px 5px; position: relative;
+    margin-right: 2px;
+  }
+  .action-btn .bottle-icon::before {
+    content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+    width: 7px; height: 4px; border-radius: 2px 2px 0 0;
+    border: 1.5px solid rgba(255,255,255,0.7); border-bottom: none;
+  }
+  .action-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ========== ANNOTATIONS ========== */
+  .annotation-layer {
+    width: 360px; flex-shrink: 0;
+  }
+  .anno { margin-bottom: 16px; padding: 12px 16px; background: #1a1a1a; border-radius: 10px; border-left: 3px solid; }
+  .anno h3 { font-size: 13px; color: #ccc; margin-bottom: 4px; }
+  .anno p { font-size: 12px; color: #888; line-height: 1.5; }
+  .anno.top { border-color: #ffe066; }
+  .anno.settings { border-color: #8866cc; }
+  .anno.bottom { border-color: #50c868; }
+  .anno.anim { border-color: #ff6688; }
+  .anno code { background: #222; padding: 1px 5px; border-radius: 3px; color: #aaa; font-size: 11px; }
+
+  /* Toggle for settings panel */
+  .toggle-label {
+    display: inline-block; padding: 8px 16px; margin: 0 8px 16px 0;
+    background: #222; border: 1px solid #444; border-radius: 8px; color: #aaa;
+    cursor: pointer; font-size: 12px; user-select: none; transition: all 0.2s;
+  }
+  .toggle-label:hover { border-color: #888; color: #fff; }
+  .toggle-label.active { background: #333; border-color: #8866cc; color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ==================== NIGHT THEME ==================== -->
+<div>
+  <h2>Night Mood (Default)</h2>
+  <div class="phone-frame night" id="nightFrame">
+    <div class="screen">
+      <div class="bokeh b1"></div>
+      <div class="bokeh b2"></div>
+      <div class="bokeh b3"></div>
+
+      <!-- TOP BAR -->
+      <div class="top-bar">
+        <div class="coin-display">
+          <div class="coin-icon">$</div>
+          <span class="coin-amount">1,250</span>
+        </div>
+
+        <div class="level-pill">
+          <div class="level-text">Level 10</div>
+          <div class="move-text">12 moves</div>
+        </div>
+
+        <div class="settings-btn" onclick="toggleSettings('night')">&#9881;</div>
+      </div>
+
+      <!-- SETTINGS PANEL — no background, 3D buttons -->
+      <div class="settings-panel hidden" id="nightSettings">
+        <div class="s-btn on" title="Music ON"><span class="material-icons-round">music_note</span></div>
+        <div class="s-btn on" title="SFX ON"><span class="material-icons-round">volume_up</span></div>
+        <div class="s-btn off" title="Vibration OFF"><span class="material-icons-round">mobile_off</span></div>
+        <div class="s-btn action" title="Restart"><span class="material-icons-round">replay</span></div>
+        <div class="s-btn exit" title="Exit to Hub"><span class="material-icons-round">exit_to_app</span></div>
+      </div>
+
+      <!-- GAMEPLAY AREA -->
+      <div class="gameplay-area">
+        <div class="bottles-row">
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM BAR -->
+      <div class="bottom-bar">
+        <div class="action-pill">
+          <div class="action-btn undo">
+            <span class="action-icon">&#8630;</span>
+            <span class="cost-group">
+              <span class="coin-icon-small">$</span>
+              <span class="cost">100</span>
+            </span>
+          </div>
+          <div class="action-btn extra">
+            <span class="bottle-icon"></span>
+            <span class="action-icon">+</span>
+            <span class="cost-group">
+              <span class="coin-icon-small">$</span>
+              <span class="cost">500</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px; text-align: center;">
+    <span class="toggle-label" onclick="toggleSettings('night')">Toggle Settings Panel</span>
+  </div>
+</div>
+
+<!-- ==================== MORNING THEME ==================== -->
+<div>
+  <h2>Morning Mood</h2>
+  <div class="phone-frame morning" id="morningFrame">
+    <div class="screen">
+      <div class="bokeh b1"></div>
+      <div class="bokeh b2"></div>
+
+      <!-- TOP BAR -->
+      <div class="top-bar">
+        <div class="coin-display">
+          <div class="coin-icon">$</div>
+          <span class="coin-amount">3,800</span>
+        </div>
+
+        <div class="level-pill">
+          <div class="level-text">Level 42</div>
+          <div class="move-text">5 moves</div>
+        </div>
+
+        <div class="settings-btn" onclick="toggleSettings('morning')">&#9881;</div>
+      </div>
+
+      <!-- SETTINGS PANEL — no background, 3D buttons -->
+      <div class="settings-panel hidden" id="morningSettings">
+        <div class="s-btn on" title="Music ON"><span class="material-icons-round">music_note</span></div>
+        <div class="s-btn off" title="SFX OFF"><span class="material-icons-round">volume_off</span></div>
+        <div class="s-btn on" title="Vibration ON"><span class="material-icons-round">vibration</span></div>
+        <div class="s-btn action" title="Restart"><span class="material-icons-round">replay</span></div>
+        <div class="s-btn exit" title="Exit to Hub"><span class="material-icons-round">exit_to_app</span></div>
+      </div>
+
+      <!-- GAMEPLAY AREA -->
+      <div class="gameplay-area">
+        <div class="bottles-row">
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+          <div class="bottle"><div class="liq"></div></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM BAR (with disabled undo) -->
+      <div class="bottom-bar">
+        <div class="action-pill">
+          <div class="action-btn undo disabled">
+            <span class="action-icon">&#8630;</span>
+            <span class="cost-group">
+              <span class="coin-icon-small">$</span>
+              <span class="cost">100</span>
+            </span>
+          </div>
+          <div class="action-btn extra">
+            <span class="bottle-icon"></span>
+            <span class="action-icon">+</span>
+            <span class="cost-group">
+              <span class="coin-icon-small">$</span>
+              <span class="cost">900</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px; text-align: center;">
+    <span class="toggle-label" onclick="toggleSettings('morning')">Toggle Settings Panel</span>
+  </div>
+</div>
+
+<!-- ==================== ANNOTATIONS ==================== -->
+<div class="annotation-layer">
+  <h2>Design Spec Notes</h2>
+
+  <div class="anno top">
+    <h3>Top Bar</h3>
+    <p><strong>Coin display:</strong> Dark pill with golden border. Coin icon: 28px radial gradient circle with 2.5s pulsing glow. Balance: 17px bold gold.</p>
+    <p style="margin-top:6px"><strong>Level pill:</strong> Centered, dark semi-transparent, 18px rounded. Move counter 12px muted below.</p>
+    <p style="margin-top:6px"><strong>Settings gear:</strong> 46px, purple gradient, 14px radius.</p>
+  </div>
+
+  <div class="anno settings">
+    <h3>Settings Panel (updated)</h3>
+    <p><strong>No background.</strong> Buttons float directly below gear — clean, minimal.</p>
+    <p style="margin-top:6px"><strong>3D buttons:</strong> 50px, 14px radius. Bottom shadow (4px) + top highlight (inset 2px white) creates physical depth. Press state: translateY(3px) to "push in".</p>
+    <p style="margin-top:6px"><strong>ON state:</strong> Bright vivid green (<code>#44ff66</code> &rarr; <code>#08b825</code>) with green outer glow. High saturation, lively feel.</p>
+    <p style="margin-top:6px"><strong>OFF state:</strong> Desaturated gray button. Uses Material Icons with built-in slash: <code>music_off</code>, <code>volume_off</code>, <code>mobile_off</code>. Icon at 40% opacity.</p>
+    <p style="margin-top:6px"><strong>Restart:</strong> Green (same as ON toggles) — positive action.</p>
+    <p style="margin-top:6px"><strong>Exit:</strong> Vivid saturated red (<code>#ff4444</code> &rarr; <code>#cc0505</code>) with red outer glow.</p>
+    <p style="margin-top:6px"><strong>Icons:</strong> Material Icons Round — <code>music_note</code>, <code>volume_up</code>/<code>volume_off</code>, <code>vibration</code>, <code>replay</code>, <code>exit_to_app</code>.</p>
+  </div>
+
+  <div class="anno bottom">
+    <h3>Bottom Action Panel (updated)</h3>
+    <p><strong>Undo:</strong> Arrow icon + mini coin icon + cost number. Clear that it costs coins.</p>
+    <p style="margin-top:6px"><strong>Extra Bottle:</strong> Bottle outline icon + "+" + mini coin icon + cost. User immediately understands: "add a bottle, costs coins".</p>
+    <p style="margin-top:6px"><strong>Mini coin:</strong> 16px version of top-bar coin icon. Same gradient, border, "$" symbol.</p>
+  </div>
+
+  <div class="anno anim">
+    <h3>Interactions</h3>
+    <p><strong>3D button press:</strong> translateY(3px) + reduced shadow = pushed-in feel.</p>
+    <p style="margin-top:6px"><strong>Settings expand:</strong> Staggered scale 0&rarr;1, EaseOutBack, 0.05s delay.</p>
+    <p style="margin-top:6px"><strong>Toggle tap:</strong> Swap green/gray gradient + swap icon (volume_up/volume_off).</p>
+  </div>
+</div>
+
+<script>
+function toggleSettings(theme) {
+  const panel = document.getElementById(theme + 'Settings');
+  panel.classList.toggle('hidden');
+}
+</script>
+</body>
+</html>
