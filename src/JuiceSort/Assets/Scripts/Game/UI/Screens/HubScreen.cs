@@ -14,8 +14,6 @@ namespace JuiceSort.Game.UI.Screens
     {
         private TextMeshProUGUI _levelButtonText;
         private TextMeshProUGUI _coinText;
-        private TextMeshProUGUI _cityNameText;
-        private TextMeshProUGUI _hintText;
         private Image _playGlowImage;
         private Image _navGlowImage;
         private int _currentLevel;
@@ -45,25 +43,7 @@ namespace JuiceSort.Game.UI.Screens
             if (!Services.TryGet<IProgressionManager>(out var p)) return;
             _currentLevel = p.CurrentLevel;
             if (_levelButtonText != null) _levelButtonText.text = $"<b>Level {_currentLevel}</b>";
-            var city = CityAssigner.AssignCity(_currentLevel);
             ThemeConfig.CurrentMood = CityAssigner.AssignMood(_currentLevel);
-            if (_cityNameText != null)
-            {
-                string cityTxt = $"<b>{city.CityName}, {city.CountryName}</b>";
-                _cityNameText.text = cityTxt;
-                // Update all 3D depth layers (siblings before city text in wrapper)
-                var wrapper = _cityNameText.transform.parent;
-                if (wrapper != null)
-                {
-                    for (int i = 0; i < wrapper.childCount; i++)
-                    {
-                        var child = wrapper.GetChild(i);
-                        if (child == _cityNameText.transform) break; // stop at main text
-                        var tmp = child.GetComponent<TextMeshProUGUI>();
-                        if (tmp != null) tmp.text = cityTxt;
-                    }
-                }
-            }
             if (Services.TryGet<ICoinManager>(out var c) && _coinText != null)
                 _coinText.text = $"<b>{c.GetBalance().ToString("N0")}</b>";
         }
@@ -89,29 +69,35 @@ namespace JuiceSort.Game.UI.Screens
             go.AddComponent<GraphicRaycaster>();
             var hub = go.AddComponent<HubScreen>();
 
-            // ===== BACKGROUND (multi-stop sunset) =====
+            // ===== BACKGROUND (hub_background.png from Resources) =====
             var bg = Img(go, "BG", V(0,0), V(1,1));
-            var bgTex = new Texture2D(1, 512, TextureFormat.RGBA32, false);
-            bgTex.wrapMode = TextureWrapMode.Clamp; bgTex.filterMode = FilterMode.Bilinear;
-            Color cA = new Color(0.06f,0.02f,0.15f);
-            Color cB = new Color(0.22f,0.1f,0.38f);
-            Color cC = new Color(0.5f,0.2f,0.42f);
-            Color cD = new Color(0.78f,0.32f,0.24f);
-            Color cE = new Color(0.95f,0.48f,0.2f);
-            Color cF = new Color(1f,0.68f,0.32f);
-            for (int y = 0; y < 512; y++)
+            bg.preserveAspect = false;
+            var bgSprite = Resources.Load<Sprite>("Backgrounds/hub_background");
+            if (bgSprite != null)
             {
-                float t = (float)y / 511f;
-                Color c;
-                if      (t > 0.85f) c = Color.Lerp(cB, cA, (t-0.85f)/0.15f);
-                else if (t > 0.65f) c = Color.Lerp(cC, cB, (t-0.65f)/0.2f);
-                else if (t > 0.45f) c = Color.Lerp(cD, cC, (t-0.45f)/0.2f);
-                else if (t > 0.25f) c = Color.Lerp(cE, cD, (t-0.25f)/0.2f);
-                else                c = Color.Lerp(cF, cE, t/0.25f);
-                bgTex.SetPixel(0, y, c);
+                bg.sprite = bgSprite;
             }
-            bgTex.Apply();
-            bg.sprite = Sprite.Create(bgTex, new Rect(0,0,1,512), V(0.5f,0.5f));
+            else
+            {
+                var bgTex2D = Resources.Load<Texture2D>("Backgrounds/hub_background");
+                if (bgTex2D != null)
+                {
+                    bg.sprite = Sprite.Create(bgTex2D,
+                        new Rect(0, 0, bgTex2D.width, bgTex2D.height), V(0.5f, 0.5f));
+                }
+                else
+                {
+                    // Fallback: dark blue gradient
+                    var fbTex = new Texture2D(1, 512, TextureFormat.RGBA32, false);
+                    fbTex.wrapMode = TextureWrapMode.Clamp; fbTex.filterMode = FilterMode.Bilinear;
+                    Color cTop = new Color(0.02f, 0.02f, 0.12f);
+                    Color cBot = new Color(0.08f, 0.12f, 0.35f);
+                    for (int y = 0; y < 512; y++)
+                        fbTex.SetPixel(0, y, Color.Lerp(cBot, cTop, (float)y / 511f));
+                    fbTex.Apply();
+                    bg.sprite = Sprite.Create(fbTex, new Rect(0, 0, 1, 512), V(0.5f, 0.5f));
+                }
+            }
             bg.type = Image.Type.Simple;
 
             var safe = R(go, "Safe"); ApplySafeArea(safe);
@@ -141,7 +127,7 @@ namespace JuiceSort.Game.UI.Screens
             var pillBrdI = pillBrd.gameObject.AddComponent<Image>();
             pillBrdI.sprite = UIShapeUtils.WhiteRoundedRect(60, 128);
             pillBrdI.type = Image.Type.Sliced;
-            pillBrdI.color = new Color(1f, 0.75f, 0.2f, 0.55f);
+            pillBrdI.color = new Color(1f, 1f, 1f, 0.45f);
             pillBrdI.raycastTarget = false;
             pillBrd.transform.SetAsFirstSibling();
             // Outer glow
@@ -220,7 +206,7 @@ namespace JuiceSort.Game.UI.Screens
             var setBrdI = setBrd.gameObject.AddComponent<Image>();
             setBrdI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
             setBrdI.type = Image.Type.Sliced;
-            setBrdI.color = new Color(1f, 1f, 1f, 0.1f);
+            setBrdI.color = new Color(1f, 1f, 1f, 0.4f);
             setBrdI.raycastTarget = false;
             setBrd.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
             // Fill
@@ -258,7 +244,7 @@ namespace JuiceSort.Game.UI.Screens
             var mapGo = SpriteBtn(safe.gameObject, "Map", "Icons/icon_worldmap", 108);
             var mapR = mapGo.GetComponent<RectTransform>();
             mapR.anchorMin = V(1,1); mapR.anchorMax = V(1,1);
-            mapR.pivot = V(1,1); mapR.anchoredPosition = V(-28,-160);
+            mapR.pivot = V(1,1); mapR.anchoredPosition = V(-28,-180);
             mapGo.GetComponent<Button>().onClick.AddListener(() => hub.GoRoadmap());
 
             // ===== TAP AREA =====
@@ -272,67 +258,18 @@ namespace JuiceSort.Game.UI.Screens
             var cen = R(go, "Cen");
             cen.anchorMin = V(0,0.15f); cen.anchorMax = V(1,0.85f);
 
-            var destTxt = Txt(cen.gameObject, "<b>NEXT DESTINATION</b>", 32, Color.white,
-                V(0.05f,0.72f), V(0.95f,0.8f));
-            destTxt.characterSpacing = 6;
-            destTxt.extraPadding = true;
-            var destMat = new Material(destTxt.fontSharedMaterial);
-            destMat.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.1f);
-            destMat.SetColor(ShaderUtilities.ID_OutlineColor, new Color(0, 0, 0, 0.4f));
-            destTxt.fontMaterial = destMat;
-
-            // Main city text (white with black outline)
-            hub._cityNameText = Txt(cen.gameObject, "<b>Istanbul, Turkey</b>", 72, Color.white,
-                V(0.02f,0.56f), V(0.98f,0.74f));
-            hub._cityNameText.extraPadding = true;
-            var cityMat = new Material(hub._cityNameText.fontSharedMaterial);
-            cityMat.SetFloat(ShaderUtilities.ID_FaceDilate, 0.45f);
-            cityMat.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.25f);
-            cityMat.SetColor(ShaderUtilities.ID_OutlineColor, new Color(0, 0, 0, 1f));
-            cityMat.EnableKeyword("OUTLINE_ON");
-            hub._cityNameText.fontMaterial = cityMat;
-
-            // 3D EXTRUDED TEXT — multiple layers behind, each offset slightly more
-            var cityWrapper = R(cen.gameObject, "CityWrap");
-            cityWrapper.anchorMin = V(0.02f, 0.56f); cityWrapper.anchorMax = V(0.98f, 0.74f);
-            // Move city text into wrapper
-            hub._cityNameText.transform.SetParent(cityWrapper.transform, false);
-            hub._cityNameText.rectTransform.anchorMin = V(0,0);
-            hub._cityNameText.rectTransform.anchorMax = V(1,1);
-            hub._cityNameText.rectTransform.offsetMin = Vector2.zero;
-            hub._cityNameText.rectTransform.offsetMax = Vector2.zero;
-
-            // 3D depth layers: darkest at back, each 2px offset right+down
-            Color[] depthColors = {
-                new Color(0.15f, 0.05f, 0.25f, 1f), // deepest — dark purple
-                new Color(0.2f, 0.08f, 0.3f, 1f),
-                new Color(0.25f, 0.1f, 0.35f, 1f),
-                new Color(0.35f, 0.15f, 0.45f, 1f),  // closest to surface — lighter purple
-            };
-            for (int i = depthColors.Length - 1; i >= 0; i--)
-            {
-                float off = (i + 1) * 2f; // 2, 4, 6, 8 px offset
-                var layer = Txt(cityWrapper.gameObject, "<b>Paris, France</b>", 72, depthColors[i]);
-                layer.rectTransform.anchorMin = V(0,0);
-                layer.rectTransform.anchorMax = V(1,1);
-                layer.rectTransform.offsetMin = V(off, -off);
-                layer.rectTransform.offsetMax = V(off, -off);
-                layer.raycastTarget = false;
-                layer.transform.SetAsFirstSibling();
-            }
-
             // ===== PLAY BUTTON =====
 
             // Glow — kept inside button bounds, no overflow
             var glow = R(cen.gameObject, "Glow");
-            glow.anchorMin = V(0.12f,0.33f); glow.anchorMax = V(0.88f,0.48f);
+            glow.anchorMin = V(0.18f,0.04f); glow.anchorMax = V(0.82f,0.17f);
             hub._playGlowImage = glow.gameObject.AddComponent<Image>();
             hub._playGlowImage.sprite = UIShapeUtils.Glow(128, new Color(0.2f,1f,0.3f,0.3f), 0.7f);
             hub._playGlowImage.raycastTarget = false;
 
             // 3D BOTTOM EDGE (darker green, offset down + right)
             var edge3 = R(cen.gameObject, "Edge3");
-            edge3.anchorMin = V(0.085f, 0.295f); edge3.anchorMax = V(0.925f, 0.465f);
+            edge3.anchorMin = V(0.185f, 0.015f); edge3.anchorMax = V(0.825f, 0.155f);
             var edge3I = edge3.gameObject.AddComponent<Image>();
             edge3I.sprite = BakeGradientPill(600, 180, 90,
                 new Color(0.08f, 0.45f, 0.12f, 1f),
@@ -344,7 +281,7 @@ namespace JuiceSort.Game.UI.Screens
 
             // 3D MIDDLE EDGE (medium dark green, smaller offset)
             var edge2 = R(cen.gameObject, "Edge2");
-            edge2.anchorMin = V(0.083f, 0.305f); edge2.anchorMax = V(0.923f, 0.475f);
+            edge2.anchorMin = V(0.183f, 0.025f); edge2.anchorMax = V(0.823f, 0.165f);
             var edge2I = edge2.gameObject.AddComponent<Image>();
             edge2I.sprite = BakeGradientPill(600, 180, 90,
                 new Color(0.1f, 0.52f, 0.15f, 1f),
@@ -356,7 +293,7 @@ namespace JuiceSort.Game.UI.Screens
 
             // PLAY BUTTON (main face) — exact CSS gradient
             var pb = R(cen.gameObject, "Play");
-            pb.anchorMin = V(0.08f, 0.32f); pb.anchorMax = V(0.92f, 0.49f);
+            pb.anchorMin = V(0.18f, 0.04f); pb.anchorMax = V(0.82f, 0.16f);
             var pbI = pb.gameObject.AddComponent<Image>();
             Color g0 = new Color(0.40f, 0.93f, 0.47f); // #66ee77
             Color g1 = new Color(0.27f, 0.87f, 0.33f); // #44dd55
@@ -393,7 +330,7 @@ namespace JuiceSort.Game.UI.Screens
             shRI.raycastTarget = false;
 
             // Level text — MASSIVE and 3X BOLD
-            hub._levelButtonText = Txt(pb.gameObject, "<b>Level 1</b>", 90, Color.white);
+            hub._levelButtonText = Txt(pb.gameObject, "<b>Level 1</b>", 56, Color.white);
             // Force bold through material — this works even if font atlas has no bold data
             hub._levelButtonText.extraPadding = true;
             var mat = new Material(hub._levelButtonText.fontSharedMaterial);
@@ -402,10 +339,6 @@ namespace JuiceSort.Game.UI.Screens
             mat.SetColor(ShaderUtilities.ID_OutlineColor, Color.white);
             hub._levelButtonText.fontMaterial = mat;
 
-            // HINT
-            hub._hintText = Txt(cen.gameObject, "<b>TAP ANYWHERE FOR ROADMAP</b>", 15,
-                new Color(1,0.92f,0.78f,0.35f), V(0.08f,0.17f), V(0.92f,0.24f));
-            hub._hintText.characterSpacing = 3;
 
             // ===== NAV BAR =====
             NavBar(go, hub);
@@ -452,14 +385,28 @@ namespace JuiceSort.Game.UI.Screens
             bar.anchorMin = V(0,0); bar.anchorMax = V(1,0);
             bar.pivot = V(0.5f,0); bar.sizeDelta = V(0, 200);
 
-            // No background — transparent bar
+            // Semi-transparent background
+            var navBg = R(bar.gameObject, "NavBg");
+            navBg.anchorMin = V(0, 0); navBg.anchorMax = V(1, 1);
+            var navBgI = navBg.gameObject.AddComponent<Image>();
+            navBgI.color = new Color(0.04f, 0.06f, 0.12f, 0.75f);
+            navBgI.raycastTarget = false;
+            navBg.transform.SetAsFirstSibling();
 
-            // GOLDEN TOP BORDER — thin shiny gold line
+            // Top border line — purple accent #5533AA
+            var navTopLine = R(bar.gameObject, "NavTopLine");
+            navTopLine.anchorMin = V(0, 1); navTopLine.anchorMax = V(1, 1);
+            navTopLine.pivot = V(0.5f, 1); navTopLine.sizeDelta = V(0, 3);
+            var navTopLineI = navTopLine.gameObject.AddComponent<Image>();
+            navTopLineI.color = new Color(0.333f, 0.2f, 0.667f, 1f);
+            navTopLineI.raycastTarget = false;
+
+            // GOLD TOP BORDER — thick shiny line
             var goldLine = R(bar.gameObject, "GoldBorder");
             goldLine.anchorMin = V(0, 1); goldLine.anchorMax = V(1, 1);
-            goldLine.pivot = V(0.5f, 1); goldLine.sizeDelta = V(0, 4);
+            goldLine.pivot = V(0.5f, 1); goldLine.sizeDelta = V(0, 6);
             var goldLineI = goldLine.gameObject.AddComponent<Image>();
-            goldLineI.sprite = UIShapeUtils.RoundedRect(400, 4, 2,
+            goldLineI.sprite = UIShapeUtils.RoundedRect(400, 6, 3,
                 new Color(1f, 0.85f, 0.3f, 0.9f),
                 new Color(1f, 0.7f, 0.15f, 0.7f));
             goldLineI.type = Image.Type.Simple;
@@ -568,9 +515,6 @@ namespace JuiceSort.Game.UI.Screens
             while (true)
             {
                 float t = Time.time;
-                if (_hintText != null)
-                    _hintText.color = new Color(1,0.92f,0.78f,
-                        Mathf.Lerp(0.15f,0.55f,(Mathf.Sin(t*1.5f)+1)*0.5f));
                 if (_playGlowImage != null)
                     _playGlowImage.color = new Color(1,1,1,
                         Mathf.Lerp(0.25f,0.6f,(Mathf.Sin(t*2f)+1)*0.5f));
