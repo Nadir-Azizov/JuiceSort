@@ -5,19 +5,23 @@ namespace JuiceSort.Game.UI.Screens
 {
     /// <summary>
     /// PNG-based loading/splash screen shown on app launch before the Hub.
-    /// Displays loading_background.png full-screen as a bridge between
-    /// Unity splash and Hub screen, then signals readiness for transition.
+    /// Displays loading_background.png full-screen for a minimum duration,
+    /// then signals readiness for transition to Hub.
     /// </summary>
     public class LoadingScreen : MonoBehaviour
     {
-        /// <summary>Set to true once the screen is ready to transition away.</summary>
+        /// <summary>Set to true once the minimum display time has elapsed.</summary>
         public bool IsReady { get; private set; }
 
-        void Start()
+        private float _elapsed;
+        private const float MinDisplaySeconds = 2f;
+
+        void Update()
         {
-            // No minimum delay — Unity splash already provides branded moment.
-            // Screen stays visible until BootLoader transitions to Hub.
-            IsReady = true;
+            if (IsReady) return;
+            _elapsed += Time.unscaledDeltaTime;
+            if (_elapsed >= MinDisplaySeconds)
+                IsReady = true;
         }
 
         public static GameObject Create()

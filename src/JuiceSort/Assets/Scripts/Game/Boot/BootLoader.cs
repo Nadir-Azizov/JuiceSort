@@ -201,7 +201,7 @@ namespace JuiceSort.Game.Boot
 
         private void Start()
         {
-            // Show loading screen first, then transition to Hub once ready
+            // Show loading screen first, then transition to Hub after minimum delay
             if (Services.TryGet<ScreenManager>(out var screenMgr))
             {
                 screenMgr.TransitionTo(GameFlowState.Loading);
@@ -217,7 +217,7 @@ namespace JuiceSort.Game.Boot
 
             if (loadingScreen != null)
             {
-                // Wait until loading screen signals ready
+                // Wait until minimum display time has elapsed
                 while (!loadingScreen.IsReady)
                     yield return null;
             }
