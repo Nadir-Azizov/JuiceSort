@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-27  # Story 11.7 loading screen done
+last_updated: 2026-03-27  # Story 11.9 app icon setup done
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -134,7 +134,7 @@ development_status:
   10-8-pour-visual-fixes: done
   10-9-pour-stream-rework: done
 
-  # Epic 11: UI/UX Overhaul (8 stories — 7 done, 1 remaining)
+  # Epic 11: UI/UX Overhaul (9 stories — 8 done, 1 remaining)
   epic-11: in-progress
   11-1-responsive-bottle-layout: done               # SO HIGH priority
   11-2-hud-redesign: done                           # HIGH priority
@@ -144,3 +144,4 @@ development_status:
   11-6-gameplay-hud-overhaul: done                      # HIGH priority — expandable settings gear, bottom action panel
   11-7-loading-screen: done                            # MEDIUM priority — PNG-based loading splash screen
   11-8-roadmap-redesign: ready-for-dev              # MEDIUM priority — vertical journey path with level nodes
+  11-9-app-icon-setup: done                         # MEDIUM priority — Android adaptive icon configuration
