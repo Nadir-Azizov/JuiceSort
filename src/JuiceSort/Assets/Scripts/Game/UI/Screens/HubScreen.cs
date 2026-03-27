@@ -237,7 +237,7 @@ namespace JuiceSort.Game.UI.Screens
             setIconI.color = new Color(1f, 1f, 1f, 0.85f);
             setIconI.raycastTarget = false;
             // Button + bounce
-            setGo.AddComponent<Button>().onClick.AddListener(() => hub.GoSettings());
+            setGo.AddComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.GoSettings(); });
             setGo.AddComponent<ButtonBounce>();
 
             // ROADMAP — PNG icon button
@@ -281,7 +281,7 @@ namespace JuiceSort.Game.UI.Screens
             mapBrd.transform.SetAsFirstSibling();
             // Ensure icon child is last sibling (renders on top)
             mapIconGo.transform.SetAsLastSibling();
-            mapGo.GetComponent<Button>().onClick.AddListener(() => hub.GoRoadmap());
+            mapGo.GetComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.GoRoadmap(); });
 
             // ===== TAP AREA =====
             var tap = Img(go, "Tap", V(0,0.13f), V(1,0.87f));
@@ -337,7 +337,7 @@ namespace JuiceSort.Game.UI.Screens
             Color g3 = new Color(0.16f, 0.72f, 0.24f); // #28b83d
             pbI.sprite = BakeGradientPill(600, 180, 90, g0, g1, g2, g3);
             pbI.type = Image.Type.Simple;
-            pb.gameObject.AddComponent<Button>().onClick.AddListener(() => hub.Play());
+            pb.gameObject.AddComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.Play(); });
             pb.gameObject.AddComponent<ButtonBounce>();
 
             // Subtle white tint at top only (thin, inside button, no overflow)
