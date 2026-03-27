@@ -2,6 +2,7 @@ namespace JuiceSort.Game.UI
 {
     public enum GameFlowState
     {
+        Loading,
         MainMenu,
         Roadmap,
         Playing,

@@ -392,7 +392,7 @@ Transform the game from a prototype feel to a premium casual puzzle game — ins
 - TextMeshPro migration + custom font + gradient backgrounds across all screens
 - Main hub screen replacing MainMenu (Level N button, bottom nav bar, coin display, settings)
 - Gameplay HUD overhaul (coins top-left, level label top-center, expandable settings gear, bottom action panel)
-- Loading screen (cupboard scene, filling bottle animation, fruit loading bar)
+- Loading screen (PNG-based splash with custom background image)
 - Extra bottle re-layout animation
 - Roadmap redesign (vertical journey path with level nodes)
 
@@ -408,7 +408,7 @@ Epic 4 (existing UI), Epic 5 (visual theme), Epic 9 (coin balance display)
 Player opens app → loading screen → hub with Level N button → one tap to play. Premium gradient backgrounds, custom typography, organized gameplay HUD with expandable settings. Roadmap accessible from hub. All screens feel polished, shiny, and "tasty."
 
 ### Design References
-- Mockups: `_bmad-output/mockups/loading-screen-mockup.html`, `_bmad-output/mockups/hub-screen-mockup.html`
+- Mockups: `_bmad-output/mockups/hub-screen-mockup.html` (loading-screen-mockup.html removed — replaced by PNG approach)
 - Visual direction: Magic Sort (com.blu.wsp) and similar top water-sort puzzle games
 - Flow: Loading → Hub (Level N + bottom nav) → Gameplay | Hub → Roadmap (X to close)
 
@@ -419,5 +419,5 @@ Player opens app → loading screen → hub with Level N button → one tap to p
 - **11.4** [HIGH] As a player, when I open the app I land on a hub screen with a prominent Level N play button, coin display, settings gear, and bottom navigation bar — no unnecessary Play/Settings menu (main hub screen)
 - **11.5** [MEDIUM] As a player, when an extra bottle is added mid-level, all bottles smoothly rearrange to fit (re-layout animation) → [11-5-extra-bottle-relayout.md](implementation-artifacts/11-5-extra-bottle-relayout.md)
 - **11.6** [HIGH] As a player, the gameplay HUD shows coins top-left, "Level N" label top-center, and an expandable settings gear top-right (with music/SFX/vibration/restart/exit toggles), plus a bottom action panel with undo and add-bottle buttons (gameplay HUD overhaul)
-- **11.7** [MEDIUM] As a player, I see a sweet loading screen with a cupboard of colorful bottles, an animated filling bottle, and a fruit-themed loading bar while the game loads (loading screen)
+- **11.7** [MEDIUM] As a player, I see a branded loading/splash screen with the game's background image when the app launches, providing a polished first impression (loading screen) → [11-7-loading-screen.md](implementation-artifacts/11-7-loading-screen.md)
 - **11.8** [MEDIUM] As a player, I can access a vertical journey roadmap from the hub showing level nodes on a path, with completed/current/locked states and city chapter cards (roadmap redesign)

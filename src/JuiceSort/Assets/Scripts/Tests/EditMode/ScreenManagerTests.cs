@@ -9,6 +9,7 @@ namespace JuiceSort.Tests.EditMode
         [Test]
         public void GameFlowState_HasAllRequiredValues()
         {
+            Assert.IsTrue(System.Enum.IsDefined(typeof(GameFlowState), GameFlowState.Loading));
             Assert.IsTrue(System.Enum.IsDefined(typeof(GameFlowState), GameFlowState.MainMenu));
             Assert.IsTrue(System.Enum.IsDefined(typeof(GameFlowState), GameFlowState.Roadmap));
             Assert.IsTrue(System.Enum.IsDefined(typeof(GameFlowState), GameFlowState.Playing));
@@ -18,10 +19,10 @@ namespace JuiceSort.Tests.EditMode
         }
 
         [Test]
-        public void GameFlowState_HasSixValues()
+        public void GameFlowState_HasSevenValues()
         {
             var values = System.Enum.GetValues(typeof(GameFlowState));
-            Assert.AreEqual(6, values.Length);
+            Assert.AreEqual(7, values.Length);
         }
     }
 }

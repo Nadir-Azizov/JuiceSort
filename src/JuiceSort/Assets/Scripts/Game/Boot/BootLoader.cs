@@ -115,6 +115,11 @@ namespace JuiceSort.Game.Boot
             var gm = gmGo.AddComponent<GameplayManager>();
             Services.Register<GameplayManager>(gm);
 
+            // Loading screen — shown immediately on boot
+            var loading = LoadingScreen.Create();
+            DontDestroyOnLoad(loading);
+            screenMgr.RegisterScreen(GameFlowState.Loading, loading);
+
             // Create and register screens
             var hub = HubScreen.Create();
             DontDestroyOnLoad(hub);
@@ -196,11 +201,33 @@ namespace JuiceSort.Game.Boot
 
         private void Start()
         {
-            // Show main menu as initial screen
+            // Show loading screen first, then transition to Hub once ready
             if (Services.TryGet<ScreenManager>(out var screenMgr))
             {
-                screenMgr.TransitionTo(GameFlowState.MainMenu);
+                screenMgr.TransitionTo(GameFlowState.Loading);
+                StartCoroutine(WaitForLoadingThenShowHub(screenMgr));
             }
+        }
+
+        private System.Collections.IEnumerator WaitForLoadingThenShowHub(ScreenManager screenMgr)
+        {
+            // Find the LoadingScreen component to check readiness
+            var loadingGo = screenMgr.GetScreen(GameFlowState.Loading);
+            var loadingScreen = loadingGo != null ? loadingGo.GetComponent<LoadingScreen>() : null;
+
+            if (loadingScreen != null)
+            {
+                // Wait until loading screen signals ready
+                while (!loadingScreen.IsReady)
+                    yield return null;
+            }
+            else
+            {
+                // Fallback: just wait 2 seconds if component not found
+                yield return new WaitForSecondsRealtime(2f);
+            }
+
+            screenMgr.TransitionTo(GameFlowState.MainMenu);
         }
 
         private void OnDestroy()

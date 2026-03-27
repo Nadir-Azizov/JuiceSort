@@ -54,6 +54,7 @@
     <Compile Include="Assets\Scripts\Game\Save\SaveData.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleCapAnimation.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\BottleContainerView.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelMood.cs" />
     <Compile Include="Assets\Scripts\Game\Effects\BloomSetup.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\IProgressionManager.cs" />
