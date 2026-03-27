@@ -245,6 +245,42 @@ namespace JuiceSort.Game.UI.Screens
             var mapR = mapGo.GetComponent<RectTransform>();
             mapR.anchorMin = V(1,1); mapR.anchorMax = V(1,1);
             mapR.pivot = V(1,1); mapR.anchoredPosition = V(-28,-180);
+            // Map button background layers (same style as Settings button)
+            // Move the icon sprite from mapGo's Image into a child so it renders on top of bg layers
+            var mapRootImg = mapGo.GetComponent<Image>();
+            var mapIconGo = R(mapGo, "Icon");
+            mapIconGo.anchorMin = V(0,0); mapIconGo.anchorMax = V(1,1);
+            var mapIconI = mapIconGo.gameObject.AddComponent<Image>();
+            mapIconI.sprite = mapRootImg.sprite;
+            mapIconI.preserveAspect = true;
+            mapIconI.color = Color.white;
+            mapIconI.raycastTarget = false;
+            // Clear the root Image visual so only the child shows the icon, but keep raycast
+            mapRootImg.sprite = null;
+            mapRootImg.color = Color.clear;
+            mapRootImg.raycastTarget = true;
+            // Fill
+            var mapFill = R(mapGo, "Fill");
+            mapFill.anchorMin = V(0,0); mapFill.anchorMax = V(1,1);
+            var mapFillI = mapFill.gameObject.AddComponent<Image>();
+            mapFillI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
+            mapFillI.type = Image.Type.Sliced;
+            mapFillI.color = new Color(0.294f, 0.216f, 0.529f, 0.65f);
+            mapFillI.raycastTarget = false;
+            mapFill.transform.SetAsFirstSibling();
+            // Border ring
+            var mapBrd = R(mapGo, "BorderRing");
+            var mapBrdRect = mapBrd.GetComponent<RectTransform>();
+            mapBrdRect.anchorMin = V(0,0); mapBrdRect.anchorMax = V(1,1);
+            mapBrdRect.offsetMin = V(-4.5f,-4.5f); mapBrdRect.offsetMax = V(4.5f,4.5f);
+            var mapBrdI = mapBrd.gameObject.AddComponent<Image>();
+            mapBrdI.sprite = UIShapeUtils.WhiteRoundedRect(30, 90);
+            mapBrdI.type = Image.Type.Sliced;
+            mapBrdI.color = new Color(1f, 1f, 1f, 0.4f);
+            mapBrdI.raycastTarget = false;
+            mapBrd.transform.SetAsFirstSibling();
+            // Ensure icon child is last sibling (renders on top)
+            mapIconGo.transform.SetAsLastSibling();
             mapGo.GetComponent<Button>().onClick.AddListener(() => hub.GoRoadmap());
 
             // ===== TAP AREA =====
@@ -385,11 +421,13 @@ namespace JuiceSort.Game.UI.Screens
             bar.anchorMin = V(0,0); bar.anchorMax = V(1,0);
             bar.pivot = V(0.5f,0); bar.sizeDelta = V(0, 200);
 
-            // Semi-transparent background
+            // Semi-transparent background — flat fill, no rounded corners
             var navBg = R(bar.gameObject, "NavBg");
             navBg.anchorMin = V(0, 0); navBg.anchorMax = V(1, 1);
+            navBg.offsetMin = Vector2.zero; navBg.offsetMax = Vector2.zero;
             var navBgI = navBg.gameObject.AddComponent<Image>();
-            navBgI.color = new Color(0.04f, 0.06f, 0.12f, 0.75f);
+            navBgI.sprite = null;
+            navBgI.color = new Color(0.745f, 0.745f, 0.745f, 0.7f);
             navBgI.raycastTarget = false;
             navBg.transform.SetAsFirstSibling();
 
