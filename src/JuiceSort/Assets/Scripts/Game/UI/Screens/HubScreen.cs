@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -17,20 +18,27 @@ namespace JuiceSort.Game.UI.Screens
         private Image _playGlowImage;
         private Image _navGlowImage;
         private int _currentLevel;
+        private Coroutine _animCoroutine;
+
+        // Track runtime-created textures so we only destroy those (never Resources-loaded assets)
+        private readonly List<Texture2D> _runtimeTextures = new List<Texture2D>();
 
         void OnEnable() { if (_levelButtonText != null) Refresh(); }
         void Start() { Refresh(); }
 
         void OnDestroy()
         {
-            foreach (var img in GetComponentsInChildren<Image>(true))
+            if (_animCoroutine != null)
+                StopCoroutine(_animCoroutine);
+
+            // Only destroy runtime-created textures — never Resources-loaded assets
+            foreach (var tex in _runtimeTextures)
             {
-                if (img.sprite != null && !img.sprite.name.StartsWith("Unity"))
-                {
-                    if (img.sprite.texture != null) Destroy(img.sprite.texture);
-                    Destroy(img.sprite);
-                }
+                if (tex != null) Destroy(tex);
             }
+            _runtimeTextures.Clear();
+
+            // Clean up cloned TMPro materials
             foreach (var tmp in GetComponentsInChildren<TextMeshProUGUI>(true))
             {
                 if (tmp.fontMaterial != null && tmp.fontMaterial != tmp.font?.material)
@@ -96,6 +104,7 @@ namespace JuiceSort.Game.UI.Screens
                         fbTex.SetPixel(0, y, Color.Lerp(cBot, cTop, (float)y / 511f));
                     fbTex.Apply();
                     bg.sprite = Sprite.Create(fbTex, new Rect(0, 0, 1, 512), V(0.5f, 0.5f));
+                    hub._runtimeTextures.Add(fbTex);
                 }
             }
             bg.type = Image.Type.Simple;
@@ -237,7 +246,7 @@ namespace JuiceSort.Game.UI.Screens
             setIconI.color = new Color(1f, 1f, 1f, 0.85f);
             setIconI.raycastTarget = false;
             // Button + bounce
-            setGo.AddComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.GoSettings(); });
+            setGo.AddComponent<Button>().onClick.AddListener(() => { TryHaptic(); hub.GoSettings(); });
             setGo.AddComponent<ButtonBounce>();
 
             // ROADMAP — PNG icon button
@@ -281,7 +290,7 @@ namespace JuiceSort.Game.UI.Screens
             mapBrd.transform.SetAsFirstSibling();
             // Ensure icon child is last sibling (renders on top)
             mapIconGo.transform.SetAsLastSibling();
-            mapGo.GetComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.GoRoadmap(); });
+            mapGo.GetComponent<Button>().onClick.AddListener(() => { TryHaptic(); hub.GoRoadmap(); });
 
             // ===== TAP AREA =====
             var tap = Img(go, "Tap", V(0,0.13f), V(1,0.87f));
@@ -307,7 +316,7 @@ namespace JuiceSort.Game.UI.Screens
             var edge3 = R(cen.gameObject, "Edge3");
             edge3.anchorMin = V(0.185f, 0.015f); edge3.anchorMax = V(0.825f, 0.155f);
             var edge3I = edge3.gameObject.AddComponent<Image>();
-            edge3I.sprite = BakeGradientPill(600, 180, 90,
+            edge3I.sprite = hub.BakeGradientPillTracked(600, 180, 90,
                 new Color(0.08f, 0.45f, 0.12f, 1f),
                 new Color(0.05f, 0.32f, 0.08f, 1f),
                 new Color(0.04f, 0.28f, 0.06f, 1f),
@@ -319,7 +328,7 @@ namespace JuiceSort.Game.UI.Screens
             var edge2 = R(cen.gameObject, "Edge2");
             edge2.anchorMin = V(0.183f, 0.025f); edge2.anchorMax = V(0.823f, 0.165f);
             var edge2I = edge2.gameObject.AddComponent<Image>();
-            edge2I.sprite = BakeGradientPill(600, 180, 90,
+            edge2I.sprite = hub.BakeGradientPillTracked(600, 180, 90,
                 new Color(0.1f, 0.52f, 0.15f, 1f),
                 new Color(0.07f, 0.4f, 0.1f, 1f),
                 new Color(0.06f, 0.35f, 0.08f, 1f),
@@ -335,9 +344,9 @@ namespace JuiceSort.Game.UI.Screens
             Color g1 = new Color(0.27f, 0.87f, 0.33f); // #44dd55
             Color g2 = new Color(0.20f, 0.80f, 0.27f); // #33cc44
             Color g3 = new Color(0.16f, 0.72f, 0.24f); // #28b83d
-            pbI.sprite = BakeGradientPill(600, 180, 90, g0, g1, g2, g3);
+            pbI.sprite = hub.BakeGradientPillTracked(600, 180, 90, g0, g1, g2, g3);
             pbI.type = Image.Type.Simple;
-            pb.gameObject.AddComponent<Button>().onClick.AddListener(() => { Handheld.Vibrate(); hub.Play(); });
+            pb.gameObject.AddComponent<Button>().onClick.AddListener(() => { TryHaptic(); hub.Play(); });
             pb.gameObject.AddComponent<ButtonBounce>();
 
             // Subtle white tint at top only (thin, inside button, no overflow)
@@ -379,7 +388,7 @@ namespace JuiceSort.Game.UI.Screens
             // ===== NAV BAR =====
             NavBar(go, hub);
 
-            hub.StartCoroutine(hub.Anim());
+            hub._animCoroutine = hub.StartCoroutine(hub.Anim());
             return go;
         }
 
@@ -547,6 +556,8 @@ namespace JuiceSort.Game.UI.Screens
             }
         }
 
+        static void TryHaptic() => HapticUtils.TryVibrate();
+
         // === ANIMATION ===
         IEnumerator Anim()
         {
@@ -597,6 +608,12 @@ namespace JuiceSort.Game.UI.Screens
         }
 
         // === BAKE GRADIENT INTO PILL SHAPE (no white overlay needed) ===
+        Sprite BakeGradientPillTracked(int w, int h, int radius, Color c0, Color c1, Color c2, Color c3)
+        {
+            var sprite = BakeGradientPill(w, h, radius, c0, c1, c2, c3);
+            _runtimeTextures.Add(sprite.texture);
+            return sprite;
+        }
         static Sprite BakeGradientPill(int w, int h, int radius, Color c0, Color c1, Color c2, Color c3)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);

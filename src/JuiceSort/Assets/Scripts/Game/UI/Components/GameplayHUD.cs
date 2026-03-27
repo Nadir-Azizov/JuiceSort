@@ -987,33 +987,7 @@ namespace JuiceSort.Game.UI.Components
             btn.localScale = to;
         }
 
-        // ============================
-        // HAPTIC FEEDBACK
-        // ============================
-
-        private void TryHaptic()
-        {
-            if (!_vibrationEnabled) return;
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (var vibrator = new AndroidJavaClass("android.os.Vibrator"))
-                using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                using (var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                using (var vib = activity.Call<AndroidJavaObject>("getSystemService", "vibrator"))
-                {
-                    // Android 26+ (API level O): use VibrationEffect for short tap
-                    using (var effectClass = new AndroidJavaClass("android.os.VibrationEffect"))
-                    {
-                        var effect = effectClass.CallStatic<AndroidJavaObject>(
-                            "createOneShot", 20L, 80); // 20ms, medium amplitude
-                        vib.Call("vibrate", effect);
-                    }
-                }
-            }
-            catch { Handheld.Vibrate(); }
-#endif
-        }
+        private void TryHaptic() => HapticUtils.TryVibrate();
 
         // ============================
         // SETTINGS TOGGLE LOGIC
@@ -1142,6 +1116,13 @@ namespace JuiceSort.Game.UI.Components
             OnSettingsPressed = null;
             if (_settingsAnimCoroutine != null) StopCoroutine(_settingsAnimCoroutine);
             if (_coinPulseCoroutine != null) StopCoroutine(_coinPulseCoroutine);
+
+            // Clean up cloned TMPro materials (FaceDilate modifications clone the material)
+            foreach (var tmp in GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                if (tmp.fontMaterial != null && tmp.fontMaterial != tmp.font?.material)
+                    Destroy(tmp.fontMaterial);
+            }
         }
     }
 }

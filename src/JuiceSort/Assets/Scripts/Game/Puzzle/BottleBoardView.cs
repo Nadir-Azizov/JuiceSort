@@ -15,6 +15,7 @@ namespace JuiceSort.Game.Puzzle
         private LayoutConfig _layoutConfig;
         private Camera _mainCamera;
         private Action _pendingAnimComplete;
+        private Coroutine _relayoutCoroutine;
 
         // Animation constants
         private const float RelayoutDuration = 0.3f;
@@ -145,8 +146,16 @@ namespace JuiceSort.Game.Puzzle
             newViews[_containerViews.Length] = view;
             _containerViews = newViews;
 
+            // Stop any in-flight relayout to prevent coroutine fights / double callbacks
+            if (_relayoutCoroutine != null)
+            {
+                StopCoroutine(_relayoutCoroutine);
+                _pendingAnimComplete?.Invoke();
+                _pendingAnimComplete = null;
+            }
+
             // Start animated re-layout
-            StartCoroutine(AnimateRelayout(layout, view, onComplete));
+            _relayoutCoroutine = StartCoroutine(AnimateRelayout(layout, view, onComplete));
 
             Debug.Log($"[BottleBoardView] Adding bottle (animated). Total={newCount}, scale={layout.Scale:F3}, rows={layout.RowCount}");
         }
@@ -222,6 +231,7 @@ namespace JuiceSort.Game.Puzzle
             }
 
             _pendingAnimComplete = null;
+            _relayoutCoroutine = null;
             onComplete?.Invoke();
         }
 

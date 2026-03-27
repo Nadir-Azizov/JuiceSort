@@ -76,92 +76,97 @@ namespace JuiceSort.Game.UI
         {
             _isTransitioning = true;
 
-            var outgoing = _screens.TryGetValue(outgoingState, out var outGo) ? outGo : null;
-            _screens.TryGetValue(incomingState, out var incoming);
-
-            CanvasGroup outCg = null;
-            RectTransform outRt = null;
-            Vector2 outOriginalPos = Vector2.zero;
-
-            if (outgoing != null)
+            try
             {
-                _canvasGroups.TryGetValue(outgoingState, out outCg);
-                outRt = outgoing.GetComponent<RectTransform>();
-                if (outRt != null)
-                    outOriginalPos = outRt.anchoredPosition;
-            }
+                var outgoing = _screens.TryGetValue(outgoingState, out var outGo) ? outGo : null;
+                _screens.TryGetValue(incomingState, out var incoming);
 
-            // Phase 1: Fade out outgoing screen
-            if (outgoing != null && outCg != null)
-            {
-                float elapsed = 0f;
-                while (elapsed < FadeDuration)
+                CanvasGroup outCg = null;
+                RectTransform outRt = null;
+                Vector2 outOriginalPos = Vector2.zero;
+
+                if (outgoing != null)
                 {
-                    elapsed += Time.deltaTime;
-                    float t = EaseInOutCubic(Mathf.Clamp01(elapsed / FadeDuration));
-                    outCg.alpha = 1f - t;
+                    _canvasGroups.TryGetValue(outgoingState, out outCg);
+                    outRt = outgoing.GetComponent<RectTransform>();
                     if (outRt != null)
-                        outRt.anchoredPosition = outOriginalPos + new Vector2(0f, SlideOffset * t);
-                    yield return null;
+                        outOriginalPos = outRt.anchoredPosition;
                 }
-                outCg.alpha = 0f;
-                outgoing.SetActive(false);
-                // Reset position
-                if (outRt != null)
-                    outRt.anchoredPosition = outOriginalPos;
-            }
 
-            // Phase 2: Fade in incoming screen (skip if no screen registered, e.g. Playing state)
-            if (incoming != null)
-            {
-                _canvasGroups.TryGetValue(incomingState, out var inCg);
-                var inRt = incoming.GetComponent<RectTransform>();
-                Vector2 inOriginalPos = inRt != null ? inRt.anchoredPosition : Vector2.zero;
-
-                if (inCg != null)
-                {
-                    inCg.alpha = 0f;
-                    inCg.blocksRaycasts = false;
-                }
-                if (inRt != null)
-                    inRt.anchoredPosition = inOriginalPos + new Vector2(0f, -SlideOffset);
-
-                incoming.SetActive(true);
-
-                if (inCg != null)
+                // Phase 1: Fade out outgoing screen
+                if (outgoing != null && outCg != null)
                 {
                     float elapsed = 0f;
                     while (elapsed < FadeDuration)
                     {
-                        elapsed += Time.deltaTime;
+                        elapsed += Time.unscaledDeltaTime;
                         float t = EaseInOutCubic(Mathf.Clamp01(elapsed / FadeDuration));
-                        inCg.alpha = t;
-                        if (inRt != null)
-                            inRt.anchoredPosition = Vector2.Lerp(
-                                inOriginalPos + new Vector2(0f, -SlideOffset),
-                                inOriginalPos, t);
+                        outCg.alpha = 1f - t;
+                        if (outRt != null)
+                            outRt.anchoredPosition = outOriginalPos + new Vector2(0f, SlideOffset * t);
                         yield return null;
                     }
-                    inCg.alpha = 1f;
-                    inCg.blocksRaycasts = true;
+                    outCg.alpha = 0f;
+                    outgoing.SetActive(false);
+                    // Reset position
+                    if (outRt != null)
+                        outRt.anchoredPosition = outOriginalPos;
                 }
-                if (inRt != null)
-                    inRt.anchoredPosition = inOriginalPos;
 
-                _currentScreen = incoming;
+                // Phase 2: Fade in incoming screen (skip if no screen registered, e.g. Playing state)
+                if (incoming != null)
+                {
+                    _canvasGroups.TryGetValue(incomingState, out var inCg);
+                    var inRt = incoming.GetComponent<RectTransform>();
+                    Vector2 inOriginalPos = inRt != null ? inRt.anchoredPosition : Vector2.zero;
+
+                    if (inCg != null)
+                    {
+                        inCg.alpha = 0f;
+                        inCg.blocksRaycasts = false;
+                    }
+                    if (inRt != null)
+                        inRt.anchoredPosition = inOriginalPos + new Vector2(0f, -SlideOffset);
+
+                    incoming.SetActive(true);
+
+                    if (inCg != null)
+                    {
+                        float elapsed = 0f;
+                        while (elapsed < FadeDuration)
+                        {
+                            elapsed += Time.unscaledDeltaTime;
+                            float t = EaseInOutCubic(Mathf.Clamp01(elapsed / FadeDuration));
+                            inCg.alpha = t;
+                            if (inRt != null)
+                                inRt.anchoredPosition = Vector2.Lerp(
+                                    inOriginalPos + new Vector2(0f, -SlideOffset),
+                                    inOriginalPos, t);
+                            yield return null;
+                        }
+                        inCg.alpha = 1f;
+                        inCg.blocksRaycasts = true;
+                    }
+                    if (inRt != null)
+                        inRt.anchoredPosition = inOriginalPos;
+
+                    _currentScreen = incoming;
+                }
+                else
+                {
+                    // No incoming screen (e.g. transitioning to gameplay) — just clear current
+                    _currentScreen = null;
+                }
+
+                _currentState = incomingState;
+                OnStateChanged?.Invoke(incomingState);
+                Debug.Log($"[ScreenManager] Transitioned to {incomingState}");
             }
-            else
+            finally
             {
-                // No incoming screen (e.g. transitioning to gameplay) — just clear current
-                _currentScreen = null;
+                _isTransitioning = false;
+                _transitionCoroutine = null;
             }
-
-            _currentState = incomingState;
-            _isTransitioning = false;
-            _transitionCoroutine = null;
-
-            OnStateChanged?.Invoke(incomingState);
-            Debug.Log($"[ScreenManager] Transitioned to {incomingState}");
         }
 
         /// <summary>
@@ -214,7 +219,7 @@ namespace JuiceSort.Game.UI
             float elapsed = 0f;
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 float t = EaseInOutCubic(Mathf.Clamp01(elapsed / duration));
                 cg.alpha = Mathf.Lerp(from, to, t);
                 yield return null;

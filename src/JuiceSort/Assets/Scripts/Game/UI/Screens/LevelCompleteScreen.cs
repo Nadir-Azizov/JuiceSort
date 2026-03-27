@@ -28,14 +28,15 @@ namespace JuiceSort.Game.UI.Screens
 
         public void Show(int levelNumber, string cityName, int stars, int moves, int optimal, bool isReplay, int coinReward = 0)
         {
-            _starText.text = StarCalculator.GetStarText(stars);
-            _infoText.text = $"Level {levelNumber} - {cityName}\nMoves: {moves} (Optimal: ~{optimal})";
-
+            if (_starText != null)
+                _starText.text = StarCalculator.GetStarText(stars);
+            if (_infoText != null)
+                _infoText.text = $"Level {levelNumber} - {cityName}\nMoves: {moves} (Optimal: ~{optimal})";
             if (_coinRewardText != null)
                 _coinRewardText.text = coinReward > 0 ? $"+{coinReward} coins" : "";
 
-            _nextLevelBtn.SetActive(!isReplay);
-            _continueBtn.SetActive(isReplay);
+            if (_nextLevelBtn != null) _nextLevelBtn.SetActive(!isReplay);
+            if (_continueBtn != null) _continueBtn.SetActive(isReplay);
 
             gameObject.SetActive(true);
         }

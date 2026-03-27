@@ -87,6 +87,7 @@
     <Compile Include="Assets\Scripts\Game\UI\ThemeColorType.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\OptimalMoveEstimator.cs" />
     <Compile Include="Assets\Scripts\Game\Boot\BootLoader.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\HapticUtils.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerState.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleBoardView.cs" />
     <Compile Include="Assets\Scripts\Game\Effects\FloatingLights.cs" />

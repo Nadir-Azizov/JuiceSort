@@ -1,6 +1,6 @@
 # Story 11.6: Gameplay HUD Overhaul
 
-Status: review
+Status: done
 
 ## Story
 
@@ -159,7 +159,17 @@ Claude Opus 4.6 (1M context)
 ### Change Log
 - 2026-03-24: Complete HUD overhaul — redesigned top bar, expandable settings panel, bottom action pill, GameplayManager API cleanup
 - 2026-03-25: Visual polish pass — rounded sprites, circular coins, disabled alpha, coin pulse glow, mood-aware pills, review fixes
+- 2026-03-27: Code review — removed dead WatchAdForCoins() method and unused Ads import from GameplayManager. All ACs verified, all tasks confirmed done.
+- 2026-03-27: Code review fixes — extracted TryHaptic to shared HapticUtils, wired ClearCache/ClearCachedGradients to BootLoader.OnDestroy, added TMPro material cleanup to GameplayHUD.OnDestroy, updated File List with all changed files.
 
 ### File List
 - Assets/Scripts/Game/UI/Components/GameplayHUD.cs (major rewrite)
+- Assets/Scripts/Game/UI/Components/HapticUtils.cs (new — shared haptic feedback utility)
 - Assets/Scripts/Game/Puzzle/GameplayManager.cs (modified — API changes, exit/settings/ad cleanup)
+- Assets/Scripts/Game/Boot/BootLoader.cs (modified — event unsubscription, cache cleanup on destroy)
+- Assets/Scripts/Game/Puzzle/BottleBoardView.cs (modified — coroutine tracking for relayout)
+- Assets/Scripts/Game/UI/Components/UIShapeUtils.cs (modified — ClearCache method, ColorKey rounding fix)
+- Assets/Scripts/Game/UI/ScreenManager.cs (modified — try/finally safety, unscaledDeltaTime)
+- Assets/Scripts/Game/UI/Screens/HubScreen.cs (modified — haptic via HapticUtils, texture tracking)
+- Assets/Scripts/Game/UI/Screens/LevelCompleteScreen.cs (modified — null-safety guards in Show)
+- Assets/Scripts/Game/UI/ThemeConfig.cs (modified — ClearCachedGradients method)

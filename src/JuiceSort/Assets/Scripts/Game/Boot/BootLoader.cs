@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using JuiceSort.Core;
@@ -8,6 +9,7 @@ using JuiceSort.Game.Ads;
 using JuiceSort.Game.Audio;
 using JuiceSort.Game.Effects;
 using JuiceSort.Game.UI;
+using JuiceSort.Game.UI.Components;
 using JuiceSort.Game.UI.Screens;
 
 namespace JuiceSort.Game.Boot
@@ -19,6 +21,17 @@ namespace JuiceSort.Game.Boot
     public class BootLoader : MonoBehaviour
     {
         private static bool _initialized;
+
+        // Stored for unsubscription in OnDestroy
+        private LevelCompleteScreen _lcScreen;
+        private StarGateScreen _gateScreen;
+        private ScreenManager _screenMgr;
+        private Action _onNextLevel;
+        private Action _onReplay;
+        private Action _onRoadmap;
+        private Action _onContinue;
+        private Action<int> _onGateLevelTapped;
+        private Action<GameFlowState> _onStateChanged;
 
         private void Awake()
         {
@@ -116,11 +129,11 @@ namespace JuiceSort.Game.Boot
             DontDestroyOnLoad(levelComplete);
             screenMgr.RegisterScreen(GameFlowState.LevelComplete, levelComplete);
 
-            var lcScreen = levelComplete.GetComponent<LevelCompleteScreen>();
-            lcScreen.OnNextLevel += () => { gm.NextLevel(); screenMgr.HideOverlay(GameFlowState.LevelComplete); };
-            lcScreen.OnReplay += () => { gm.RestartLevel(); screenMgr.HideOverlay(GameFlowState.LevelComplete); };
-            lcScreen.OnRoadmap += () => { screenMgr.HideOverlay(GameFlowState.LevelComplete); screenMgr.TransitionTo(GameFlowState.Roadmap); };
-            lcScreen.OnContinue += () =>
+            _lcScreen = levelComplete.GetComponent<LevelCompleteScreen>();
+            _onNextLevel = () => { gm.NextLevel(); screenMgr.HideOverlay(GameFlowState.LevelComplete); };
+            _onReplay = () => { gm.RestartLevel(); screenMgr.HideOverlay(GameFlowState.LevelComplete); };
+            _onRoadmap = () => { screenMgr.HideOverlay(GameFlowState.LevelComplete); screenMgr.TransitionTo(GameFlowState.Roadmap); };
+            _onContinue = () =>
             {
                 screenMgr.HideOverlay(GameFlowState.LevelComplete);
                 if (Services.TryGet<IProgressionManager>(out var prog) && prog.CanPassBatchGate())
@@ -128,19 +141,24 @@ namespace JuiceSort.Game.Boot
                 else
                     screenMgr.TransitionTo(GameFlowState.Roadmap);
             };
+            _lcScreen.OnNextLevel += _onNextLevel;
+            _lcScreen.OnReplay += _onReplay;
+            _lcScreen.OnRoadmap += _onRoadmap;
+            _lcScreen.OnContinue += _onContinue;
 
             // Star Gate screen
             var starGate = StarGateScreen.Create();
             DontDestroyOnLoad(starGate);
             screenMgr.RegisterScreen(GameFlowState.Gate, starGate);
 
-            var gateScreen = starGate.GetComponent<StarGateScreen>();
-            gateScreen.OnLevelTapped += (levelNum) =>
+            _gateScreen = starGate.GetComponent<StarGateScreen>();
+            _onGateLevelTapped = (levelNum) =>
             {
                 screenMgr.HideOverlay(GameFlowState.Gate);
                 gm.StartReplay(levelNum);
                 screenMgr.TransitionTo(GameFlowState.Playing);
             };
+            _gateScreen.OnLevelTapped += _onGateLevelTapped;
 
             // Settings screen
             var settings = SettingsScreen.Create();
@@ -151,7 +169,8 @@ namespace JuiceSort.Game.Boot
             // FloatingLights.Create();
 
             // Refresh screens when transitioning to them
-            screenMgr.OnStateChanged += (state) =>
+            _screenMgr = screenMgr;
+            _onStateChanged = (state) =>
             {
                 if (state == GameFlowState.MainMenu)
                 {
@@ -172,6 +191,7 @@ namespace JuiceSort.Game.Boot
                         settingsScreen.Refresh();
                 }
             };
+            _screenMgr.OnStateChanged += _onStateChanged;
         }
 
         private void Start()
@@ -185,8 +205,23 @@ namespace JuiceSort.Game.Boot
 
         private void OnDestroy()
         {
-            if (_initialized && gameObject.scene.isLoaded == false)
-                _initialized = false;
+            // Unsubscribe all event listeners to allow proper GC and editor domain reload
+            if (_lcScreen != null)
+            {
+                _lcScreen.OnNextLevel -= _onNextLevel;
+                _lcScreen.OnReplay -= _onReplay;
+                _lcScreen.OnRoadmap -= _onRoadmap;
+                _lcScreen.OnContinue -= _onContinue;
+            }
+            if (_gateScreen != null)
+                _gateScreen.OnLevelTapped -= _onGateLevelTapped;
+            if (_screenMgr != null)
+                _screenMgr.OnStateChanged -= _onStateChanged;
+
+            UIShapeUtils.ClearCache();
+            ThemeConfig.ClearCachedGradients();
+
+            _initialized = false;
         }
     }
 }

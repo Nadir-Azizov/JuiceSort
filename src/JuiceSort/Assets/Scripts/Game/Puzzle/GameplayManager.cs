@@ -8,7 +8,6 @@ using JuiceSort.Game.Audio;
 using JuiceSort.Game.UI;
 using JuiceSort.Game.UI.Components;
 using JuiceSort.Game.UI.Screens;
-using JuiceSort.Game.Ads;
 
 namespace JuiceSort.Game.Puzzle
 {
@@ -286,31 +285,6 @@ namespace JuiceSort.Game.Puzzle
             RefreshUndoState();
 
             Debug.Log($"[GameplayManager] Extra bottle added (coin). Used: {_extraBottlesUsed}/{GameConstants.MaxExtraBottles}, Cost: {cost}");
-        }
-
-        public void WatchAdForCoins()
-        {
-            if (_isLevelComplete || _isAnimating)
-                return;
-
-            if (!Services.TryGet<IAdManager>(out var adManager))
-                return;
-
-            adManager.ShowRewardedAd(
-                onRewarded: () =>
-                {
-                    if (Services.TryGet<ICoinManager>(out var coinMgr))
-                    {
-                        var config = Economy.CoinConfig.Default();
-                        coinMgr.AddCoins(config.AdRewardAmount);
-                        Debug.Log($"[GameplayManager] Ad reward: +{config.AdRewardAmount} coins");
-                    }
-                        },
-                onFailed: () =>
-                {
-                    Debug.Log("[GameplayManager] Ad failed — no coins awarded");
-                }
-            );
         }
 
         /// <summary>

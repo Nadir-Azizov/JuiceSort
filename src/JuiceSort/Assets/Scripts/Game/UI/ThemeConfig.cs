@@ -166,6 +166,28 @@ namespace JuiceSort.Game.UI
         private static Sprite _cachedMorningGradient;
         private static Sprite _cachedNightGradient;
 
+        /// <summary>
+        /// Destroys cached gradient sprites and their backing textures.
+        /// Call during full app teardown or domain reload cleanup.
+        /// </summary>
+        public static void ClearCachedGradients()
+        {
+            if (_cachedMorningGradient != null)
+            {
+                if (_cachedMorningGradient.texture != null)
+                    Object.Destroy(_cachedMorningGradient.texture);
+                Object.Destroy(_cachedMorningGradient);
+                _cachedMorningGradient = null;
+            }
+            if (_cachedNightGradient != null)
+            {
+                if (_cachedNightGradient.texture != null)
+                    Object.Destroy(_cachedNightGradient.texture);
+                Object.Destroy(_cachedNightGradient);
+                _cachedNightGradient = null;
+            }
+        }
+
         public static Texture2D CreateGradientTexture(Color top, Color bottom, int height = 256)
         {
             var tex = new Texture2D(1, height, TextureFormat.RGBA32, false);

@@ -13,6 +13,24 @@ namespace JuiceSort.Game.UI.Components
         private static readonly Dictionary<string, Sprite> _cache = new Dictionary<string, Sprite>();
 
         /// <summary>
+        /// Destroys all cached textures and sprites. Call during scene cleanup or when
+        /// procedural UI is fully torn down to reclaim GPU memory.
+        /// </summary>
+        public static void ClearCache()
+        {
+            foreach (var kvp in _cache)
+            {
+                if (kvp.Value != null)
+                {
+                    if (kvp.Value.texture != null)
+                        Object.Destroy(kvp.Value.texture);
+                    Object.Destroy(kvp.Value);
+                }
+            }
+            _cache.Clear();
+        }
+
+        /// <summary>
         /// Creates a rounded rectangle sprite with optional gradient and soft edges.
         /// </summary>
         /// <param name="width">Texture width in pixels</param>
@@ -647,7 +665,7 @@ namespace JuiceSort.Game.UI.Components
 
         private static string ColorKey(Color c)
         {
-            return $"{(int)(c.r * 255)}_{(int)(c.g * 255)}_{(int)(c.b * 255)}_{(int)(c.a * 255)}";
+            return $"{Mathf.RoundToInt(c.r * 255)}_{Mathf.RoundToInt(c.g * 255)}_{Mathf.RoundToInt(c.b * 255)}_{Mathf.RoundToInt(c.a * 255)}";
         }
     }
 }
