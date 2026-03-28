@@ -77,37 +77,31 @@ namespace JuiceSort.Game.UI.Screens
             go.AddComponent<GraphicRaycaster>();
             var hub = go.AddComponent<HubScreen>();
 
-            // ===== BACKGROUND (hub_background.png from Resources) =====
-            var bg = Img(go, "BG", V(0,0), V(1,1));
-            bg.preserveAspect = false;
-            var bgSprite = Resources.Load<Sprite>("Backgrounds/hub_background");
-            if (bgSprite != null)
+            // ===== BACKGROUND (aspect-fill / cover) =====
+            var bgR = R(go, "BG");
+            bgR.anchorMin = V(0, 0); bgR.anchorMax = V(1, 1);
+            var bgRaw = bgR.gameObject.AddComponent<RawImage>();
+
+            var bgTex2D = Resources.Load<Texture2D>("Backgrounds/hub_background");
+            if (bgTex2D != null)
             {
-                bg.sprite = bgSprite;
+                bgRaw.texture = bgTex2D;
             }
             else
             {
-                var bgTex2D = Resources.Load<Texture2D>("Backgrounds/hub_background");
-                if (bgTex2D != null)
-                {
-                    bg.sprite = Sprite.Create(bgTex2D,
-                        new Rect(0, 0, bgTex2D.width, bgTex2D.height), V(0.5f, 0.5f));
-                }
-                else
-                {
-                    // Fallback: dark blue gradient
-                    var fbTex = new Texture2D(1, 512, TextureFormat.RGBA32, false);
-                    fbTex.wrapMode = TextureWrapMode.Clamp; fbTex.filterMode = FilterMode.Bilinear;
-                    Color cTop = new Color(0.02f, 0.02f, 0.12f);
-                    Color cBot = new Color(0.08f, 0.12f, 0.35f);
-                    for (int y = 0; y < 512; y++)
-                        fbTex.SetPixel(0, y, Color.Lerp(cBot, cTop, (float)y / 511f));
-                    fbTex.Apply();
-                    bg.sprite = Sprite.Create(fbTex, new Rect(0, 0, 1, 512), V(0.5f, 0.5f));
-                    hub._runtimeTextures.Add(fbTex);
-                }
+                // Fallback: dark blue gradient
+                var fbTex = new Texture2D(1, 512, TextureFormat.RGBA32, false);
+                fbTex.wrapMode = TextureWrapMode.Clamp; fbTex.filterMode = FilterMode.Bilinear;
+                Color cTop = new Color(0.02f, 0.02f, 0.12f);
+                Color cBot = new Color(0.08f, 0.12f, 0.35f);
+                for (int y = 0; y < 512; y++)
+                    fbTex.SetPixel(0, y, Color.Lerp(cBot, cTop, (float)y / 511f));
+                fbTex.Apply();
+                bgRaw.texture = fbTex;
+                hub._runtimeTextures.Add(fbTex);
             }
-            bg.type = Image.Type.Simple;
+
+            bgR.gameObject.AddComponent<AspectFillScaler>();
 
             var safe = R(go, "Safe"); ApplySafeArea(safe);
 

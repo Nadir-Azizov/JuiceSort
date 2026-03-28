@@ -115,7 +115,8 @@ namespace JuiceSort.Game.Boot
             var gm = gmGo.AddComponent<GameplayManager>();
             Services.Register<GameplayManager>(gm);
 
-            // Loading screen — shown immediately on boot
+            // Loading screen — shown when entering Boot directly (editor Play)
+            // In builds, LoadingScene (index 0) shows the splash first
             var loading = LoadingScreen.Create();
             DontDestroyOnLoad(loading);
             screenMgr.RegisterScreen(GameFlowState.Loading, loading);
@@ -201,29 +202,33 @@ namespace JuiceSort.Game.Boot
 
         private void Start()
         {
-            // Show loading screen first, then transition to Hub after minimum delay
             if (Services.TryGet<ScreenManager>(out var screenMgr))
             {
-                screenMgr.TransitionTo(GameFlowState.Loading);
-                StartCoroutine(WaitForLoadingThenShowHub(screenMgr));
+                if (LoadingSceneManager.SplashCompleted)
+                {
+                    screenMgr.TransitionTo(GameFlowState.MainMenu);
+                }
+                else
+                {
+                    // Direct play (editor) — show loading screen with 2s delay
+                    screenMgr.TransitionTo(GameFlowState.Loading);
+                    StartCoroutine(WaitForLoadingThenShowHub(screenMgr));
+                }
             }
         }
 
         private System.Collections.IEnumerator WaitForLoadingThenShowHub(ScreenManager screenMgr)
         {
-            // Find the LoadingScreen component to check readiness
             var loadingGo = screenMgr.GetScreen(GameFlowState.Loading);
             var loadingScreen = loadingGo != null ? loadingGo.GetComponent<LoadingScreen>() : null;
 
             if (loadingScreen != null)
             {
-                // Wait until minimum display time has elapsed
                 while (!loadingScreen.IsReady)
                     yield return null;
             }
             else
             {
-                // Fallback: just wait 2 seconds if component not found
                 yield return new WaitForSecondsRealtime(2f);
             }
 

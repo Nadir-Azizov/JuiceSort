@@ -77,6 +77,9 @@ Claude Opus 4.6 (1M context)
 - 2026-03-27: Deleted loading-screen-mockup.html — obsolete, replaced by PNG-based implementation
 - 2026-03-27: Code review — removed unnecessary GraphicRaycaster (no interactive elements on loading screen)
 - 2026-03-27: Restored 2s minimum delay — instant transition looked jarring
+- 2026-03-28: Post-completion — Background switched from Image+Sprite to RawImage+Texture2D, added AspectFillScaler for aspect-fill (cover) mode instead of stretching. Prevents distortion on non-16:9 devices.
+- 2026-03-28: Post-completion — Created LoadingScene.unity (Build Index 0) with LoadingSceneManager that async-loads Boot scene. BootLoader detects via static flag whether splash already shown. Unity built-in splash disabled.
+- 2026-03-28: Post-completion — loading_background.png replaced with taller 9:20 ratio image (1080x2400) with expendable top/bottom bleed zones for safe cropping on shorter screens.
 
 ### File List
 - `Assets/Scripts/Game/UI/Screens/LoadingScreen.cs` (NEW)

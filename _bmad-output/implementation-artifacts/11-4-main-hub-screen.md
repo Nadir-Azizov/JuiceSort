@@ -156,6 +156,7 @@ Claude Opus 4.6 (1M context)
 - 2026-03-24: Story 11.4 implemented — HubScreen replaces MainMenuScreen
 - 2026-03-24: Code review fixes — Fixed bg tap blocking all clicks (moved to center-only overlay), deleted dead MainMenuScreen.cs, replaced hardcoded colors with ThemeConfig
 - 2026-03-24: Icon fix — Replaced invisible Unicode text icons (⚙/≡) on settings/roadmap buttons with PNG sprites via new SpriteBtn helper (Resources.Load from Icons/)
+- 2026-03-28: Post-completion — Hub background switched from Image+Sprite to RawImage+Texture2D, added AspectFillScaler for aspect-fill (cover) mode. Prevents stretching/distortion on non-16:9 devices (e.g., Samsung S23 Ultra 19.3:9).
 
 ### File List
 - CREATED: `src/JuiceSort/Assets/Scripts/Game/UI/Screens/HubScreen.cs` — Full hub screen (607 lines)
