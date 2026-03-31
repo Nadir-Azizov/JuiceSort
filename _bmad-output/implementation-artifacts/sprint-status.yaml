@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-31  # Story 11.10 visual polish complete, production ready
+last_updated: 2026-03-31  # Story 11.11 navbar-play-button ready for review
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -134,7 +134,7 @@ development_status:
   10-8-pour-visual-fixes: done
   10-9-pour-stream-rework: done
 
-  # Epic 11: UI/UX Overhaul (9 stories — 8 done, 1 remaining)
+  # Epic 11: UI/UX Overhaul (10 stories — 8 done, 2 remaining)
   epic-11: in-progress
   11-1-responsive-bottle-layout: done               # SO HIGH priority
   11-2-hud-redesign: done                           # HIGH priority
@@ -146,3 +146,4 @@ development_status:
   11-8-roadmap-redesign: ready-for-dev              # MEDIUM priority — vertical journey path with level nodes
   11-9-app-icon-setup: done                         # MEDIUM priority — Android adaptive icon configuration
   11-10-main-settings: done                  # HIGH priority — Settings panel redesign (uGUI, code review passed)
+  11-11-navbar-play-button: review            # HIGH priority — Premium nav bar + 3D play button overhaul

@@ -14,7 +14,7 @@
 | 8 | Animation Polish | Epic 1, 4, 5 | 5 implemented | Done |
 | 9 | Coin Economy System | Epic 1, 3, 7 | 6 implemented | Done |
 | 10 | Liquid Visual Overhaul | Epic 1, 5 | 6 implemented | Done |
-| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 3 done, 5 remaining (redesigned) | In Progress |
+| 11 | UI/UX Overhaul | Epic 4, 5, 9 | 10 stories (8 done, 2 remaining) | In Progress |
 
 **Total: 47 implemented stories / 57 originally planned (13 merged during development)**
 
@@ -423,3 +423,4 @@ Player opens app → loading screen → hub with Level N button → one tap to p
 - **11.8** [MEDIUM] As a player, I can access a vertical journey roadmap from the hub showing level nodes on a path, with completed/current/locked states and city chapter cards (roadmap redesign)
 - **11.9** [MEDIUM] As a player, the JuiceSort app has a polished, recognizable icon on my device that looks professional and is easy to find (Android adaptive icon setup) → [11-9-app-icon-setup.md](implementation-artifacts/11-9-app-icon-setup.md)
 - **11.10** [HIGH] As a player, I want a polished settings panel with 3D-style buttons and clear toggle states, so that managing my game preferences feels premium and intuitive (main settings) → [11-10-main-settings.md](implementation-artifacts/11-10-main-settings.md)
+- **11.11** [HIGH] As a player, I want a premium casual-game nav bar with 3D icons and a polished play button with gold border, shadows, and animations, so that the hub screen feels like a top-tier mobile puzzle game (nav bar & play button overhaul) → [11-11-navbar-play-button.md](implementation-artifacts/11-11-navbar-play-button.md)

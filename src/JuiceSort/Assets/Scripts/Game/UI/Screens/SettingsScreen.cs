@@ -154,7 +154,7 @@ namespace JuiceSort.Game.UI.Screens
 
         #region Constants
 
-        private const float HeaderHeight = 184f;
+        private const float HeaderHeightBase = 184f;
         private const float GoldSepHeight = 11f;
         private const float CloseButtonSize = 146f;
         private const float CloseButtonMargin = 38f;
@@ -219,12 +219,24 @@ namespace JuiceSort.Game.UI.Screens
             go.AddComponent<CanvasGroup>();
             var screen = go.AddComponent<SettingsScreen>();
 
+            // Header uses safe area top inset so title/close sit below the notch.
+            // Convert Screen.safeArea (physical pixels) to reference-resolution units
+            // using the same logic CanvasScaler applies (matchWidthOrHeight = 0.5).
+            float refW = 1080f, refH = 1920f;
+            float logW = Mathf.Log(Screen.width / refW, 2f);
+            float logH = Mathf.Log(Screen.height / refH, 2f);
+            float canvasScale = Mathf.Pow(2f, Mathf.Lerp(logW, logH, 0.5f));
+            float notchPad = Mathf.Max((Screen.height - Screen.safeArea.yMax) / canvasScale, 0f);
+            // Guarantee a minimum so the title clears status bar even without a notch
+            notchPad = Mathf.Max(notchPad, 60f);
+            float HeaderHeight = HeaderHeightBase + notchPad;
+
             // Background
             var bg = R(go, "Background");
             bg.anchorMin = V(0, 0); bg.anchorMax = V(1, 1);
             Img(bg, null, Col("#2d2280")).raycastTarget = true;
 
-            // Header
+            // Header — taller to include notch/status bar padding
             var header = R(go, "Header");
             header.anchorMin = V(0, 1); header.anchorMax = V(1, 1);
             header.pivot = V(0.5f, 1); header.sizeDelta = V(0, HeaderHeight);
@@ -238,7 +250,7 @@ namespace JuiceSort.Game.UI.Screens
             headerHl.pivot = V(0.5f, 1); headerHl.sizeDelta = V(0, 5);
             Img(headerHl, null, ColA(1, 1, 1, 0.15f)).raycastTarget = false;
 
-            // Header bottom shadow (CSS: box-shadow: 0 6px 16px rgba(0,0,0,0.5))
+            // Header bottom shadow
             var headerSh = R(header.gameObject, "HeaderShadow");
             headerSh.anchorMin = V(0, 0); headerSh.anchorMax = V(1, 0);
             headerSh.pivot = V(0.5f, 1); headerSh.sizeDelta = V(0, 43);
@@ -251,12 +263,18 @@ namespace JuiceSort.Game.UI.Screens
             sep.pivot = V(0.5f, 0); sep.sizeDelta = V(0, GoldSepHeight);
             Img(sep, null, Col("#7a5510")).raycastTarget = false;
 
-            // Title — max bold + thick black border
-            var title = Txt(header.gameObject, "Settings", 103f, Color.white, 0.6f, 0.25f);
+            // Content area inside header — below notch, above bottom edge
+            var headerContent = R(header.gameObject, "HeaderContent");
+            headerContent.anchorMin = V(0, 0); headerContent.anchorMax = V(1, 1);
+            headerContent.offsetMin = V(0, 0);
+            headerContent.offsetMax = V(0, -notchPad);
+
+            // Title — inside safe content area
+            var title = Txt(headerContent.gameObject, "Settings", 103f, Color.white, 0.6f, 0.25f);
             title.characterSpacing = -4f;
 
-            // Close button
-            var closeRoot = R(header.gameObject, "CloseButton");
+            // Close button — inside safe content area
+            var closeRoot = R(headerContent.gameObject, "CloseButton");
             closeRoot.anchorMin = V(1, 0.5f); closeRoot.anchorMax = V(1, 0.5f);
             closeRoot.pivot = V(1, 0.5f);
             closeRoot.anchoredPosition = V(-CloseButtonMargin, 0);

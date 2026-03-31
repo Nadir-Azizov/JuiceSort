@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using JuiceSort.Core;
@@ -15,21 +18,46 @@ namespace JuiceSort.Game.UI.Screens
     {
         private TextMeshProUGUI _levelButtonText;
         private TextMeshProUGUI _coinText;
-        private Image _playGlowImage;
-        private Image _navGlowImage;
         private int _currentLevel;
-        private Coroutine _animCoroutine;
+
+        // Nav bar state
+        private RectTransform[] _navIcons;
+        private Image[] _navImages;
+        private GameObject[] _navGlows;
+        private int _activeTab = 2; // Home default
+        private Coroutine[] _navAnimCoroutines;
+
+        // Play button state
+        private RectTransform _playButtonFace;
+        private Vector2 _playButtonBasePos;
+        private CanvasGroup _playGlowCG;
+        private RectTransform _playGlowRT;
+
+        // Animation coroutines
+        private Coroutine _playPulseCoroutine;
+        private Coroutine _playGlowCoroutine;
+        private Coroutine _playShimmerCoroutine;
+        private Coroutine _goldShimmerCoroutine;
+        private Coroutine _navGlowCoroutine;
+
+        // Events
+        public event Action<int> OnTabChanged;
 
         // Track runtime-created textures so we only destroy those (never Resources-loaded assets)
         private readonly List<Texture2D> _runtimeTextures = new List<Texture2D>();
+
+        // Cached colors
+        static readonly Color INACTIVE_TINT = new Color(0.55f, 0.55f, 0.55f, 0.7f);
+    static readonly Color ACTIVE_TINT = Color.white;
+        static readonly Color GOLD = new Color(0.784f, 0.659f, 0.306f, 1f); // #C8A84E
+        static readonly Color GOLD_SEMI = new Color(0.784f, 0.659f, 0.306f, 0.35f);
 
         void OnEnable() { if (_levelButtonText != null) Refresh(); }
         void Start() { Refresh(); }
 
         void OnDestroy()
         {
-            if (_animCoroutine != null)
-                StopCoroutine(_animCoroutine);
+            StopAllCoroutines();
 
             // Only destroy runtime-created textures — never Resources-loaded assets
             foreach (var tex in _runtimeTextures)
@@ -64,6 +92,233 @@ namespace JuiceSort.Game.UI.Screens
         }
         void GoRoadmap() { if (Services.TryGet<ScreenManager>(out var s)) s.TransitionTo(GameFlowState.Roadmap); }
         void GoSettings() { if (Services.TryGet<ScreenManager>(out var s)) s.TransitionTo(GameFlowState.Settings); }
+
+        // ================================================================
+        // TAB SWITCHING
+        // ================================================================
+
+        void OnTabClicked(int index)
+        {
+            if (index == _activeTab) return;
+            if (index < 0 || index >= _navIcons.Length) return;
+
+            // Stop any running animation on both tabs
+            if (_navAnimCoroutines[_activeTab] != null) StopCoroutine(_navAnimCoroutines[_activeTab]);
+            if (_navAnimCoroutines[index] != null) StopCoroutine(_navAnimCoroutines[index]);
+
+            // Old tab — shrink with undershoot
+            _navAnimCoroutines[_activeTab] = StartCoroutine(AnimateShrinkOut(_activeTab));
+
+            // New tab — bounce up with overshoot
+            _navAnimCoroutines[index] = StartCoroutine(AnimateBounceIn(index));
+
+            _activeTab = index;
+            OnTabChanged?.Invoke(index);
+            // TODO: wire non-Home tabs to screens when implemented
+        }
+
+        // ================================================================
+        // KEYFRAME INTERPOLATION
+        // ================================================================
+
+        // Evaluates a keyframe curve at time t (0-1) using linear interpolation between keys
+        static float EvalKeyframes(float t, float[] times, float[] values)
+        {
+            if (t <= times[0]) return values[0];
+            if (t >= times[times.Length - 1]) return values[values.Length - 1];
+            for (int i = 0; i < times.Length - 1; i++)
+            {
+                if (t <= times[i + 1])
+                {
+                    float seg = (t - times[i]) / (times[i + 1] - times[i]);
+                    return Mathf.Lerp(values[i], values[i + 1], seg);
+                }
+            }
+            return values[values.Length - 1];
+        }
+
+        // ACTIVATE keyframes: 1.0 → 1.65 → 1.30 → 1.52 → 1.42 → 1.45
+        static readonly float[] BOUNCE_TIMES  = { 0f, 0.25f, 0.45f, 0.70f, 0.85f, 1f };
+        static readonly float[] BOUNCE_SCALES = { 1.0f, 1.65f, 1.30f, 1.52f, 1.42f, 1.45f };
+
+        // DEACTIVATE keyframes: 1.45 → 0.85 → 1.05 → 1.0
+        static readonly float[] SHRINK_TIMES  = { 0f, 0.50f, 0.75f, 1f };
+        static readonly float[] SHRINK_SCALES = { 1.45f, 0.85f, 1.05f, 1.0f };
+
+        // ================================================================
+        // ANIMATION COROUTINES
+        // ================================================================
+
+        // NEW TAB: Bounce up with overshoot keyframes (0.45s)
+        // 1.0 → 1.65 (overshoot!) → 1.30 → 1.52 → 1.42 → 1.45 (settle)
+        IEnumerator AnimateBounceIn(int index)
+        {
+            float duration = 0.45f;
+            float elapsed = 0f;
+            var icon = _navIcons[index];
+            var img = _navImages[index];
+            Color startColor = img.color;
+
+            if (_navGlows[index] != null) _navGlows[index].SetActive(true);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+
+                // Scale from keyframe table — visible overshoot to 1.65
+                float scale = EvalKeyframes(t, BOUNCE_TIMES, BOUNCE_SCALES);
+                icon.localScale = Vector3.one * scale;
+
+                // Color — linear over 0.3s
+                float colorT = Mathf.Clamp01(elapsed / 0.3f);
+                img.color = Color.Lerp(startColor, ACTIVE_TINT, colorT);
+
+                yield return null;
+            }
+            icon.localScale = Vector3.one * 1.45f;
+            img.color = ACTIVE_TINT;
+        }
+
+        // OLD TAB: Shrink with undershoot keyframes (0.25s)
+        // 1.45 → 0.85 (undershoot!) → 1.05 → 1.0 (settle)
+        IEnumerator AnimateShrinkOut(int index)
+        {
+            float duration = 0.25f;
+            float elapsed = 0f;
+            var icon = _navIcons[index];
+            var img = _navImages[index];
+            Color startColor = img.color;
+
+            if (_navGlows[index] != null) _navGlows[index].SetActive(false);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+
+                // Scale from keyframe table — undershoot to 0.85
+                float scale = EvalKeyframes(t, SHRINK_TIMES, SHRINK_SCALES);
+                icon.localScale = Vector3.one * scale;
+
+                // Color
+                img.color = Color.Lerp(startColor, INACTIVE_TINT, t);
+
+                yield return null;
+            }
+            icon.localScale = Vector3.one;
+            img.color = INACTIVE_TINT;
+        }
+
+        IEnumerator AnimatePlayPulse(RectTransform button)
+        {
+            while (true)
+            {
+                float t = Time.time;
+                float scale = Mathf.Lerp(1f, 1.02f, (Mathf.Sin(t * Mathf.PI / 1.5f) + 1f) * 0.5f);
+                button.localScale = Vector3.one * scale;
+                yield return null;
+            }
+        }
+
+        IEnumerator AnimatePlayGlow(CanvasGroup cg, RectTransform rt)
+        {
+            while (true)
+            {
+                float t = Time.time;
+                float sine = (Mathf.Sin(t * Mathf.PI / 1.25f) + 1f) * 0.5f;
+                cg.alpha = Mathf.Lerp(0.35f, 0.7f, sine);  // HTML: 0.5 -> 1.0 (toned down for mobile)
+                float s = Mathf.Lerp(1f, 1.1f, sine);   // HTML: scale 1 -> 1.1
+                rt.localScale = new Vector3(s, s, 1f);
+                yield return null;
+            }
+        }
+
+        IEnumerator AnimatePlayShimmer(RectTransform shimmer, float buttonWidth, float shimmerWidth)
+        {
+            // HTML: animation 2.5s, sweep from -50% to 120% in first 35%, hold rest
+            var startPos = new Vector2(-shimmerWidth, 0);
+            float endX = buttonWidth * 1.2f;
+            while (true)
+            {
+                shimmer.anchoredPosition = startPos;
+                float elapsed = 0f;
+                float sweepDuration = 0.875f; // 35% of 2.5s
+                while (elapsed < sweepDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / sweepDuration);
+                    float ease = -(Mathf.Cos(Mathf.PI * t) - 1f) / 2f;
+                    float x = Mathf.Lerp(-shimmerWidth, endX, ease);
+                    shimmer.anchoredPosition = new Vector2(x, 0);
+                    yield return null;
+                }
+                // Hold at end for remaining time, then restart (total ~2.5s cycle)
+                yield return new WaitForSeconds(1.625f);
+            }
+        }
+
+        IEnumerator AnimateGoldShimmer(RectTransform shimmer, float barWidth, float shimmerWidth)
+        {
+            var startPos = new Vector2(-shimmerWidth, 0);
+            while (true)
+            {
+                shimmer.anchoredPosition = startPos;
+                float elapsed = 0f;
+                while (elapsed < 5f)
+                {
+                    elapsed += Time.deltaTime;
+                    float x = Mathf.Lerp(-shimmerWidth, barWidth, elapsed / 5f);
+                    shimmer.anchoredPosition = new Vector2(x, 0);
+                    yield return null;
+                }
+                yield return new WaitForSeconds(1f);
+            }
+        }
+
+        IEnumerator AnimateNavGlow()
+        {
+            while (true)
+            {
+                float t = Time.time;
+                // Pulse alpha of active tab's glow
+                if (_navGlows != null && _activeTab >= 0 && _activeTab < _navGlows.Length && _navGlows[_activeTab] != null)
+                {
+                    var glowImg = _navGlows[_activeTab].GetComponent<Image>();
+                    if (glowImg != null)
+                    {
+                        float navT = Mathf.Repeat(t * 0.5f, 1f); // 2s cycle
+                        float ease = navT < 0.5f
+                            ? 4f * navT * navT * navT
+                            : 1f - Mathf.Pow(-2f * navT + 2f, 3f) / 2f;
+                        float navA = Mathf.Lerp(0.15f, 0.5f, ease);
+                        glowImg.color = new Color(1f, 0.84f, 0f, navA);
+                    }
+                }
+                yield return null;
+            }
+        }
+
+        // ================================================================
+        // PLAY BUTTON PRESS FEEDBACK
+        // ================================================================
+
+        void OnPlayPointerDown()
+        {
+            if (_playPulseCoroutine != null) { StopCoroutine(_playPulseCoroutine); _playPulseCoroutine = null; }
+            _playButtonFace.localScale = Vector3.one;
+            _playButtonFace.anchoredPosition = _playButtonBasePos + new Vector2(0, -6f);
+        }
+
+        void OnPlayPointerUp()
+        {
+            _playButtonFace.anchoredPosition = _playButtonBasePos;
+            _playPulseCoroutine = StartCoroutine(AnimatePlayPulse(_playButtonFace));
+        }
+
+        // ================================================================
+        // FACTORY: Create()
+        // ================================================================
 
         public static GameObject Create()
         {
@@ -248,8 +503,6 @@ namespace JuiceSort.Game.UI.Screens
             var mapR = mapGo.GetComponent<RectTransform>();
             mapR.anchorMin = V(1,1); mapR.anchorMax = V(1,1);
             mapR.pivot = V(1,1); mapR.anchoredPosition = V(-28,-180);
-            // Map button background layers (same style as Settings button)
-            // Move the icon sprite from mapGo's Image into a child so it renders on top of bg layers
             var mapRootImg = mapGo.GetComponent<Image>();
             var mapIconGo = R(mapGo, "Icon");
             mapIconGo.anchorMin = V(0,0); mapIconGo.anchorMax = V(1,1);
@@ -258,7 +511,6 @@ namespace JuiceSort.Game.UI.Screens
             mapIconI.preserveAspect = true;
             mapIconI.color = Color.white;
             mapIconI.raycastTarget = false;
-            // Clear the root Image visual so only the child shows the icon, but keep raycast
             mapRootImg.sprite = null;
             mapRootImg.color = Color.clear;
             mapRootImg.raycastTarget = true;
@@ -282,7 +534,6 @@ namespace JuiceSort.Game.UI.Screens
             mapBrdI.color = new Color(1f, 1f, 1f, 0.4f);
             mapBrdI.raycastTarget = false;
             mapBrd.transform.SetAsFirstSibling();
-            // Ensure icon child is last sibling (renders on top)
             mapIconGo.transform.SetAsLastSibling();
             mapGo.GetComponent<Button>().onClick.AddListener(() => { TryHaptic(); hub.GoRoadmap(); });
 
@@ -293,98 +544,392 @@ namespace JuiceSort.Game.UI.Screens
             tapBtn.transition = Selectable.Transition.None;
             tapBtn.onClick.AddListener(() => hub.GoRoadmap());
 
-            // ===== CENTER =====
-            var cen = R(go, "Cen");
-            cen.anchorMin = V(0,0.15f); cen.anchorMax = V(1,0.85f);
-
-            // ===== PLAY BUTTON =====
-
-            // Glow — kept inside button bounds, no overflow
-            var glow = R(cen.gameObject, "Glow");
-            glow.anchorMin = V(0.18f,0.04f); glow.anchorMax = V(0.82f,0.17f);
-            hub._playGlowImage = glow.gameObject.AddComponent<Image>();
-            hub._playGlowImage.sprite = UIShapeUtils.Glow(128, new Color(0.2f,1f,0.3f,0.3f), 0.7f);
-            hub._playGlowImage.raycastTarget = false;
-
-            // 3D BOTTOM EDGE (darker green, offset down + right)
-            var edge3 = R(cen.gameObject, "Edge3");
-            edge3.anchorMin = V(0.185f, 0.015f); edge3.anchorMax = V(0.825f, 0.155f);
-            var edge3I = edge3.gameObject.AddComponent<Image>();
-            edge3I.sprite = hub.BakeGradientPillTracked(600, 180, 90,
-                new Color(0.08f, 0.45f, 0.12f, 1f),
-                new Color(0.05f, 0.32f, 0.08f, 1f),
-                new Color(0.04f, 0.28f, 0.06f, 1f),
-                new Color(0.03f, 0.22f, 0.05f, 1f));
-            edge3I.type = Image.Type.Simple;
-            edge3I.raycastTarget = false;
-
-            // 3D MIDDLE EDGE (medium dark green, smaller offset)
-            var edge2 = R(cen.gameObject, "Edge2");
-            edge2.anchorMin = V(0.183f, 0.025f); edge2.anchorMax = V(0.823f, 0.165f);
-            var edge2I = edge2.gameObject.AddComponent<Image>();
-            edge2I.sprite = hub.BakeGradientPillTracked(600, 180, 90,
-                new Color(0.1f, 0.52f, 0.15f, 1f),
-                new Color(0.07f, 0.4f, 0.1f, 1f),
-                new Color(0.06f, 0.35f, 0.08f, 1f),
-                new Color(0.05f, 0.3f, 0.07f, 1f));
-            edge2I.type = Image.Type.Simple;
-            edge2I.raycastTarget = false;
-
-            // PLAY BUTTON (main face) — exact CSS gradient
-            var pb = R(cen.gameObject, "Play");
-            pb.anchorMin = V(0.18f, 0.04f); pb.anchorMax = V(0.82f, 0.16f);
-            var pbI = pb.gameObject.AddComponent<Image>();
-            Color g0 = new Color(0.40f, 0.93f, 0.47f); // #66ee77
-            Color g1 = new Color(0.27f, 0.87f, 0.33f); // #44dd55
-            Color g2 = new Color(0.20f, 0.80f, 0.27f); // #33cc44
-            Color g3 = new Color(0.16f, 0.72f, 0.24f); // #28b83d
-            pbI.sprite = hub.BakeGradientPillTracked(600, 180, 90, g0, g1, g2, g3);
-            pbI.type = Image.Type.Simple;
-            pb.gameObject.AddComponent<Button>().onClick.AddListener(() => { TryHaptic(); hub.Play(); });
-            pb.gameObject.AddComponent<ButtonBounce>();
-
-            // Subtle white tint at top only (thin, inside button, no overflow)
-            var topTint = R(pb.gameObject, "TopTint");
-            topTint.anchorMin = V(0.1f, 0.7f); topTint.anchorMax = V(0.9f, 0.95f);
-            var topTintI = topTint.gameObject.AddComponent<Image>();
-            topTintI.sprite = UIShapeUtils.WhitePill(400, 30);
-            topTintI.type = Image.Type.Simple;
-            topTintI.color = new Color(1f, 1f, 1f, 0.12f);
-            topTintI.raycastTarget = false;
-
-            // Shine dot left
-            var shL = R(pb.gameObject, "ShL");
-            shL.anchorMin = V(0.08f, 0.55f); shL.anchorMax = V(0.18f, 0.85f);
-            var shLI = shL.gameObject.AddComponent<Image>();
-            shLI.sprite = UIShapeUtils.WhiteCircle(32);
-            shLI.color = new Color(1f, 1f, 1f, 0.1f);
-            shLI.raycastTarget = false;
-
-            // Shine dot right
-            var shR = R(pb.gameObject, "ShR");
-            shR.anchorMin = V(0.82f, 0.55f); shR.anchorMax = V(0.92f, 0.85f);
-            var shRI = shR.gameObject.AddComponent<Image>();
-            shRI.sprite = UIShapeUtils.WhiteCircle(32);
-            shRI.color = new Color(1f, 1f, 1f, 0.08f);
-            shRI.raycastTarget = false;
-
-            // Level text — MASSIVE and 3X BOLD
-            hub._levelButtonText = Txt(pb.gameObject, "<b>Level 1</b>", 56, Color.white);
-            // Force bold through material — this works even if font atlas has no bold data
-            hub._levelButtonText.extraPadding = true;
-            var mat = new Material(hub._levelButtonText.fontSharedMaterial);
-            mat.SetFloat(ShaderUtilities.ID_FaceDilate, 0.3f);  // thicken glyphs
-            mat.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f); // outline adds more thickness
-            mat.SetColor(ShaderUtilities.ID_OutlineColor, Color.white);
-            hub._levelButtonText.fontMaterial = mat;
-
-
             // ===== NAV BAR =====
             NavBar(go, hub);
 
-            hub._animCoroutine = hub.StartCoroutine(hub.Anim());
+            // ===== PLAY BUTTON =====
+            PlayButton(go, hub);
+
+            // ===== START ANIMATIONS =====
+            hub._navGlowCoroutine = hub.StartCoroutine(hub.AnimateNavGlow());
+
             return go;
         }
+
+        // ================================================================
+        // NAV BAR
+        // ================================================================
+
+        static void NavBar(GameObject root, HubScreen hub)
+        {
+            hub._navIcons = new RectTransform[5];
+            hub._navImages = new Image[5];
+            hub._navGlows = new GameObject[5];
+            hub._navAnimCoroutines = new Coroutine[5];
+
+            var bar = R(root, "Nav");
+            bar.anchorMin = V(0, 0); bar.anchorMax = V(1, 0);
+            bar.pivot = V(0.5f, 0); bar.sizeDelta = V(0, 200);
+
+            // Gradient background: top #4A2D8A -> bottom #251060
+            var navBg = R(bar.gameObject, "NavBg");
+            navBg.anchorMin = V(0, 0); navBg.anchorMax = V(1, 1);
+            navBg.offsetMin = Vector2.zero; navBg.offsetMax = Vector2.zero;
+            var navBgI = navBg.gameObject.AddComponent<Image>();
+            navBgI.sprite = ThemeConfig.CreateGradientSprite(
+                new Color(0.290f, 0.176f, 0.541f), // #4A2D8A top
+                new Color(0.145f, 0.063f, 0.376f)); // #251060 bottom
+            navBgI.type = Image.Type.Simple;
+            navBgI.raycastTarget = false;
+            navBg.transform.SetAsFirstSibling();
+
+            // Gold top border — 3.5px, #C8A84E
+            var goldLine = R(bar.gameObject, "GoldBorder");
+            goldLine.anchorMin = V(0, 1); goldLine.anchorMax = V(1, 1);
+            goldLine.pivot = V(0.5f, 0.5f);
+            goldLine.anchoredPosition = V(0, 0);
+            goldLine.sizeDelta = V(0, 3.5f);
+            var goldLineI = goldLine.gameObject.AddComponent<Image>();
+            goldLineI.color = GOLD;
+            goldLineI.raycastTarget = false;
+
+            // Gold shimmer band (child of gold border, clipped by RectMask2D)
+            var goldMask = goldLine.gameObject.AddComponent<RectMask2D>();
+            var shimmer = R(goldLine.gameObject, "Shimmer");
+            shimmer.anchorMin = V(0, 0); shimmer.anchorMax = V(0, 1);
+            shimmer.pivot = V(0, 0.5f);
+            shimmer.sizeDelta = V(120, 0); // shimmer band width
+            shimmer.anchoredPosition = V(-120, 0);
+            var shimmerI = shimmer.gameObject.AddComponent<Image>();
+            shimmerI.sprite = UIShapeUtils.Glow(64, Color.white, 0.8f);
+            shimmerI.color = new Color(1f, 1f, 1f, 0.6f);
+            shimmerI.raycastTarget = false;
+            hub._goldShimmerCoroutine = hub.StartCoroutine(hub.AnimateGoldShimmer(shimmer, 1080f, 120f));
+
+            // Gold glow behind border line
+            var goldGlow = R(bar.gameObject, "GoldGlow");
+            goldGlow.anchorMin = V(0.05f, 0.92f); goldGlow.anchorMax = V(0.95f, 1.05f);
+            var goldGlowI = goldGlow.gameObject.AddComponent<Image>();
+            goldGlowI.sprite = UIShapeUtils.Glow(128, new Color(1f, 0.8f, 0.2f, 0.15f), 0.5f);
+            goldGlowI.raycastTarget = false;
+            goldGlow.transform.SetAsFirstSibling();
+
+            // Nav items + separators
+            string[] labels = { "Shop", "Leaders", "Home", "Teams", "Collect" };
+            string[] icoFallback = { "\u2B50", "\u265B", "\u2665", "\u2726", "\u2666" };
+            string[] icoRes = {
+                "Icons/NavBar/icon_shop",
+                "Icons/NavBar/icon_leaderboard",
+                "Icons/NavBar/icon_home",
+                "Icons/NavBar/icon_teams",
+                "Icons/NavBar/icon_collections"
+            };
+            // Fallback to old flat icons if new ones not found
+            string[] icoResFallback = {
+                "Icons/flat_icon_shop",
+                "Icons/flat_icon_leaderboard",
+                "Icons/flat_icon_home",
+                "Icons/flat_icon_teams",
+                "Icons/flat_icon_collections"
+            };
+            Color[] fallbackColors = {
+                new Color(1f, 0.8f, 0.2f),
+                new Color(1f, 0.6f, 0.2f),
+                new Color(0.6f, 0.92f, 1f),
+                new Color(0.4f, 1f, 0.55f),
+                new Color(1f, 0.5f, 0.7f)
+            };
+
+            float tabW = 1f / 5f;
+            for (int i = 0; i < 5; i++)
+            {
+                bool isActive = (i == 2); // Home tab
+
+                // Separator before this tab (skip first)
+                if (i > 0)
+                {
+                    var sep = R(bar.gameObject, $"Sep_{i - 1}_{i}");
+                    sep.anchorMin = V(tabW * i - 0.001f, 0);
+                    sep.anchorMax = V(tabW * i + 0.001f, 1);
+                    sep.offsetMin = V(0, 14); sep.offsetMax = V(0, -14);
+                    sep.sizeDelta = new Vector2(1.5f, sep.sizeDelta.y);
+                    var sepI = sep.gameObject.AddComponent<Image>();
+                    sepI.color = GOLD_SEMI;
+                    sepI.raycastTarget = false;
+                }
+
+                // Nav item container
+                var item = R(bar.gameObject, $"N{labels[i]}");
+                item.anchorMin = V(tabW * i, 0); item.anchorMax = V(tabW * (i + 1), 1);
+                item.offsetMin = V(4, 28); item.offsetMax = V(-4, -8);
+
+                // Gold glow behind icon (active only)
+                var gl = R(item.gameObject, "Gl");
+                gl.anchorMin = V(-0.1f, 0.1f); gl.anchorMax = V(1.1f, 0.95f);
+                var glI = gl.gameObject.AddComponent<Image>();
+                glI.sprite = UIShapeUtils.Glow(64, new Color(1f, 0.84f, 0f, 0.4f), 0.55f);
+                glI.raycastTarget = false;
+                gl.transform.SetAsFirstSibling();
+                gl.gameObject.SetActive(isActive);
+                hub._navGlows[i] = gl.gameObject;
+
+                // Icon — direct PNG, no background box
+                var iconRT = R(item.gameObject, "Ico");
+                iconRT.anchorMin = V(0.1f, 0.05f); iconRT.anchorMax = V(0.9f, 0.95f);
+                var iconImg = iconRT.gameObject.AddComponent<Image>();
+                iconImg.raycastTarget = false;
+                iconImg.preserveAspect = true;
+
+                // Load icon: new NavBar/ path -> old flat_ path -> text fallback
+                Sprite iconSprite = LoadIconSprite(icoRes[i]);
+                if (iconSprite == null) iconSprite = LoadIconSprite(icoResFallback[i]);
+
+                if (iconSprite != null)
+                {
+                    iconImg.sprite = iconSprite;
+                }
+                else
+                {
+                    iconImg.color = Color.clear;
+                    Txt(item.gameObject, $"<b>{icoFallback[i]}</b>", 36, fallbackColors[i]);
+                }
+
+                // Initial state: active = 1.45x white, inactive = 1.0x dimmed
+                iconRT.localScale = isActive ? Vector3.one * 1.45f : Vector3.one;
+                iconImg.color = isActive ? ACTIVE_TINT : INACTIVE_TINT;
+
+                hub._navIcons[i] = iconRT;
+                hub._navImages[i] = iconImg;
+
+                // Invisible raycast + button
+                var btnImg = item.gameObject.AddComponent<Image>();
+                btnImg.color = Color.clear;
+                var btn = item.gameObject.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+                int tabIndex = i;
+                btn.onClick.AddListener(() => { TryHaptic(); hub.OnTabClicked(tabIndex); });
+            }
+        }
+
+        static Sprite LoadIconSprite(string resPath)
+        {
+            var spr = Resources.Load<Sprite>(resPath);
+            if (spr != null) return spr;
+            var tex = Resources.Load<Texture2D>(resPath);
+            if (tex != null)
+                return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), V(0.5f, 0.5f));
+            return null;
+        }
+
+        // ================================================================
+        // PLAY BUTTON
+        // ================================================================
+
+        static void PlayButton(GameObject root, HubScreen hub)
+        {
+            // Position play button in the center-bottom area
+            var cen = R(root, "Cen");
+            cen.anchorMin = V(0, 0.15f); cen.anchorMax = V(1, 0.85f);
+
+            float btnBottom = 0.04f;
+            float btnTop = 0.16f;
+
+            // Glow behind button — soft green radial, very faded
+            var glowGo = R(cen.gameObject, "PlayGlow");
+            glowGo.anchorMin = V(0.10f, btnBottom - 0.02f);
+            glowGo.anchorMax = V(0.90f, btnTop + 0.02f);
+            var glowImg = glowGo.gameObject.AddComponent<Image>();
+            glowImg.sprite = UIShapeUtils.Glow(128, new Color(0.31f, 0.82f, 0.39f, 0.35f), 0.3f);
+            glowImg.raycastTarget = false;
+            hub._playGlowCG = glowGo.gameObject.AddComponent<CanvasGroup>();
+            hub._playGlowCG.alpha = 0.5f;
+            hub._playGlowRT = glowGo;
+
+            // === BUTTON FACE ===
+            // Single pill-shaped sprite with gradient. No separate shadow/border layers,
+            // so transparent pill corners have nothing behind them to bleed through.
+            var face = R(cen.gameObject, "PlayFace");
+            face.anchorMin = V(0.20f, btnBottom);
+            face.anchorMax = V(0.80f, btnTop);
+
+            // Face image: rounded-rect pill with 4-stop green gradient
+            var faceI = face.gameObject.AddComponent<Image>();
+            faceI.sprite = hub.BakeGradientPillTracked(600, 180, 90,
+                new Color(0.40f, 0.93f, 0.47f),  // #66ee77 top
+                new Color(0.27f, 0.87f, 0.33f),  // #44dd55
+                new Color(0.20f, 0.80f, 0.27f),  // #33cc44
+                new Color(0.16f, 0.72f, 0.24f)); // #28b83d bottom
+            faceI.type = Image.Type.Sliced;
+
+            // Mask clips children (gloss, shimmer, etc.) to pill shape
+            var maskImg = face.gameObject.AddComponent<Mask>();
+            maskImg.showMaskGraphic = true;
+
+            // Drop shadow via Unity's Shadow component — duplicates mesh below, same shape
+            var shadow = face.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0.086f, 0.420f, 0.157f, 0.8f); // #166b28
+            shadow.effectDistance = new Vector2(0, -6f);
+
+            // Button + bounce + press feedback
+            var faceBtn = face.gameObject.AddComponent<Button>();
+            faceBtn.transition = Selectable.Transition.None;
+            faceBtn.onClick.AddListener(() => { TryHaptic(); hub.Play(); });
+            face.gameObject.AddComponent<ButtonBounce>();
+
+            var pressFeedback = face.gameObject.AddComponent<PlayButtonPressFeedback>();
+            pressFeedback.Init(hub);
+
+            hub._playButtonFace = face;
+            hub._playButtonBasePos = face.anchoredPosition;
+
+            // Top highlight — fades from white to transparent
+            var gloss = R(face.gameObject, "Gloss");
+            gloss.anchorMin = V(0, 0.65f); gloss.anchorMax = V(1, 0.95f);
+            var glossI = gloss.gameObject.AddComponent<Image>();
+            glossI.sprite = ThemeConfig.CreateGradientSprite(
+                new Color(1f, 1f, 1f, 0.3f),
+                new Color(1f, 1f, 1f, 0f));
+            glossI.type = Image.Type.Simple;
+            glossI.raycastTarget = false;
+
+            // Inset bottom shadow — subtle dark at bottom
+            var insetBot = R(face.gameObject, "InsetBot");
+            insetBot.anchorMin = V(0, 0f); insetBot.anchorMax = V(1, 0.2f);
+            var insetBotI = insetBot.gameObject.AddComponent<Image>();
+            insetBotI.sprite = ThemeConfig.CreateGradientSprite(
+                new Color(0f, 0f, 0f, 0f),
+                new Color(0f, 0f, 0f, 0.1f));
+            insetBotI.type = Image.Type.Simple;
+            insetBotI.raycastTarget = false;
+
+            // Shimmer sweep inside RectMask2D
+            var shimmerMask = R(face.gameObject, "ShimmerMask");
+            shimmerMask.anchorMin = V(0, 0); shimmerMask.anchorMax = V(1, 1);
+            shimmerMask.gameObject.AddComponent<RectMask2D>();
+
+            var shimmerBand = R(shimmerMask.gameObject, "ShimmerBand");
+            shimmerBand.anchorMin = V(0, 0); shimmerBand.anchorMax = V(0, 1);
+            shimmerBand.pivot = V(0.5f, 0.5f);
+            shimmerBand.sizeDelta = V(300, 0);
+            shimmerBand.anchoredPosition = V(-300, 0);
+            var shimmerBandI = shimmerBand.gameObject.AddComponent<Image>();
+            shimmerBandI.sprite = UIShapeUtils.Glow(64, Color.white, 0.3f);
+            shimmerBandI.color = new Color(1f, 1f, 1f, 0.25f);
+            shimmerBandI.raycastTarget = false;
+
+            // Level text
+            hub._levelButtonText = Txt(face.gameObject, "<b>Level 1</b>", 56, Color.white);
+            hub._levelButtonText.extraPadding = true;
+            hub._levelButtonText.raycastTarget = false;
+            var mat = new Material(hub._levelButtonText.fontSharedMaterial);
+            mat.SetFloat(ShaderUtilities.ID_FaceDilate, 0.3f);
+            mat.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f);
+            mat.SetColor(ShaderUtilities.ID_OutlineColor, Color.white);
+            hub._levelButtonText.fontMaterial = mat;
+
+            // === DEBUG: Log play button configuration ===
+            hub.StartCoroutine(LogPlayButtonDebugSimple(face, faceI));
+
+            // Start play button animations
+            hub._playPulseCoroutine = hub.StartCoroutine(hub.AnimatePlayPulse(face));
+            hub._playGlowCoroutine = hub.StartCoroutine(hub.AnimatePlayGlow(hub._playGlowCG, hub._playGlowRT));
+            hub._playShimmerCoroutine = hub.StartCoroutine(hub.AnimatePlayShimmer(shimmerBand, 600f, 300f));
+        }
+
+        // ================================================================
+        // PLAY BUTTON DEBUG LOGGING
+        // ================================================================
+
+        static IEnumerator LogPlayButtonDebugSimple(RectTransform face, Image faceI)
+        {
+            yield return null; // wait one frame for layout
+
+            var tag = "[PlayButton]";
+            var sb = new StringBuilder();
+            sb.AppendLine($"{tag} ===== PLAY BUTTON DEBUG DUMP =====");
+
+            // Face
+            sb.AppendLine($"{tag} FACE: ImageType={faceI.type}, Color={faceI.color}, " +
+                $"RectSize={face.rect.width:F1}x{face.rect.height:F1}, " +
+                $"AnchoredPos={face.anchoredPosition}");
+            var s = faceI.sprite;
+            if (s != null)
+            {
+                sb.AppendLine($"{tag}   Sprite: tex={s.texture.width}x{s.texture.height}, " +
+                    $"border=L{s.border.x} B{s.border.y} R{s.border.z} T{s.border.w}");
+                var tex = s.texture;
+                int midY = tex.height / 2;
+                sb.AppendLine($"{tag}   EdgePixels(y={midY}): " +
+                    $"x=0 a={tex.GetPixel(0, midY).a:F3}, " +
+                    $"x=1 a={tex.GetPixel(1, midY).a:F3}, " +
+                    $"x=3 a={tex.GetPixel(3, midY).a:F3}, " +
+                    $"x=10 a={tex.GetPixel(10, midY).a:F3}");
+            }
+
+            // Mask + Shadow
+            var mask = face.GetComponent<Mask>();
+            var shad = face.GetComponent<Shadow>();
+            sb.AppendLine($"{tag} MASK: present={mask != null}, showGraphic={mask?.showMaskGraphic}");
+            sb.AppendLine($"{tag} SHADOW: present={shad != null}" +
+                (shad != null ? $", color={shad.effectColor}, dist={shad.effectDistance}" : ""));
+
+            // All children
+            sb.AppendLine($"{tag} Children ({face.childCount}):");
+            for (int i = 0; i < face.childCount; i++)
+            {
+                var ch = face.GetChild(i);
+                var rt = ch.GetComponent<RectTransform>();
+                var img = ch.GetComponent<Image>();
+                sb.AppendLine($"{tag}   [{i}] {ch.name}: " +
+                    $"anchors=({rt.anchorMin.x:F2},{rt.anchorMin.y:F2})-({rt.anchorMax.x:F2},{rt.anchorMax.y:F2}), " +
+                    $"size={rt.rect.width:F1}x{rt.rect.height:F1}" +
+                    (img != null ? $", imgType={img.type}, color={img.color}" : ""));
+            }
+
+            // Sibling layers (parent = Cen)
+            var parent = face.parent;
+            sb.AppendLine($"{tag} Sibling layers under '{parent.name}' ({parent.childCount}):");
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                var sib = parent.GetChild(i);
+                var sibImg = sib.GetComponent<Image>();
+                var sibRT = sib.GetComponent<RectTransform>();
+                sb.AppendLine($"{tag}   [{i}] {sib.name}: " +
+                    $"size={sibRT.rect.width:F1}x{sibRT.rect.height:F1}, " +
+                    $"pos={sibRT.anchoredPosition}" +
+                    (sibImg != null ? $", color={sibImg.color}, type={sibImg.type}" : ""));
+            }
+
+            sb.AppendLine($"{tag} ===== END DEBUG DUMP =====");
+            UnityEngine.Debug.Log(sb.ToString());
+        }
+
+        // ================================================================
+        // PLAY BUTTON PRESS FEEDBACK COMPONENT
+        // ================================================================
+
+        class PlayButtonPressFeedback : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+        {
+            private HubScreen _hub;
+
+            public void Init(HubScreen hub) { _hub = hub; }
+
+            public void OnPointerDown(PointerEventData eventData)
+            {
+                if (_hub != null) _hub.OnPlayPointerDown();
+            }
+
+            public void OnPointerUp(PointerEventData eventData)
+            {
+                if (_hub != null) _hub.OnPlayPointerUp();
+            }
+        }
+
+        // ================================================================
+        // UTILITY METHODS
+        // ================================================================
+
+        static void TryHaptic() => HapticUtils.TryVibrate();
 
         static GameObject SpriteBtn(GameObject par, string n, string resPath, float sz)
         {
@@ -404,177 +949,6 @@ namespace JuiceSort.Game.UI.Screens
             return rt.gameObject;
         }
 
-        // === WHITE BORDER ===
-        static void WBorder(GameObject go, float alpha)
-        {
-            var b = R(go, "Brd");
-            b.anchorMin = V(-0.03f,-0.03f); b.anchorMax = V(1.03f,1.03f);
-            var i = b.gameObject.AddComponent<Image>();
-            i.sprite = UIShapeUtils.WhiteRoundedRect(24, 68);
-            i.type = Image.Type.Sliced;
-            i.color = new Color(1,1,1,alpha);
-            i.raycastTarget = false;
-            b.transform.SetAsFirstSibling();
-        }
-
-        // === NAV BAR ===
-        static void NavBar(GameObject root, HubScreen hub)
-        {
-            var bar = R(root, "Nav");
-            bar.anchorMin = V(0,0); bar.anchorMax = V(1,0);
-            bar.pivot = V(0.5f,0); bar.sizeDelta = V(0, 200);
-
-            // Semi-transparent background — flat fill, no rounded corners
-            var navBg = R(bar.gameObject, "NavBg");
-            navBg.anchorMin = V(0, 0); navBg.anchorMax = V(1, 1);
-            navBg.offsetMin = Vector2.zero; navBg.offsetMax = Vector2.zero;
-            var navBgI = navBg.gameObject.AddComponent<Image>();
-            navBgI.sprite = null;
-            navBgI.color = new Color(0.745f, 0.745f, 0.745f, 0.7f);
-            navBgI.raycastTarget = false;
-            navBg.transform.SetAsFirstSibling();
-
-            // Top border line — purple accent #5533AA
-            var navTopLine = R(bar.gameObject, "NavTopLine");
-            navTopLine.anchorMin = V(0, 1); navTopLine.anchorMax = V(1, 1);
-            navTopLine.pivot = V(0.5f, 1); navTopLine.sizeDelta = V(0, 3);
-            var navTopLineI = navTopLine.gameObject.AddComponent<Image>();
-            navTopLineI.color = new Color(0.333f, 0.2f, 0.667f, 1f);
-            navTopLineI.raycastTarget = false;
-
-            // GOLD TOP BORDER — thick shiny line
-            var goldLine = R(bar.gameObject, "GoldBorder");
-            goldLine.anchorMin = V(0, 1); goldLine.anchorMax = V(1, 1);
-            goldLine.pivot = V(0.5f, 1); goldLine.sizeDelta = V(0, 6);
-            var goldLineI = goldLine.gameObject.AddComponent<Image>();
-            goldLineI.sprite = UIShapeUtils.RoundedRect(400, 6, 3,
-                new Color(1f, 0.85f, 0.3f, 0.9f),
-                new Color(1f, 0.7f, 0.15f, 0.7f));
-            goldLineI.type = Image.Type.Simple;
-            goldLineI.raycastTarget = false;
-
-            // Gold glow behind border line
-            var goldGlow = R(bar.gameObject, "GoldGlow");
-            goldGlow.anchorMin = V(0.05f, 0.92f); goldGlow.anchorMax = V(0.95f, 1.05f);
-            var goldGlowI = goldGlow.gameObject.AddComponent<Image>();
-            goldGlowI.sprite = UIShapeUtils.Glow(128, new Color(1f, 0.8f, 0.2f, 0.15f), 0.5f);
-            goldGlowI.raycastTarget = false;
-            goldGlow.transform.SetAsFirstSibling();
-
-            string[] lbl = {"Shop","Leaders","Home","Teams","Collect"};
-            // Fallback text icons if PNGs not loaded
-            string[] icoText = { "\u2B50", "\u265B", "\u2665", "\u2726", "\u2666" };
-            // PNG icon names in Resources/Icons/
-            string[] icoRes = { "Icons/flat_icon_shop", "Icons/flat_icon_leaderboard", "Icons/flat_icon_home", "Icons/flat_icon_teams", "Icons/flat_icon_collections" };
-            Color[] clr = {
-                new Color(1f, 0.8f, 0.2f),        // gold
-                new Color(1f, 0.6f, 0.2f),         // orange
-                new Color(0.6f, 0.92f, 1f),        // cyan
-                new Color(0.4f, 1f, 0.55f),         // green
-                new Color(1f, 0.5f, 0.7f)           // pink
-            };
-
-            // Use anchors (0-1) so all 5 fit evenly, no overflow
-            float w = 1f / 5f;
-            for (int i = 0; i < 5; i++)
-            {
-                NI(bar.gameObject, lbl[i], icoText[i], icoRes[i], clr[i],
-                    V(w * i, 0), V(w * (i + 1), 1), i == 2, hub);
-            }
-        }
-
-        static void NI(GameObject par, string label, string iconText, string iconRes, Color ic,
-            Vector2 aMin, Vector2 aMax, bool act, HubScreen hub)
-        {
-            var item = R(par, $"N{label}");
-            item.anchorMin = aMin; item.anchorMax = aMax;
-            // Active icon raised UP (popped out of bar), inactive stays normal
-            item.offsetMin = V(4, act ? 35 : 16);
-            item.offsetMax = V(-4, act ? 10 : -8);
-
-            // Icon container — HUGE, fills almost entire item
-            var ibg = R(item.gameObject, "IBg");
-            ibg.anchorMin = V(0f, 0.08f); ibg.anchorMax = V(1f, 0.98f);
-
-            // NO background color — just the PNG icon directly
-            // Active glow behind icon
-            if (act)
-            {
-                var gl = R(item.gameObject, "Gl");
-                gl.anchorMin = V(-0.1f, 0.2f); gl.anchorMax = V(1.1f, 0.95f);
-                var glI = gl.gameObject.AddComponent<Image>();
-                glI.sprite = UIShapeUtils.Glow(64, new Color(0.5f, 0.3f, 1f, 0.35f), 0.55f);
-                glI.raycastTarget = false;
-                gl.transform.SetAsFirstSibling();
-                hub._navGlowImage = glI;
-            }
-
-            // ICON — load PNG, fallback to text
-            var iconSprite = Resources.Load<Sprite>(iconRes);
-            if (iconSprite == null)
-            {
-                // Try loading as Texture2D and create sprite
-                var iconTex = Resources.Load<Texture2D>(iconRes);
-                if (iconTex != null)
-                    iconSprite = Sprite.Create(iconTex,
-                        new Rect(0, 0, iconTex.width, iconTex.height),
-                        V(0.5f, 0.5f));
-            }
-
-            if (iconSprite != null)
-            {
-                var icoImg = R(ibg.gameObject, "Ico");
-                icoImg.anchorMin = V(0.05f, 0.05f); icoImg.anchorMax = V(0.95f, 0.95f);
-                var icoImgC = icoImg.gameObject.AddComponent<Image>();
-                icoImgC.sprite = iconSprite;
-                icoImgC.preserveAspect = true;
-                icoImgC.raycastTarget = false;
-                // All icons show original colors — no dimming
-            }
-            else
-            {
-                // Fallback: text icon
-                Txt(ibg.gameObject, $"<b>{iconText}</b>", 36, ic);
-            }
-
-            // No SOON badges, no labels — icons only
-
-            // Active golden dot
-            if (act)
-            {
-                var dot = R(item.gameObject, "Dot");
-                dot.anchorMin = V(0.4f, 0.01f); dot.anchorMax = V(0.6f, 0.06f);
-                var dI = dot.gameObject.AddComponent<Image>();
-                dI.sprite = UIShapeUtils.WhiteCircle(16);
-                dI.color = new Color(1, 0.85f, 0.3f); dI.raycastTarget = false;
-            }
-        }
-
-        static void TryHaptic() => HapticUtils.TryVibrate();
-
-        // === ANIMATION ===
-        IEnumerator Anim()
-        {
-            while (true)
-            {
-                float t = Time.time;
-                if (_playGlowImage != null)
-                    _playGlowImage.color = new Color(1,1,1,
-                        Mathf.Lerp(0.25f,0.6f,(Mathf.Sin(t*2f)+1)*0.5f));
-                // Nav glow pulse (cubic-bezier-like easing)
-                if (_navGlowImage != null)
-                {
-                    float navT = Mathf.Repeat(t * 0.5f, 1f); // 2s cycle
-                    float ease = navT < 0.5f
-                        ? 4f * navT * navT * navT  // ease in
-                        : 1f - Mathf.Pow(-2f * navT + 2f, 3f) / 2f; // ease out
-                    float navA = Mathf.Lerp(0.15f, 0.45f, ease);
-                    _navGlowImage.color = new Color(0.5f, 0.3f, 1f, navA);
-                }
-                yield return null;
-            }
-        }
-
         // === TEXT with rich text <b> for REAL bold ===
         static TextMeshProUGUI Txt(GameObject p, string txt, float sz, Color c)
         {
@@ -592,16 +966,16 @@ namespace JuiceSort.Game.UI.Screens
             t.alignment = TextAlignmentOptions.Center;
             t.color = c;
             t.font = ThemeConfig.GetFont();
-            t.richText = true; // enable <b> tags
+            t.richText = true;
             t.fontStyle = FontStyles.Bold;
             t.fontWeight = FontWeight.Heavy;
-            t.outlineWidth = 0.25f; // extra thickness
+            t.outlineWidth = 0.25f;
             t.outlineColor = new Color32(
                 (byte)(c.r*255), (byte)(c.g*255), (byte)(c.b*255), (byte)(c.a*200));
             return t;
         }
 
-        // === BAKE GRADIENT INTO PILL SHAPE (no white overlay needed) ===
+        // === BAKE GRADIENT INTO PILL SHAPE ===
         Sprite BakeGradientPillTracked(int w, int h, int radius, Color c0, Color c1, Color c2, Color c3)
         {
             var sprite = BakeGradientPill(w, h, radius, c0, c1, c2, c3);
@@ -614,12 +988,16 @@ namespace JuiceSort.Game.UI.Screens
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.filterMode = FilterMode.Bilinear;
             float r = Mathf.Min(radius, Mathf.Min(w, h) / 2f);
-            float se = 3f; // soft edge
+            float se = 3f;
+            // Extend pill shape beyond texture edges by 'se' so the AA fringe
+            // falls outside the visible area — all texture pixels are fully opaque
+            // along the straight edges, corners keep smooth antialiasing.
+            float halfW = (w - 1) / 2f + se;
+            float halfH = (h - 1) / 2f + se;
 
             for (int y = 0; y < h; y++)
             {
-                float t = (float)y / (h - 1); // 0=bottom, 1=top
-                // 4-stop gradient: c3(0%) → c2(40%) → c1(70%) → c0(100%)
+                float t = (float)y / (h - 1);
                 Color rowColor;
                 if      (t > 0.7f) rowColor = Color.Lerp(c1, c0, (t - 0.7f) / 0.3f);
                 else if (t > 0.4f) rowColor = Color.Lerp(c2, c1, (t - 0.4f) / 0.3f);
@@ -627,16 +1005,18 @@ namespace JuiceSort.Game.UI.Screens
 
                 for (int x = 0; x < w; x++)
                 {
-                    // SDF for rounded rect
-                    float cx = Mathf.Max(Mathf.Abs(x - (w-1)/2f) - ((w-1)/2f - r), 0f);
-                    float cy = Mathf.Max(Mathf.Abs(y - (h-1)/2f) - ((h-1)/2f - r), 0f);
+                    float cx = Mathf.Max(Mathf.Abs(x - (w-1)/2f) - (halfW - r), 0f);
+                    float cy = Mathf.Max(Mathf.Abs(y - (h-1)/2f) - (halfH - r), 0f);
                     float dist = Mathf.Sqrt(cx*cx + cy*cy) - r;
                     float alpha = dist < -se ? 1f : (dist > 0f ? 0f : -dist / se);
                     tex.SetPixel(x, y, new Color(rowColor.r, rowColor.g, rowColor.b, alpha));
                 }
             }
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0,0,w,h), new Vector2(0.5f,0.5f), 100f);
+            int b = Mathf.CeilToInt(r);
+            int bv = Mathf.Min(b, h / 2);
+            return Sprite.Create(tex, new Rect(0,0,w,h), new Vector2(0.5f,0.5f), 100f,
+                0, SpriteMeshType.FullRect, new Vector4(b, bv, b, bv));
         }
 
         // === HELPERS ===
