@@ -248,6 +248,51 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Wobble driven by coroutine (impulse → damped oscillation → zero), not Update loop
 - Destroy runtime material in OnDestroy to prevent leaks
 
+## UI Screen Construction Patterns
+
+**Screen Factory Pattern:**
+- Every screen uses a static `Create()` method returning a `GameObject` with Canvas
+- Canvas: `ScreenSpaceOverlay`, `CanvasScaler` (1080×1920, match 0.5), `GraphicRaycaster`, `CanvasGroup`
+- Registered with `ScreenManager` in `BootLoader.CreateServices()`
+- Refresh via `OnStateChanged` callback in BootLoader
+
+**Shared Helpers (in `Scripts/Game/UI/Components/`):**
+- `UI3DButton.Create()` — multi-layer 3D button (gold ring bevel → border → face → gloss), returns face GO for content
+- `UI3DButton.CreateNoGold()` — same without gold ring (purple outer bevel variant)
+- `UICard.Create()` — card container with border ring, fill, top shadow, bottom highlight
+- `UIShapeUtils` — cached procedural sprites (WhiteRoundedRect, WhiteCircle, WhitePill, etc.)
+- `ButtonBounce` — press animation component (scale 0.92→1.05→1.0)
+- `HapticUtils.TryVibrate()` — Android haptic feedback with preference check
+- `ThemeConfig.GetFont()` — Nunito-Regular SDF, `CreateGradientSprite(top, bottom)` for gradients
+
+**3D Button Construction (CRITICAL for new screens):**
+- Every `Button` component MUST have a transparent `Image` (Color.clear) on the same GO for raycast targeting
+- Gold ring bevel: base color `#f5dc68` + `Mask` + child gradient overlay (`Color.clear` → `#786010`)
+- Border: inset 8px from gold ring
+- Face: inset 13px from gold ring
+- Gloss: top 45-48% of face, same sprite as face, semi-transparent white
+- Always add `ButtonBounce` component
+- Always call `HapticUtils.TryVibrate()` in click handlers
+
+**Card Construction:**
+- Border ring: oversized child Image behind fill (sizeDelta += borderWidth×2)
+- Fill: `WhiteRoundedRect(radius, 64)`, `Image.Type.Sliced`
+- Top inset shadow: stretch-top, dark
+- Bottom inset highlight: stretch-bottom, light
+
+**Text Pattern (TMPro):**
+- All UI text: Nunito-Regular SDF via `ThemeConfig.GetFont()`, Bold, white, with outline
+- Always set `raycastTarget = false` on non-interactive text
+- Text shadow: create material instance, enable `UNDERLAY_ON` keyword, set offset/softness/color
+
+**Common Helpers (duplicated per screen, define locally):**
+```csharp
+static Vector2 V(float x, float y) => new Vector2(x, y);
+static RectTransform R(GameObject p, string n) { /* child with stretch-all anchors */ }
+static TextMeshProUGUI Txt(GameObject p, string txt, float sz, Color c) { /* TMPro child */ }
+static Color Col(string hex) { ColorUtility.TryParseHtmlString(hex, out var c); return c; }
+```
+
 ## Responsive Layout Rules (Epic 11)
 
 **Layout Calculation:**
@@ -302,4 +347,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-03-22
+Last Updated: 2026-03-30

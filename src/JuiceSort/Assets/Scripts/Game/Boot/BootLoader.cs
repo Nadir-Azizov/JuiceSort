@@ -166,10 +166,11 @@ namespace JuiceSort.Game.Boot
             };
             _gateScreen.OnLevelTapped += _onGateLevelTapped;
 
-            // Settings screen
+            // Settings screen (uGUI — same pattern as HubScreen)
             var settings = SettingsScreen.Create();
             DontDestroyOnLoad(settings);
             screenMgr.RegisterScreen(GameFlowState.Settings, settings);
+            var settingsScreen = settings.GetComponent<SettingsScreen>();
 
             // Ambient floating light particles disabled — caused streaking line artifacts
             // FloatingLights.Create();
@@ -192,7 +193,6 @@ namespace JuiceSort.Game.Boot
                 }
                 else if (state == GameFlowState.Settings)
                 {
-                    var settingsScreen = settings.GetComponent<SettingsScreen>();
                     if (settingsScreen != null)
                         settingsScreen.Refresh();
                 }
