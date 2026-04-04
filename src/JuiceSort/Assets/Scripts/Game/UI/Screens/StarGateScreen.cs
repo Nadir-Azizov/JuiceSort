@@ -13,12 +13,11 @@ namespace JuiceSort.Game.UI.Screens
 {
     /// <summary>
     /// Star gate screen shown when batch progression is blocked.
-    /// Displays star deficit and scrollable level list for replay.
+    /// Displays star deficit and a button to go to the roadmap for replaying levels.
     /// </summary>
     public class StarGateScreen : MonoBehaviour
     {
         private TextMeshProUGUI _headerText;
-        private LevelListView _levelList;
 
         public event Action<int> OnLevelTapped;
 
@@ -32,13 +31,6 @@ namespace JuiceSort.Game.UI.Screens
                 ? $"Batch Gate\nNeed {deficit} more stars ({currentStars}/{requiredStars})"
                 : "Batch Unlocked!";
 
-            var nodes = new List<LevelNodeData>();
-            foreach (var record in progression.GetAllLevelRecords())
-            {
-                nodes.Add(LevelNodeData.FromRecord(record));
-            }
-
-            _levelList.Populate(nodes);
             gameObject.SetActive(true);
         }
 
@@ -91,17 +83,43 @@ namespace JuiceSort.Game.UI.Screens
             screen._headerText.font = ThemeConfig.GetFontBold();
             screen._headerText.fontStyle = TMPro.FontStyles.Bold;
 
-            // Level list area
-            var listArea = new GameObject("ListArea");
-            listArea.transform.SetParent(go.transform, false);
-            var listRect = listArea.AddComponent<RectTransform>();
-            listRect.anchorMin = new Vector2(0.03f, 0.03f);
-            listRect.anchorMax = new Vector2(0.97f, 0.8f);
-            listRect.offsetMin = Vector2.zero;
-            listRect.offsetMax = Vector2.zero;
+            // "Go to Roadmap" button
+            var btnGo = new GameObject("RoadmapButton");
+            btnGo.transform.SetParent(go.transform, false);
+            var btnRect = btnGo.AddComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(0.2f, 0.4f);
+            btnRect.anchorMax = new Vector2(0.8f, 0.48f);
+            btnRect.offsetMin = Vector2.zero;
+            btnRect.offsetMax = Vector2.zero;
 
-            screen._levelList = LevelListView.Create(listArea.transform);
-            screen._levelList.OnLevelTapped += (levelNum) => screen.OnLevelTapped?.Invoke(levelNum);
+            var btnImage = btnGo.AddComponent<Image>();
+            btnImage.color = ThemeConfig.GetColor(ThemeColorType.ButtonPrimary);
+
+            var btn = btnGo.AddComponent<Button>();
+            btnGo.AddComponent<ButtonBounce>();
+            btn.onClick.AddListener(() =>
+            {
+                if (Services.TryGet<ScreenManager>(out var sm))
+                {
+                    sm.HideOverlay(GameFlowState.Gate);
+                    sm.TransitionTo(GameFlowState.Roadmap);
+                }
+            });
+
+            var btnTextGo = new GameObject("BtnText");
+            btnTextGo.transform.SetParent(btnGo.transform, false);
+            var btnTextRect = btnTextGo.AddComponent<RectTransform>();
+            btnTextRect.anchorMin = Vector2.zero;
+            btnTextRect.anchorMax = Vector2.one;
+            btnTextRect.offsetMin = Vector2.zero;
+            btnTextRect.offsetMax = Vector2.zero;
+
+            var btnText = btnTextGo.AddComponent<TextMeshProUGUI>();
+            btnText.text = "Replay Levels";
+            btnText.fontSize = ThemeConfig.FontSizeSecondary;
+            btnText.alignment = TextAlignmentOptions.Center;
+            btnText.color = Color.white;
+            btnText.font = ThemeConfig.GetFont();
 
             go.SetActive(false);
             return go;

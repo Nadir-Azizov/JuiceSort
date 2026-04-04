@@ -57,13 +57,11 @@
     <Compile Include="Assets\Scripts\Game\UI\Screens\LoadingScreen.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelMood.cs" />
     <Compile Include="Assets\Scripts\Game\Effects\BloomSetup.cs" />
-    <Compile Include="Assets\Scripts\Game\UI\Components\UI3DButton.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\IProgressionManager.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\BackgroundManager.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\StarGateScreen.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\PuzzleSolver.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\GameplayHUD.cs" />
-    <Compile Include="Assets\Scripts\Game\UI\Components\LevelNodeData.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\ButtonBounce.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Screens\LevelCompleteScreen.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityAssigner.cs" />
@@ -72,13 +70,13 @@
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleEngine.cs" />
     <Compile Include="Assets\Scripts\Game\Layout\BottleLayout.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityData.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\RoadmapMapView.cs" />
     <Compile Include="Assets\Scripts\Game\Economy\CoinConfig.cs" />
     <Compile Include="Assets\Scripts\Game\Progression\LevelRecord.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\CityDatabase.cs" />
     <Compile Include="Assets\Scripts\Game\Audio\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Game\Save\SaveManager.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleState.cs" />
-    <Compile Include="Assets\Scripts\Game\UI\Components\UICard.cs" />
     <Compile Include="Assets\Scripts\Game\UI\ThemeConfig.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\AspectFillScaler.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PourStreamVFX.cs" />
@@ -92,6 +90,7 @@
     <Compile Include="Assets\Scripts\Game\Progression\OptimalMoveEstimator.cs" />
     <Compile Include="Assets\Scripts\Game\Boot\BootLoader.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\HapticUtils.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\RoadmapIslandMarker.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\ContainerState.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\PuzzleBoardView.cs" />
     <Compile Include="Assets\Scripts\Game\Effects\FloatingLights.cs" />
@@ -100,9 +99,9 @@
     <Compile Include="Assets\Scripts\Game\Boot\GlobalExceptionHandler.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\CompletionShimmer.cs" />
     <Compile Include="Assets\Scripts\Game\UI\Components\UIShapeUtils.cs" />
-    <Compile Include="Assets\Scripts\Game\UI\Components\LevelListView.cs" />
     <Compile Include="Assets\Scripts\Game\UI\GameFlowState.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\LevelGenerator.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\RoadmapConfig.cs" />
     <Compile Include="Assets\Scripts\Game\Layout\LayoutConfig.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\DifficultyConfig.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\LiquidMaterialController.cs" />
@@ -122,6 +121,7 @@
     <Compile Include="Assets\Scripts\Game\Puzzle\DrinkColor.cs" />
     <Compile Include="Assets\Scripts\Game\Puzzle\GameplayManager.cs" />
     <Compile Include="Assets\Scripts\Game\Ads\AdManager.cs" />
+    <Compile Include="Assets\Scripts\Game\UI\Components\RoadmapNodeData.cs" />
     <Compile Include="Assets\Scripts\Game\Economy\StreakBonusCalculator.cs" />
     <Compile Include="Assets\Scripts\Game\LevelGen\SolveResult.cs" />
   </ItemGroup>

@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-20
-last_updated: 2026-03-31  # Story 11.11 navbar-play-button ready for review
+last_updated: 2026-04-02  # Story 11.8 roadmap-redesign complete, ready for review
 project: JuiceSort
 project_key: NOKEY
 tracking_system: file-system
@@ -143,7 +143,7 @@ development_status:
   11-5-extra-bottle-relayout: done                  # MEDIUM priority (depends on 11.1)
   11-6-gameplay-hud-overhaul: done                      # HIGH priority — expandable settings gear, bottom action panel
   11-7-loading-screen: done                            # MEDIUM priority — PNG-based loading splash screen
-  11-8-roadmap-redesign: ready-for-dev              # MEDIUM priority — vertical journey path with level nodes
+  11-8-roadmap-redesign: review                      # MEDIUM priority — vertical journey path with level nodes
   11-9-app-icon-setup: done                         # MEDIUM priority — Android adaptive icon configuration
   11-10-main-settings: done                  # HIGH priority — Settings panel redesign (uGUI, code review passed)
   11-11-navbar-play-button: review            # HIGH priority — Premium nav bar + 3D play button overhaul

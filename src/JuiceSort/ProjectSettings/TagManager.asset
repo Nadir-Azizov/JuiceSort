@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Roadmap
   - 
   - 
   - 
@@ -40,4 +40,13 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: RoadmapSky
+    uniqueID: 1
+    locked: 0
+  - name: RoadmapStones
+    uniqueID: 2
+    locked: 0
+  - name: RoadmapIslands
+    uniqueID: 3
     locked: 0
