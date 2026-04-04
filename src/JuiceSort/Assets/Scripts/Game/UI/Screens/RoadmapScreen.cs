@@ -287,18 +287,30 @@ namespace JuiceSort.Game.UI.Screens
         {
             var nodes = new List<RoadmapNodeData>();
 
-            // Completed levels
+            int currentLevel = progression.CurrentLevel;
+            int previousLevel = currentLevel - 1;
+            bool gateBlocked = previousLevel > 0
+                && progression.IsAtBatchGate(previousLevel)
+                && !progression.CanPassBatchGate();
+
+            // Zone bounds: each zone = 20 levels
+            int currentZone = (currentLevel - 1) / 20;
+            int zoneStart = currentZone * 20 + 1;
+            int zoneEnd = (currentZone + 1) * 20;
+
+            // Completed levels within current zone
             var records = progression.GetAllLevelRecords();
             foreach (var record in records)
             {
                 int lvl = record.LevelNumber;
-                bool isBoss = lvl % 10 == 0;
+                if (lvl < zoneStart || lvl > zoneEnd) continue;
+
                 var node = new RoadmapNodeData
                 {
                     LevelNumber = lvl,
                     State = RoadmapLevelState.Completed,
                     StarsEarned = record.Stars,
-                    IsBoss = isBoss,
+                    IsBoss = lvl % 10 == 0,
                     IslandSprite = RoadmapConfig.GetIslandSprite(lvl, RoadmapLevelState.Completed),
                     FlipX = RoadmapConfig.ShouldFlip(lvl),
                     WorldPosition = RoadmapConfig.GetNodePosition(lvl)
@@ -306,24 +318,17 @@ namespace JuiceSort.Game.UI.Screens
                 nodes.Add(node);
             }
 
-            // Current level (not yet completed, not gate-blocked)
-            int currentLevel = progression.CurrentLevel;
-            int previousLevel = currentLevel - 1;
-            bool gateBlocked = previousLevel > 0
-                && progression.IsAtBatchGate(previousLevel)
-                && !progression.CanPassBatchGate();
-
+            // Current level (if within zone, not completed, not gate-blocked)
             int lastRenderedLevel = currentLevel;
-
-            if (!progression.IsLevelCompleted(currentLevel) && !gateBlocked)
+            if (currentLevel >= zoneStart && currentLevel <= zoneEnd
+                && !progression.IsLevelCompleted(currentLevel) && !gateBlocked)
             {
-                bool isBoss = currentLevel % 10 == 0;
                 var currentNode = new RoadmapNodeData
                 {
                     LevelNumber = currentLevel,
                     State = RoadmapLevelState.Current,
                     StarsEarned = 0,
-                    IsBoss = isBoss,
+                    IsBoss = currentLevel % 10 == 0,
                     IslandSprite = RoadmapConfig.GetIslandSprite(currentLevel, RoadmapLevelState.Current),
                     FlipX = RoadmapConfig.ShouldFlip(currentLevel),
                     WorldPosition = RoadmapConfig.GetNodePosition(currentLevel)
@@ -333,26 +338,47 @@ namespace JuiceSort.Game.UI.Screens
             }
             else if (gateBlocked)
             {
-                // Gate-blocked: current level is not shown
                 lastRenderedLevel = currentLevel - 1;
             }
 
-            // 5 locked levels beyond current
-            for (int i = 1; i <= 5; i++)
+            // Remaining locked levels within current zone (up to zoneEnd)
+            for (int lvl = lastRenderedLevel + 1; lvl <= zoneEnd; lvl++)
             {
-                int lockedLevel = lastRenderedLevel + i;
-                bool isBoss = lockedLevel % 10 == 0;
                 var lockedNode = new RoadmapNodeData
                 {
-                    LevelNumber = lockedLevel,
+                    LevelNumber = lvl,
                     State = RoadmapLevelState.Locked,
                     StarsEarned = 0,
-                    IsBoss = isBoss,
-                    IslandSprite = RoadmapConfig.GetIslandSprite(lockedLevel, RoadmapLevelState.Locked),
-                    FlipX = RoadmapConfig.ShouldFlip(lockedLevel),
-                    WorldPosition = RoadmapConfig.GetNodePosition(lockedLevel)
+                    IsBoss = lvl % 10 == 0,
+                    IslandSprite = RoadmapConfig.GetIslandSprite(lvl, RoadmapLevelState.Locked),
+                    FlipX = RoadmapConfig.ShouldFlip(lvl),
+                    WorldPosition = RoadmapConfig.GetNodePosition(lvl)
                 };
                 nodes.Add(lockedNode);
+            }
+
+            // 4 preview islands from next zone (skip boss positions — multiples of 10)
+            int previewCount = 0;
+            int previewLevel = zoneEnd + 1;
+            while (previewCount < 4)
+            {
+                if (previewLevel % 10 != 0) // skip boss positions in preview
+                {
+                    var previewNode = new RoadmapNodeData
+                    {
+                        LevelNumber = previewLevel,
+                        State = RoadmapLevelState.Locked,
+                        StarsEarned = 0,
+                        IsBoss = false,
+                        IsPreview = true,
+                        IslandSprite = RoadmapConfig.GetIslandSprite(previewLevel, RoadmapLevelState.Locked, isPreview: true),
+                        FlipX = RoadmapConfig.ShouldFlip(previewLevel),
+                        WorldPosition = RoadmapConfig.GetNodePosition(previewLevel)
+                    };
+                    nodes.Add(previewNode);
+                    previewCount++;
+                }
+                previewLevel++;
             }
 
             return nodes;
@@ -377,7 +403,7 @@ namespace JuiceSort.Game.UI.Screens
 
             var cam = camGO.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = RoadmapConfig.OceanBottom;
+            cam.backgroundColor = new Color(0.024f, 0.290f, 0.408f, 1f); // #064A68 deep ocean fallback
             cam.orthographic = true;
             cam.orthographicSize = CameraOrthoSize;
             cam.nearClipPlane = 0.3f;

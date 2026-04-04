@@ -24,6 +24,7 @@ namespace JuiceSort.Game.UI.Components
         public bool IsBoss;             // true for every 10th level
         public Sprite IslandSprite;     // resolved sprite reference
         public bool FlipX;              // whether to flip horizontally
+        public bool IsPreview;          // true for faded next-zone preview islands
         public Vector2 WorldPosition;   // calculated position in world space
     }
 }

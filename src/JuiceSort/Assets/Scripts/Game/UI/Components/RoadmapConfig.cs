@@ -53,23 +53,12 @@ namespace JuiceSort.Game.UI.Components
         public const float PoolingMarginScreens = 2.0f;
 
         // --- Colors ---
-        public static readonly Color BadgeCompletedColor = new Color(0.76f, 0.16f, 0.66f, 1f);     // #C22AA8
-        public static readonly Color BadgeBossColor = new Color(0.91f, 0.66f, 0f, 1f);              // #E8A800
-        public static readonly Color BadgeCurrentColor = new Color(0.91f, 0.33f, 0.82f, 1f);        // #E855D0
-        public static readonly Color BadgeLockedColor = new Color(0.42f, 0.47f, 0.54f, 1f);         // #6A7789
         public static readonly Color StarEarnedColor = new Color(1f, 0.84f, 0f, 1f);                // #FFD700
         public static readonly Color StarEmptyColor = new Color(0.33f, 0.38f, 0.46f, 0.5f);         // #556075 @ 50%
         public static readonly Color GlowColor = new Color(0.91f, 0.33f, 0.82f, 0.25f);             // purple glow
         public static readonly Color BossLockedTint = new Color(0.6f, 0.6f, 0.6f, 0.7f);
         public static readonly Color StoneUnlockedColor = new Color(0.67f, 0.61f, 0.53f, 0.75f);
         public static readonly Color StoneLockedColor = new Color(0.31f, 0.39f, 0.47f, 0.5f);
-
-        // --- Ocean Gradient ---
-        public static readonly Color OceanTop = HexColor("#87CEEB");
-        public static readonly Color OceanMidTop = HexColor("#4DD8FF");
-        public static readonly Color OceanMid = HexColor("#0E94C8");
-        public static readonly Color OceanMidBot = HexColor("#0A7DB0");
-        public static readonly Color OceanBottom = HexColor("#064A68");
 
         // --- Header ---
         public static readonly Color HeaderBgColor = new Color(0.03f, 0.20f, 0.29f, 0.95f);         // rgba(8,50,75,0.95)
@@ -84,11 +73,13 @@ namespace JuiceSort.Game.UI.Components
 
         /// <summary>
         /// Gets the island sprite for a given level number and state.
-        /// Follows the A→B→D→E rotation pattern. Boss = C. Locked = island_locked.
+        /// Follows the A→B→D→E rotation pattern. Boss = C.
+        /// Preview islands use island_locked; zone-locked islands use the normal rotation.
         /// </summary>
-        public static Sprite GetIslandSprite(int levelNumber, RoadmapLevelState state)
+        public static Sprite GetIslandSprite(int levelNumber, RoadmapLevelState state, bool isPreview = false)
         {
-            if (state == RoadmapLevelState.Locked && levelNumber % 10 != 0)
+            // Only preview islands get the burned/faded locked sprite
+            if (isPreview && levelNumber % 10 != 0)
                 return LoadSprite(IslandLockedPath);
 
             if (levelNumber % 10 == 0)
@@ -157,6 +148,9 @@ namespace JuiceSort.Game.UI.Components
         // --- Sprite Cache ---
         private static readonly System.Collections.Generic.Dictionary<string, Sprite> _spriteCache
             = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>Clears the sprite cache so replaced assets are reloaded fresh.</summary>
+        public static void ClearSpriteCache() => _spriteCache.Clear();
 
         /// <summary>
         /// Loads a sprite from Resources with caching.

@@ -23,20 +23,38 @@ namespace JuiceSort.Game.UI.Components
             = new Dictionary<int, (GameObject, int)>();
 
         // Runtime-generated textures (must be destroyed to avoid leaks)
-        private Texture2D _oceanTexture;
         private Texture2D _circleTexture;
         private Texture2D _starTexture;
         private Sprite _circleSprite;
         private Sprite _starSprite;
-        private Sprite _oceanSprite;
 
         // Stone PNG sprites (loaded from Resources)
         private Sprite[] _stoneSprites;
+
+        // Badge PNG sprites (loaded from Resources)
+        private Sprite _badgePurple;
+        private Sprite _badgeGold;
+        private Sprite _badgeLocked;
         private GameObject _oceanQuad;
-        private GameObject _glowGO;
+
+        // Current level badge pulse animation
+        private RectTransform _currentBadgeRect;
+        private Vector3 _currentBadgeBaseScale;
 
         // Cliff decoration container (scrolls with map at 1:1)
         private GameObject _cliffsParentGO;
+
+        // Cloud barrier ("fog of war") — stored for future reveal animation
+        private GameObject _cloudLeftGO;
+        private GameObject _cloudRightGO;
+        private readonly List<GameObject> _cloudStoneGOs = new List<GameObject>();
+
+        /// <summary>
+        /// World-Y of the cloud barrier. Use to cap scroll bounds so the player
+        /// sees the clouds as the end of the map (e.g. scrollMaxY = CloudBarrierY - 4f).
+        /// Returns float.MaxValue when no barrier exists.
+        /// </summary>
+        public float CloudBarrierY { get; private set; } = float.MaxValue;
 
         // Pooling state
         private float _poolingMargin;
@@ -58,7 +76,13 @@ namespace JuiceSort.Game.UI.Components
         public void BuildMap(List<RoadmapNodeData> nodes)
         {
             ClearMap();
+            RoadmapConfig.ClearSpriteCache();
             _nodes = nodes;
+
+            // Load badge sprites fresh (after cache clear)
+            _badgePurple = RoadmapConfig.LoadSprite("Roadmap/Badges/badge_purple");
+            _badgeGold = RoadmapConfig.LoadSprite("Roadmap/Badges/badge_gold");
+            _badgeLocked = RoadmapConfig.LoadSprite("Roadmap/Badges/badge_locked");
 
             CreateOceanBackground();
 
@@ -73,6 +97,7 @@ namespace JuiceSort.Game.UI.Components
             }
 
             CreateCliffDecorations();
+            CreateCloudBarrier();
             UpdatePooling();
         }
 
@@ -112,7 +137,17 @@ namespace JuiceSort.Game.UI.Components
 
         public void UpdateOceanPosition()
         {
-            // Ocean quad is now parented to camera — no manual repositioning needed
+            // Ocean tiles are parented to _mapRoot — no manual repositioning needed
+        }
+
+        private void Update()
+        {
+            // Gentle breathing pulse on current level badge
+            if (_currentBadgeRect != null)
+            {
+                float pulse = 1f + 0.12f * (0.5f + 0.5f * Mathf.Sin(Time.time * 4.2f));
+                _currentBadgeRect.localScale = _currentBadgeBaseScale * pulse;
+            }
         }
 
         // Cliffs are parented to _mapRoot — they scroll at 1:1 with the camera, no parallax needed.
@@ -140,64 +175,55 @@ namespace JuiceSort.Game.UI.Components
                     _stoneSprites[i] = _circleSprite;
                 }
             }
+
         }
 
         private void CreateOceanBackground()
         {
-            // Gradient texture: 8px wide, 256px tall. All columns identical.
-            // 2px border on each side filled with edge color to prevent bilinear
-            // filtering from blending with transparent pixels at sprite edges.
-            const int texW = 8;
-            const int texH = 256;
-            _oceanTexture = new Texture2D(texW, texH, TextureFormat.RGBA32, false);
-            _oceanTexture.wrapMode = TextureWrapMode.Clamp;
-            _oceanTexture.filterMode = FilterMode.Bilinear;
-
-            Color[] stops = {
-                RoadmapConfig.OceanBottom,   // 0% — bottom
-                RoadmapConfig.OceanMidBot,   // 25%
-                RoadmapConfig.OceanMid,      // 50%
-                RoadmapConfig.OceanMidTop,   // 75%
-                RoadmapConfig.OceanTop        // 100% — top
-            };
-
-            for (int y = 0; y < texH; y++)
+            var oceanSprite = RoadmapConfig.LoadSprite("Roadmap/Background/ocean_tile");
+            if (oceanSprite == null)
             {
-                float t = y / (float)(texH - 1);
-                float segT = t * 4f;
-                int seg = Mathf.Min((int)segT, 3);
-                float localT = segT - seg;
-                Color c = Color.Lerp(stops[seg], stops[seg + 1], localT);
-                for (int x = 0; x < texW; x++)
-                    _oceanTexture.SetPixel(x, y, c);
+                Debug.LogError("[RoadmapMapView] ocean_tile not found at Resources/Roadmap/Background/ocean_tile");
+                return;
             }
-            _oceanTexture.Apply();
+            Debug.Log($"[OceanDebug] tex={oceanSprite.texture.name}, size={oceanSprite.texture.width}x{oceanSprite.texture.height}");
 
-            // Use full texture as sprite — no inset needed since all edge pixels
-            // contain valid gradient colors (not transparent)
-            _oceanSprite = Sprite.Create(_oceanTexture,
-                new Rect(0, 0, texW, texH), new Vector2(0.5f, 0.5f), 100f);
+            float tileSize = oceanSprite.bounds.size.x; // 512px at 100 PPU = 5.12 world units
+            float camW = _camera.orthographicSize * 2f * _camera.aspect;
 
-            _oceanQuad = new GameObject("OceanBackground");
+            // Map vertical extent
+            float mapBottom = -2f;
+            float highestLevelY = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].WorldPosition.y : 0f;
+            float mapTop = highestLevelY + 10f;
+
+            int tilesX = Mathf.CeilToInt(camW / tileSize) + 2;
+            int tilesY = Mathf.CeilToInt((mapTop - mapBottom) / tileSize) + 2;
+
+            float startX = -tilesX / 2f * tileSize;
+            float startY = mapBottom;
+
+            _oceanQuad = new GameObject("OceanTiles");
             _oceanQuad.layer = RoadmapLayer;
-            _oceanQuad.transform.SetParent(_camera.transform, false);
-            _oceanQuad.transform.localPosition = new Vector3(0f, 0f, 20f);
+            _oceanQuad.transform.SetParent(_mapRoot, false);
 
-            var sr = _oceanQuad.AddComponent<SpriteRenderer>();
-            sr.sprite = _oceanSprite;
-            sr.sortingLayerName = SortingLayerSky;
-            sr.sortingOrder = 0;
-            sr.drawMode = SpriteDrawMode.Simple;
-
-            // Scale to fill viewport + 40% padding (generous to guarantee no edge visible)
-            float camHeight = _camera.orthographicSize * 2f;
-            float aspect = _camera.aspect > 0.01f ? _camera.aspect : (float)Screen.width / Screen.height;
-            float camWidth = camHeight * aspect;
-            float spriteWorldW = _oceanSprite.bounds.size.x;
-            float spriteWorldH = _oceanSprite.bounds.size.y;
-            float scaleX = (camWidth / spriteWorldW) * 1.4f;
-            float scaleY = (camHeight / spriteWorldH) * 1.4f;
-            _oceanQuad.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+            for (int ty = 0; ty < tilesY; ty++)
+            {
+                for (int tx = 0; tx < tilesX; tx++)
+                {
+                    var tileGO = new GameObject($"OceanTile_{tx}_{ty}");
+                    tileGO.layer = RoadmapLayer;
+                    var sr = tileGO.AddComponent<SpriteRenderer>();
+                    sr.sprite = oceanSprite;
+                    sr.sortingLayerName = SortingLayerSky;
+                    sr.sortingOrder = 0;
+                    tileGO.transform.position = new Vector3(
+                        startX + tx * tileSize,
+                        startY + ty * tileSize,
+                        0f
+                    );
+                    tileGO.transform.SetParent(_oceanQuad.transform, true);
+                }
+            }
         }
 
         private void CreateIslandNode(RoadmapNodeData node)
@@ -238,9 +264,9 @@ namespace JuiceSort.Game.UI.Components
 
             islandGO.transform.localScale = new Vector3(scale, scale, 1f);
 
-            // Boss locked tint
-            if (node.State == RoadmapLevelState.Locked && node.IsBoss)
-                sr.color = RoadmapConfig.BossLockedTint;
+            // Preview islands: faded/desaturated gray tint
+            if (node.IsPreview)
+                sr.color = new Color(0.6f, 0.6f, 0.6f, 0.7f);
 
             // Collider for tap detection (in local space, so use actual sprite bounds)
             var collider = islandGO.AddComponent<BoxCollider2D>();
@@ -251,43 +277,13 @@ namespace JuiceSort.Game.UI.Components
             marker.LevelNumber = node.LevelNumber;
             marker.State = node.State;
 
-            // Current level glow
-            if (node.State == RoadmapLevelState.Current)
-                CreateGlow(islandGO.transform, node, scale);
-
             // WorldSpace Canvas for badge + stars
-            CreateBadgeAndStars(islandGO.transform, node, targetSize, scale);
+            CreateBadgeAndStars(islandGO.transform, node, scale);
 
             _islandGOs[node.LevelNumber] = islandGO;
         }
 
-        private void CreateGlow(Transform islandTransform, RoadmapNodeData node, float parentScale)
-        {
-            _glowGO = new GameObject("Glow");
-            _glowGO.layer = RoadmapLayer;
-            _glowGO.transform.SetParent(islandTransform, false);
-            _glowGO.transform.localPosition = Vector3.zero;
-
-            var sr = _glowGO.AddComponent<SpriteRenderer>();
-            sr.sprite = _circleSprite;
-            sr.sortingLayerName = SortingLayerIslands;
-            sr.sortingOrder = -1; // behind island
-
-            // Glow color with more visible alpha
-            var glowColor = RoadmapConfig.GlowColor;
-            glowColor.a = 0.85f;
-            sr.color = glowColor;
-
-            // Glow = 1.3x the target island size (in world units)
-            float targetIslandSize = node.IsBoss ? RoadmapConfig.BossIslandSize : RoadmapConfig.NormalIslandSize;
-            float glowWorldSize = targetIslandSize * RoadmapConfig.CurrentLevelScale * 1.3f;
-            // Circle sprite is 64px at 100PPU = 0.64 world units
-            // Parent GO is already at parentScale, so local scale = desired world size / (0.64 * parentScale)
-            float localScale = glowWorldSize / (0.64f * parentScale);
-            _glowGO.transform.localScale = new Vector3(localScale, localScale, 1f);
-        }
-
-        private void CreateBadgeAndStars(Transform islandTransform, RoadmapNodeData node, float islandSize, float parentScale)
+        private void CreateBadgeAndStars(Transform islandTransform, RoadmapNodeData node, float parentScale)
         {
             // WorldSpace Canvas — child of island so it scrolls with it
             var canvasGO = new GameObject("BadgeCanvas");
@@ -307,19 +303,26 @@ namespace JuiceSort.Game.UI.Components
             canvasRect.localScale = new Vector3(canvasLocalScale, canvasLocalScale, 1f);
             canvasRect.localPosition = Vector3.zero;
 
-            // Badge position: below island center-bottom edge
-            // islandSize is the target world size (e.g., 2.6). Badge is BadgeOffsetY below the bottom edge.
-            float halfIslandSize = islandSize / 2f;
-            float badgeWorldY = -halfIslandSize + RoadmapConfig.BadgeOffsetY;
-            // Convert world offset to canvas pixels: effective world scale = 0.01, so px = world / 0.01
+            // Badge position: overlapping island bottom edge (~70% down from center)
+            float islandHalfH = node.IsBoss ? 1.9f : 1.3f;
+            float badgeWorldY = -(islandHalfH * 0.7f);
             float badgePxY = badgeWorldY * 100f;
 
             bool isBoss = node.IsBoss;
             bool isCurrent = node.State == RoadmapLevelState.Current;
-            float badgeSize = (isBoss || isCurrent) ? 90f : 80f;
-            float fontSize = (isBoss || isCurrent) ? 38f : 32f;
+            float badgeSize = (isBoss || isCurrent) ? 130f : 120f;
+            float fontSize = (isBoss || isCurrent) ? 42f : 38f;
 
-            // Badge background — circular using runtime circle sprite
+            // Select badge PNG sprite
+            Sprite badgeSprite;
+            if (node.State == RoadmapLevelState.Locked)
+                badgeSprite = _badgeLocked;
+            else if (isBoss)
+                badgeSprite = _badgeGold;
+            else
+                badgeSprite = _badgePurple;
+
+            // Badge image using PNG sprite — no tinting
             var badgeGO = new GameObject("Badge");
             badgeGO.layer = RoadmapLayer;
             badgeGO.transform.SetParent(canvasGO.transform, false);
@@ -328,58 +331,60 @@ namespace JuiceSort.Game.UI.Components
             badgeRect.anchoredPosition = new Vector2(0f, badgePxY);
 
             var badgeImg = badgeGO.AddComponent<Image>();
-            badgeImg.sprite = _circleSprite; // runtime-generated white circle, tinted by color
-            badgeImg.color = GetBadgeColor(node);
+            badgeImg.sprite = badgeSprite;
+            badgeImg.color = Color.white; // full color, no tinting
+            badgeImg.preserveAspect = true;
 
-            // Border via Outline component on the circle
-            Color borderColor = node.State == RoadmapLevelState.Locked
-                ? new Color(1f, 1f, 1f, 0.12f)
-                : new Color(1f, 1f, 1f, 0.5f);
-            var outline = badgeGO.AddComponent<Outline>();
-            outline.effectColor = borderColor;
-            outline.effectDistance = new Vector2(2f, 2f);
-
-            // Drop shadow below badge
-            var shadow = badgeGO.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.4f);
-            shadow.effectDistance = new Vector2(0f, -3f);
-
-            // Badge text (level number or lock icon)
-            var textGO = new GameObject("Text");
-            textGO.layer = RoadmapLayer;
-            textGO.transform.SetParent(badgeGO.transform, false);
-            var textRect = textGO.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-            var tmp = textGO.AddComponent<TextMeshProUGUI>();
-            tmp.font = ThemeConfig.GetFontBold();
-            tmp.fontStyle = TMPro.FontStyles.Bold;
-            tmp.fontSize = fontSize;
-            tmp.enableAutoSizing = false;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = Color.white;
-
-            tmp.text = node.LevelNumber.ToString();
-            if (node.State == RoadmapLevelState.Locked)
+            // Store current level badge for pulse animation
+            if (node.State == RoadmapLevelState.Current)
             {
-                tmp.color = new Color(1f, 1f, 1f, 0.45f);
+                _currentBadgeRect = badgeRect;
+                _currentBadgeBaseScale = badgeRect.localScale;
             }
 
-            // Stars (only for completed and current levels)
+            // Level number text — only for non-locked badges (locked has baked-in lock icon)
             if (node.State != RoadmapLevelState.Locked)
             {
-                float starsWorldY = badgeWorldY + RoadmapConfig.StarsOffsetY;
-                float starsPxY = starsWorldY * 100f;
+                var textGO = new GameObject("Text");
+                textGO.layer = RoadmapLayer;
+                textGO.transform.SetParent(badgeGO.transform, false);
+                var textRect = textGO.AddComponent<RectTransform>();
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = Vector2.zero;
+                textRect.offsetMax = Vector2.zero;
+                textRect.anchoredPosition = new Vector2(0f, 8f); // shift text up inside badge
+                var tmp = textGO.AddComponent<TextMeshProUGUI>();
+                tmp.font = ThemeConfig.GetFontBold();
+                tmp.fontStyle = TMPro.FontStyles.Bold;
+                tmp.fontSize = fontSize;
+                tmp.enableAutoSizing = false;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.color = Color.white;
+                tmp.text = node.LevelNumber.ToString();
+
+                // Clone material to avoid affecting other text, then apply inspector-tested settings
+                tmp.fontMaterial = new Material(tmp.fontMaterial);
+                tmp.ForceMeshUpdate();
+                tmp.fontMaterial.SetFloat("_FaceDilate", 0.69f);
+                tmp.fontMaterial.EnableKeyword("OUTLINE_ON");
+                tmp.fontMaterial.SetFloat("_OutlineWidth", 0.303f);
+                tmp.fontMaterial.SetColor("_OutlineColor", Color.black);
+            }
+
+            // Stars only on completed levels
+            if (node.State == RoadmapLevelState.Completed)
+            {
+                float badgeHalfPx = badgeSize / 2f;
+                float starsPxY = badgePxY + badgeHalfPx + 8f; // just above badge top edge
                 CreateStars(canvasGO.transform, node.StarsEarned, starsPxY);
             }
         }
 
         private void CreateStars(Transform canvasTransform, int starsEarned, float yPosition)
         {
-            float starSize = 22f;
-            float gap = 3f;
+            float starSize = 32f;
+            float gap = 4f;
             float totalWidth = starSize * 3f + gap * 2f;
             float startX = -totalWidth / 2f + starSize / 2f;
 
@@ -395,18 +400,11 @@ namespace JuiceSort.Game.UI.Components
                 var img = starGO.AddComponent<Image>();
                 img.sprite = _starSprite;
                 img.color = i < starsEarned ? RoadmapConfig.StarEarnedColor : RoadmapConfig.StarEmptyColor;
-            }
-        }
 
-        private Color GetBadgeColor(RoadmapNodeData node)
-        {
-            if (node.State == RoadmapLevelState.Locked)
-                return RoadmapConfig.BadgeLockedColor;
-            if (node.State == RoadmapLevelState.Current)
-                return RoadmapConfig.BadgeCurrentColor;
-            if (node.IsBoss)
-                return RoadmapConfig.BadgeBossColor;
-            return RoadmapConfig.BadgeCompletedColor;
+                var starOutline = starGO.AddComponent<Outline>();
+                starOutline.effectColor = new Color(0f, 0f, 0f, 0.7f);
+                starOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            }
         }
 
         private void CreateCliffDecorations()
@@ -461,6 +459,109 @@ namespace JuiceSort.Game.UI.Components
 
                 index++;
             }
+        }
+
+        private void CreateCloudBarrier()
+        {
+            Debug.Log("[CloudBarrier] CreateCloudBarrier() called");
+
+            // Find the last preview island (cloud sits above the preview zone)
+            float lastPreviewY = float.NegativeInfinity;
+            float lastPreviewX = 0f;
+            for (int i = 0; i < _nodes.Count; i++)
+            {
+                if (_nodes[i].IsPreview)
+                {
+                    lastPreviewY = _nodes[i].WorldPosition.y;
+                    lastPreviewX = _nodes[i].WorldPosition.x;
+                }
+            }
+
+            // Fallback: if no preview nodes, use last locked island
+            if (float.IsNegativeInfinity(lastPreviewY))
+            {
+                for (int i = 0; i < _nodes.Count; i++)
+                {
+                    if (_nodes[i].State == RoadmapLevelState.Locked)
+                    {
+                        lastPreviewY = _nodes[i].WorldPosition.y;
+                        lastPreviewX = _nodes[i].WorldPosition.x;
+                    }
+                }
+            }
+
+            Debug.Log($"[CloudBarrier] lastPreviewY = {lastPreviewY}");
+
+            // No locked or preview islands — no barrier needed
+            if (float.IsNegativeInfinity(lastPreviewY)) return;
+
+            float cloudY = lastPreviewY + 10f;
+            float cloudScale = 1.2f;
+
+            var cloudLeftSprite = RoadmapConfig.LoadSprite("Roadmap/Background/cloud_left");
+            var cloudRightSprite = RoadmapConfig.LoadSprite("Roadmap/Background/cloud_right");
+
+            Debug.Log($"[CloudBarrier] leftSprite={cloudLeftSprite != null}, rightSprite={cloudRightSprite != null}");
+
+            if (cloudLeftSprite == null || cloudRightSprite == null)
+            {
+                Debug.LogWarning("[RoadmapMapView] Cloud barrier sprites not found in Resources/Roadmap/Background/");
+                return;
+            }
+
+            // Left cloud — dense body on right side
+            _cloudLeftGO = new GameObject("CloudBarrierLeft");
+            _cloudLeftGO.layer = RoadmapLayer;
+            _cloudLeftGO.transform.SetParent(_mapRoot, false);
+            var leftSR = _cloudLeftGO.AddComponent<SpriteRenderer>();
+            leftSR.sprite = cloudLeftSprite;
+            leftSR.sortingLayerName = SortingLayerIslands;
+            leftSR.sortingOrder = 200; // above ocean tiles AND islands
+            _cloudLeftGO.transform.localPosition = new Vector3(-1.5f, cloudY, 0f);
+            _cloudLeftGO.transform.localScale = Vector3.one * cloudScale;
+
+            // Right cloud — wispy tendrils on left side, overlaps center with left cloud
+            _cloudRightGO = new GameObject("CloudBarrierRight");
+            _cloudRightGO.layer = RoadmapLayer;
+            _cloudRightGO.transform.SetParent(_mapRoot, false);
+            var rightSR = _cloudRightGO.AddComponent<SpriteRenderer>();
+            rightSR.sprite = cloudRightSprite;
+            rightSR.sortingLayerName = SortingLayerIslands;
+            rightSR.sortingOrder = 199; // behind left cloud
+            _cloudRightGO.transform.localPosition = new Vector3(1.5f, cloudY, 0f);
+            _cloudRightGO.transform.localScale = Vector3.one * cloudScale;
+
+            Debug.Log($"[CloudBarrier] left sorting: layer={leftSR.sortingLayerName} order={leftSR.sortingOrder}");
+            Debug.Log($"[CloudBarrier] right sorting: layer={rightSR.sortingLayerName} order={rightSR.sortingOrder}");
+            Debug.Log($"[CloudBarrier] leftPos={_cloudLeftGO.transform.position}, rightPos={_cloudRightGO.transform.position}");
+
+            // 4 stepping stones from last preview island into the clouds
+            float stoneStartY = lastPreviewY + 1.5f;
+            float stoneEndY = cloudY - 4.0f;
+            int stoneCount = 4;
+            for (int s = 0; s < stoneCount; s++)
+            {
+                float t = (float)s / (stoneCount - 1); // 0, 0.33, 0.66, 1.0
+                float y = Mathf.Lerp(stoneStartY, stoneEndY, t);
+                float x = Mathf.Lerp(lastPreviewX, 0f, t * 0.5f);
+
+                var stoneGO = new GameObject($"CloudStone_{s}");
+                stoneGO.layer = RoadmapLayer;
+                stoneGO.transform.SetParent(_mapRoot, false);
+                var sr = stoneGO.AddComponent<SpriteRenderer>();
+                sr.sprite = _stoneSprites[s % _stoneSprites.Length];
+                sr.sortingLayerName = SortingLayerStones;
+                sr.sortingOrder = 5;
+                stoneGO.transform.localPosition = new Vector3(x, y, 0f);
+                stoneGO.transform.localScale = Vector3.one * 0.4f;
+
+                float alpha = Mathf.Lerp(0.65f, 0.35f, t);
+                sr.color = new Color(1f, 1f, 1f, alpha);
+
+                _cloudStoneGOs.Add(stoneGO);
+            }
+
+            CloudBarrierY = cloudY - 4f;
         }
 
         private void CreateStoneSegment(RoadmapNodeData lower, RoadmapNodeData upper)
@@ -637,23 +738,39 @@ namespace JuiceSort.Game.UI.Components
                 _cliffsParentGO = null;
             }
 
+            if (_cloudLeftGO != null)
+            {
+                Object.Destroy(_cloudLeftGO);
+                _cloudLeftGO = null;
+            }
+            if (_cloudRightGO != null)
+            {
+                Object.Destroy(_cloudRightGO);
+                _cloudRightGO = null;
+            }
+            foreach (var stoneGO in _cloudStoneGOs)
+            {
+                if (stoneGO != null)
+                    Object.Destroy(stoneGO);
+            }
+            _cloudStoneGOs.Clear();
+            CloudBarrierY = float.MaxValue;
+
             if (_oceanQuad != null)
             {
                 Object.Destroy(_oceanQuad);
                 _oceanQuad = null;
             }
 
-            _glowGO = null;
+            _currentBadgeRect = null;
         }
 
         private void OnDestroy()
         {
             ClearMap();
 
-            if (_oceanTexture != null) Object.Destroy(_oceanTexture);
             if (_circleTexture != null) Object.Destroy(_circleTexture);
             if (_starTexture != null) Object.Destroy(_starTexture);
-            if (_oceanSprite != null) Object.Destroy(_oceanSprite);
             if (_circleSprite != null) Object.Destroy(_circleSprite);
             if (_starSprite != null) Object.Destroy(_starSprite);
         }
